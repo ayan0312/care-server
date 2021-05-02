@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "rootDir": ".",
+        "outDir": "dist",
+        "target": "ESNext",
+        "module": "CommonJS",
+        "lib": [
+            "ESNext"
+        ],
+        "types": [
+            "node",
+            "jest"
+        ],
+        "paths": {
+            "src": [
+                "src"
+            ]
+        },
+        "strict": true,
+        "allowJs": false,
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": false,
+        "removeComments": false,
+        "esModuleInterop": true,
+        "strictNullChecks": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "noUnusedParameters": false,
+        "strictFunctionTypes": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "strictPropertyInitialization": false
+    },
+    "include": [
+        "src",
+        "scripts"
+    ]
+}
