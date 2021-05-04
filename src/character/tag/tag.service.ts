@@ -22,12 +22,16 @@ export class TagService {
         private readonly categoryService: CategoryService
     ) { }
 
-    public async find(name: string) {
-        return await this.tagRepo.find({ name })
-    }
+    public async find(query: ICharacterTag) {
+        const opts: { name?: string, category?: CharacterCategoryEntity } = {}
 
-    public async findAll() {
-        return await this.tagRepo.find()
+        if (query.name)
+            opts.name = query.name
+
+        if (query.categoryId)
+            opts.category = await this.categoryService.findById(query.categoryId)
+
+        return await this.tagRepo.find(opts)
     }
 
     public async findById(id: number) {
@@ -65,7 +69,7 @@ export class TagService {
         if (await this.hasName(tag.name))
             throw new ConflictException('has the same name')
 
-        return this.tagRepo.insert(tag)
+        return this.tagRepo.save(tag)
     }
 
     public async update(

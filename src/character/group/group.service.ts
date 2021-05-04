@@ -48,19 +48,20 @@ export class GroupService {
         if (await this.hasName(group.name))
             throw new ConflictException('has the same name')
 
-        return this.groupRepo.insert(group)
+        return this.groupRepo.save(group)
     }
 
     public async update(id: number, body: IStarName) {
         const group = await this.findById(id)
+        if (body.name)
+            if (group.name !== body.name && await this.hasName(body.name))
+                throw new ConflictException('has the same name')
+
         mergeObjectToEntity(group, body)
 
         const errors = await validate(group)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
-        if (await this.hasName(group.name))
-            throw new ConflictException('has the same name')
 
         return await this.groupRepo.save(group)
     }

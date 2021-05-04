@@ -23,9 +23,8 @@ export class TagController {
     constructor(private readonly tagService: TagService) { }
 
     @Get()
-    public async find(@Query('name', new DefaultValuePipe('')) name: string) {
-        if (name) return await this.tagService.find(name)
-        return await this.tagService.findAll()
+    public async find(@Query() query: ICharacterTag) {
+        return await this.tagService.find(query)
     }
 
     @Post()

@@ -26,9 +26,7 @@ import { PictureCategoryEntity } from './picture/category/category.entity'
             synchronize: true,
             autoLoadEntities: true,
         }),
-        MulterModule.register({
-            dest: config.TEMP_PATH,
-        }),
+        MulterModule,
         TempModule,
         CharacterModule,
     ],

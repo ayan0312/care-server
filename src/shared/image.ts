@@ -17,16 +17,6 @@ function getImageType(filename: string): string | false {
     return type
 }
 
-function getFileSize(filename: string): number {
-    let stats: fs.Stats
-    try {
-        stats = fs.statSync(filename)
-    } catch (err) {
-        throw err
-    }
-    return stats.size
-}
-
 function copyImage(oldPath: string, newPath: string): Promise<void> {
     let readStream = fs.createReadStream(oldPath)
     let writeStream = fs.createWriteStream(newPath)
@@ -66,13 +56,8 @@ export async function saveImage(
     originFilename: string,
     rename?: boolean
 ) {
-    let size: string
-    try {
-        size = String(getFileSize(originFilename))
-    } catch (err) {
-        throw err
-    }
-
+    console.log(originFilename)
+    let size = String(fs.statSync(originFilename))
     autoMkdirSync(path)
 
     const type = getImageType(originFilename) || ''
@@ -85,12 +70,8 @@ export async function saveImage(
         filename: newFilename,
     }
 
-    try {
-        if (rename) await renameImage(originFilename, metadata.filename)
-        else await copyImage(originFilename, metadata.filename)
-    } catch (err) {
-        throw err
-    }
+    if (rename) await renameImage(originFilename, metadata.filename)
+    else await copyImage(originFilename, metadata.filename)
 
     return metadata
 }

@@ -27,7 +27,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
             else if (res) {
                 if (Array.isArray(res.errors) && res.errors.length > 0) {
                     message = 'Input data validation failed'
-                    errors = res.errors
+                    errors = res.errors.map((err: any) => {
+                        return err.constraints
+                    })
                 }
                 if (typeof res.message === 'string') message = res.message
             }

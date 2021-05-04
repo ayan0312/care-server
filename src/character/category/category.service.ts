@@ -16,7 +16,7 @@ export class CategoryService {
     constructor(
         @InjectRepository(CharacterCategoryEntity)
         private readonly categoryRepo: Repository<CharacterCategoryEntity>
-    ) {}
+    ) { }
 
     public async find(name: string) {
         return await this.categoryRepo.find({ name })
@@ -45,9 +45,6 @@ export class CategoryService {
     }
 
     public async create(name: string) {
-        if (await this.hasName(name))
-            throw new ConflictException('has the same name')
-
         const category = new CharacterCategoryEntity()
         category.name = name
 
@@ -55,6 +52,9 @@ export class CategoryService {
 
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
+
+        if (await this.hasName(name))
+            throw new ConflictException('has the same name')
 
         await this.categoryRepo.save(category)
         return category
