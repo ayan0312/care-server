@@ -21,27 +21,27 @@ export class CharacterEntity extends StarNameEntity {
 
     @Column({ default: '' })
     @Length(0, 25)
-    public wiki: string
+    public wiki: string = ''
 
     @Column({ default: '' })
     @Length(0, 1000)
-    public intro: string
+    public intro: string = ''
 
     @Column({ default: '' })
-    @Length(0, 25)
-    public avatar: string
+    @Length(0, 100)
+    public avatar: string = ''
 
     @Column({ default: '' })
     @Length(0, 255)
-    public remark: string
+    public remark: string = ''
 
     @Column('simple-array')
-    public relationships: string[]
+    public relationships: string[] = []
 
     @Column('simple-array')
-    public staicCategories: string[]
+    public staicCategories: string[] = []
 
     @Column({ default: '' })
-    @Length(0, 25)
-    public fullLengthPicture: string
+    @Length(0, 100)
+    public fullLengthPicture: string = ''
 }

@@ -8,7 +8,7 @@ export interface ICharacter extends IStarName {
     groupIds?: string
     relationships?: string[]
     staicCategories?: string[]
-    fullLengthPicture?: String
+    fullLengthPicture?: string
 }
 
 export interface ICharacterSearch {

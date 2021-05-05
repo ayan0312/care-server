@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { config } from './config'
 
 export interface ImageMetadata {
     name: string
@@ -46,7 +47,7 @@ function renameImage(oldPath: string, newPath: string): Promise<void> {
     })
 }
 
-function autoMkdirSync(path: string) {
+export function autoMkdirSync(path: string) {
     if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
 }
 
@@ -56,22 +57,29 @@ export async function saveImage(
     originFilename: string,
     rename?: boolean
 ) {
-    console.log(originFilename)
     let size = String(fs.statSync(originFilename))
     autoMkdirSync(path)
 
     const type = getImageType(originFilename) || ''
-    const newFilename = `${path}/${sign}.${type}`
     const metadata: ImageMetadata = {
         type,
         path,
         size,
-        name: sign,
-        filename: newFilename,
+        name: `${sign}.${type}`,
+        filename: `${path}/${sign}.${type}`,
     }
 
     if (rename) await renameImage(originFilename, metadata.filename)
     else await copyImage(originFilename, metadata.filename)
 
     return metadata
+}
+
+export function patchURL<T extends Record<string, any>>(entity: T, keys: string[]) {
+    if (keys.length === 0) return
+    Object.keys(entity).forEach(key => {
+        if (keys.includes(key))
+            (entity as any)[key] = `http://localhost:${config.PORT}${entity[key]}`
+    })
+    return entity
 }

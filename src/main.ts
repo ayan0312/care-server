@@ -3,6 +3,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 
 import { ApplicationModule } from './app.module'
 import { AllExceptionsFilter } from './shared/allExceptions.filter'
+import { config } from './shared/config'
 import { ResponseInterceptor } from './shared/response.interceptor'
 
 async function bootstrap() {
@@ -22,7 +23,7 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, options)
     SwaggerModule.setup('docs', app, document)
 
-    await app.listen(3000)
+    await app.listen(config.PORT)
 }
 
 bootstrap()

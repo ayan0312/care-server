@@ -11,6 +11,7 @@ import { PictureEntity } from './picture/picture.entity'
 import { PictureTagEntity } from './picture/tag/tag.entity'
 import { PictureGroupEntity } from './picture/group/group.entity'
 import { PictureCategoryEntity } from './picture/category/category.entity'
+import { ServeStaticModule } from '@nestjs/serve-static'
 
 @Module({
     imports: [
@@ -25,6 +26,10 @@ import { PictureCategoryEntity } from './picture/category/category.entity'
             ],
             synchronize: true,
             autoLoadEntities: true,
+        }),
+        ServeStaticModule.forRoot({
+            rootPath: config.STORAGE_PATH,
+            exclude: [config.DATABASE_FILENAME]
         }),
         MulterModule,
         TempModule,
