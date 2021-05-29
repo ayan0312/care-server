@@ -10,6 +10,8 @@ import {
     Patch,
     HttpCode,
     Query,
+    ParseArrayPipe,
+    DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ICharacter, ICharacterSearch } from 'src/interface/character/character.interface'
@@ -69,8 +71,14 @@ export class CharacterController {
     }
 
     @Get(':id')
-    public async findById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.charService.findById(id)
+    public async findById(
+        @Param('id', new ParseIntPipe()) id: number,
+        @Query('relations',
+            new DefaultValuePipe(''),
+            new ParseArrayPipe({ items: String, separator: ',' })
+        ) relations: string[]
+    ) {
+        return await this.charService.findById(id, relations)
     }
 
     @Patch(':id')

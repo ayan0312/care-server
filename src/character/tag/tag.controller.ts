@@ -37,6 +37,24 @@ export class TagController {
         return await this.tagService.create(body)
     }
 
+    @Get('relation')
+    public async findRelations(
+        @Query('primary', new DefaultValuePipe(false)) primary: boolean,
+        @Query(
+            'ids',
+            new DefaultValuePipe('-1'),
+            new ParseArrayPipe({ items: Number, separator: ',' })
+        )
+        ids: number[]
+    ) {
+        if (ids.length > 0) {
+            if (primary) return await this.tagService.findRelationsByIds(ids)
+            return await this.tagService.tranformCategoryRelationByIds(ids)
+        }
+
+        return []
+    }
+
     @Get(':id')
     public async findById(@Param('id', new ParseIntPipe()) id: number) {
         return await this.tagService.findById(id)
@@ -53,23 +71,5 @@ export class TagController {
     @Delete(':id')
     public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
         return await this.tagService.delete(id)
-    }
-
-    @Get('/relation')
-    public async findRelations(
-        @Query('primary', new DefaultValuePipe(false)) primary: boolean,
-        @Query(
-            'ids',
-            new DefaultValuePipe(''),
-            new ParseArrayPipe({ items: Number, separator: ',' })
-        )
-        ids: number[]
-    ) {
-        if (ids.length > 0) {
-            if (primary) return await this.tagService.findRelationsByIds(ids)
-            return await this.tagService.tranformCategoryRelationByIds(ids)
-        }
-
-        return await this.tagService.findRelations()
     }
 }

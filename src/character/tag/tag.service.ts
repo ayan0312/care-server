@@ -112,13 +112,14 @@ export class TagService {
         > = {}
 
         tags.forEach((tag) => {
-            if (map[tag.category.id]) {
+            if (map[tag.category.id])
                 map[tag.category.id].tags.push(tag)
-                return
-            }
-            map[tag.category.id] = Object.assign(tag.category, {
-                tags: [tag],
-            })
+            else
+                map[tag.category.id] = Object.assign(tag.category, {
+                    tags: [tag],
+                })
+
+            delete (tag as any).category
         })
 
         return Object.keys(map)

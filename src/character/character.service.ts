@@ -26,8 +26,10 @@ export class CharacterService {
 
     private _imageId = 0
 
-    public async findById(id: number) {
-        const result = await this.charRepo.findOne(id)
+    public async findById(id: number, relations: string[] = []) {
+        const result = await this.charRepo.findOne(id, relations ? {
+            relations
+        } : {})
         if (!result) throw new NotFoundException()
         return result
     }
