@@ -1,3 +1,4 @@
+import gm from 'gm'
 import {
     HttpException,
     HttpStatus,
@@ -25,7 +26,7 @@ export class CharacterService {
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
         private readonly groupService: GroupService
-    ) {}
+    ) { }
 
     private _imageId = 0
 
@@ -34,8 +35,8 @@ export class CharacterService {
             id,
             relations
                 ? {
-                      relations,
-                  }
+                    relations,
+                }
                 : {}
         )
         if (!result) throw new NotFoundException()
@@ -60,9 +61,15 @@ export class CharacterService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: qb[0].map((entity) =>
+            rows: qb[0].map((entity) => {
                 patchURL(entity, ['avatar', 'fullLengthPicture'])
-            ),
+                return Object.assign({}, entity, {
+                    ['xsmall']: {
+                        avatar: entity.avatar.replace('avatars', 'avatars/200'),
+                        fullLengthPicture: entity.fullLengthPicture.replace('fullLengthPictures', 'fullLengthPictures/300')
+                    }
+                })
+            }),
             total: qb[1],
         }
     }
@@ -75,11 +82,49 @@ export class CharacterService {
                 `${config.TEMP_PATH}/${filename}`,
                 true
             )
-            return metadata.name
+            return metadata
         } catch (err) {
             console.log(err)
-            return ''
+            return null
         }
+    }
+
+    private async _saveAvatar(tempFilename: string) {
+        const metadata = await this._saveImage(
+            config.STORAGE_PATH + 'avatars',
+            tempFilename
+        )
+
+        if (metadata === null)
+            return '/avatars/package.png'
+
+        gm(metadata.filename)
+            .resize(200, 200, '!')
+            .write(`${metadata.path}/200/${metadata.name}`, (err) => {
+                if (err)
+                    console.error(err)
+            })
+
+        return '/avatars/' + metadata.name
+    }
+
+    private async _saveFullLengthPicture(tempFilename: string) {
+        const metadata = await this._saveImage(
+            config.STORAGE_PATH + 'fullLengthPictures',
+            tempFilename
+        )
+
+        if (metadata === null)
+            return '/fullLengthPictures/package.png'
+
+        gm(metadata.filename)
+            .resize(300)
+            .write(`${metadata.path}/300/${metadata.name}`, (err) => {
+                if (err)
+                    console.error(err)
+            })
+
+        return '/fullLengthPictures/' + metadata.name
     }
 
     private async _mergeBodyToEntity(
@@ -99,19 +144,9 @@ export class CharacterService {
                 parseIds(body.groupIds)
             )
         if (body.avatar)
-            target.avatar =
-                '/avatars/' +
-                (await this._saveImage(
-                    config.STORAGE_PATH + 'avatars',
-                    body.avatar
-                ))
+            target.avatar = await this._saveAvatar(body.avatar)
         if (body.fullLengthPicture)
-            target.fullLengthPicture =
-                '/fullLengthPictures/' +
-                (await this._saveImage(
-                    config.STORAGE_PATH + 'fullLengthPictures',
-                    body.fullLengthPicture
-                ))
+            target.fullLengthPicture = await this._saveFullLengthPicture(body.fullLengthPicture)
         return target
     }
 

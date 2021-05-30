@@ -1,3 +1,4 @@
+import gm from 'gm'
 import {
     HttpException,
     HttpStatus,
@@ -27,7 +28,7 @@ export class PictureService {
         private readonly tagService: TagService,
         private readonly charService: CharacterService,
         private readonly groupService: GroupService
-    ) {}
+    ) { }
 
     private _imageId = 0
 
@@ -36,8 +37,8 @@ export class PictureService {
             id,
             relations
                 ? {
-                      relations,
-                  }
+                    relations,
+                }
                 : {}
         )
         if (!result) throw new NotFoundException()
@@ -62,7 +63,14 @@ export class PictureService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: qb[0].map((entity) => patchURL(entity, ['picture'])),
+            rows: qb[0].map((entity) => {
+                patchURL(entity, ['pictures'])
+                return Object.assign({}, entity, {
+                    ['xsmall']: {
+                        avatar: entity.picture.replace('pictures', 'pictures/300'),
+                    }
+                })
+            }),
             total: qb[1],
         }
     }
@@ -75,11 +83,30 @@ export class PictureService {
                 `${config.TEMP_PATH}/${filename}`,
                 true
             )
-            return metadata.name
+            return metadata
         } catch (err) {
             console.log(err)
-            return ''
+            return null
         }
+    }
+
+    private async _savePicture(tempFilename: string) {
+        const metadata = await this._saveImage(
+            config.STORAGE_PATH + 'pictures',
+            tempFilename
+        )
+
+        if (metadata === null)
+            return '/pictures/package.png'
+
+        gm(metadata.filename)
+            .resize(300)
+            .write(`${metadata.path}/300/${metadata.name}`, (err) => {
+                if (err)
+                    console.error(err)
+            })
+
+        return '/pictures/' + metadata.name
     }
 
     private async _mergeBodyToEntity(target: PictureEntity, body: IPicture) {
@@ -96,12 +123,7 @@ export class PictureService {
                 parseIds(body.groupIds)
             )
         if (body.picture)
-            target.picture =
-                '/pictures/' +
-                (await this._saveImage(
-                    config.STORAGE_PATH + 'pictures',
-                    body.picture
-                ))
+            target.picture = await this._savePicture(body.picture)
         if (body.characterIds)
             target.characters = await this.charService.findByIds(
                 parseIds(body.characterIds)

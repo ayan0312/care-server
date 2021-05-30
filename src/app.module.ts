@@ -21,6 +21,10 @@ import { PictureModule } from './picture/picture.module'
         ServeStaticModule.forRoot({
             rootPath: config.STORAGE_PATH,
             exclude: [config.DATABASE_FILENAME],
+            serveStaticOptions: {
+                cacheControl: true,
+                maxAge: 31536000
+            }
         }),
         MulterModule,
         TempModule,
@@ -31,5 +35,5 @@ import { PictureModule } from './picture/picture.module'
     providers: [],
 })
 export class ApplicationModule {
-    constructor(private readonly connection: Connection) {}
+    constructor(private readonly connection: Connection) { }
 }
