@@ -8,22 +8,22 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { Repository } from 'typeorm'
-import { CharacterCategoryEntity } from 'src/character/category/category.entity'
-import { CategoryService } from 'src/character/category/category.service'
-import { CharacterTagEntity } from './tag.entity'
-import { ICharacterTag } from 'src/interface/character/tag.interface'
+import { PictureCategoryEntity } from 'src/picture/category/category.entity'
+import { CategoryService } from 'src/picture/category/category.service'
+import { PictureTagEntity } from './tag.entity'
+import { IPictureTag } from 'src/interface/picture/tag.interface'
 import { mergeObjectToEntity } from 'src/shared/utilities'
 
 @Injectable()
 export class TagService {
     constructor(
-        @InjectRepository(CharacterTagEntity)
-        private readonly tagRepo: Repository<CharacterTagEntity>,
+        @InjectRepository(PictureTagEntity)
+        private readonly tagRepo: Repository<PictureTagEntity>,
         private readonly categoryService: CategoryService
     ) {}
 
-    public async find(query: ICharacterTag) {
-        const opts: { name?: string; category?: CharacterCategoryEntity } = {}
+    public async find(query: IPictureTag) {
+        const opts: { name?: string; category?: PictureCategoryEntity } = {}
 
         if (query.name) opts.name = query.name
 
@@ -57,8 +57,8 @@ export class TagService {
         })
     }
 
-    public async create(body: ICharacterTag) {
-        const tag = new CharacterTagEntity()
+    public async create(body: IPictureTag) {
+        const tag = new PictureTagEntity()
         mergeObjectToEntity(tag, body, ['categoryId'])
         if (body.categoryId)
             tag.category = await this.categoryService.findById(body.categoryId)
@@ -73,7 +73,7 @@ export class TagService {
         return this.tagRepo.save(tag)
     }
 
-    public async update(id: number, body: ICharacterTag) {
+    public async update(id: number, body: IPictureTag) {
         const tag = await this.findById(id)
         mergeObjectToEntity(tag, body, ['categoryId'])
         if (body.categoryId)
@@ -100,13 +100,13 @@ export class TagService {
     }
 
     public async tranformCategoryRelationByIds(ids: number[]) {
-        let tags: CharacterTagEntity[] = await this.tagRepo.findByIds(ids, {
+        let tags: PictureTagEntity[] = await this.tagRepo.findByIds(ids, {
             relations: ['category'],
         })
 
         const map: Record<
             number,
-            CharacterCategoryEntity & { tags: CharacterTagEntity[] }
+            PictureCategoryEntity & { tags: PictureTagEntity[] }
         > = {}
 
         tags.forEach((tag) => {

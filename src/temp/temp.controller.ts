@@ -1,9 +1,4 @@
-import {
-    Controller,
-    Post,
-    UploadedFile,
-    UseInterceptors,
-} from '@nestjs/common'
+import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import multer from 'multer'
@@ -19,25 +14,27 @@ const storage = multer.diskStorage({
         let exts = file.mimetype.split('/')
         let ext = exts[exts.length - 1]
         cb(null, `${Date.now()}.${++tempId}.${ext}`)
-    }
+    },
 })
 
 @ApiTags('temps')
 @Controller('temps')
 export class TempController {
-    constructor() { }
+    constructor() {}
 
     @Post()
-    @UseInterceptors(FileInterceptor('image', {
-        storage,
-        preservePath: true,
-    }))
+    @UseInterceptors(
+        FileInterceptor('image', {
+            storage,
+            preservePath: true,
+        })
+    )
     public async uploadImage(@UploadedFile() file: Express.Multer.File) {
         return {
             size: file.size,
             filename: file.filename,
             mimetype: file.mimetype,
-            originalname: file.originalname
+            originalname: file.originalname,
         }
     }
 }

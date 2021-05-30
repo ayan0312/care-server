@@ -7,30 +7,32 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import {
-    ICharacter,
-    ICharacterSearch,
-} from 'src/interface/character/character.interface'
+    IPicture,
+    IPictureSearch,
+} from 'src/interface/picture/picture.interface'
 import { config } from 'src/shared/config'
 import { patchURL, saveImage } from 'src/shared/image'
 import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
-import { CharacterEntity } from './character.entity'
+import { PictureEntity } from './picture.entity'
 import { GroupService } from './group/group.service'
 import { TagService } from './tag/tag.service'
+import { CharacterService } from 'src/character/character.service'
 
 @Injectable()
-export class CharacterService {
+export class PictureService {
     constructor(
-        @InjectRepository(CharacterEntity)
-        private readonly charRepo: Repository<CharacterEntity>,
+        @InjectRepository(PictureEntity)
+        private readonly picRepo: Repository<PictureEntity>,
         private readonly tagService: TagService,
+        private readonly charService: CharacterService,
         private readonly groupService: GroupService
     ) {}
 
     private _imageId = 0
 
     public async findById(id: number, relations: string[] = []) {
-        const result = await this.charRepo.findOne(
+        const result = await this.picRepo.findOne(
             id,
             relations
                 ? {
@@ -43,15 +45,15 @@ export class CharacterService {
     }
 
     public async findByIds(ids: number[]) {
-        return this.charRepo.findByIds(ids)
+        return this.picRepo.findByIds(ids)
     }
 
-    public async search(body: ICharacterSearch) {
+    public async search(body: IPictureSearch) {
         const { name = '', size = 20, page = 1 } = body
 
-        const qb = await this.charRepo
-            .createQueryBuilder('character')
-            .where('character.name like :name', { name: '%' + name + '%' })
+        const qb = await this.picRepo
+            .createQueryBuilder('picture')
+            .where('picture.name like :name', { name: '%' + name + '%' })
             .orderBy('created', 'DESC')
             .skip(size * (page - 1))
             .take(size)
@@ -60,9 +62,7 @@ export class CharacterService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: qb[0].map((entity) =>
-                patchURL(entity, ['avatar', 'fullLengthPicture'])
-            ),
+            rows: qb[0].map((entity) => patchURL(entity, ['picture'])),
             total: qb[1],
         }
     }
@@ -82,15 +82,12 @@ export class CharacterService {
         }
     }
 
-    private async _mergeBodyToEntity(
-        target: CharacterEntity,
-        body: ICharacter
-    ) {
+    private async _mergeBodyToEntity(target: PictureEntity, body: IPicture) {
         mergeObjectToEntity(target, body, [
             'tagIds',
-            'avatar',
+            'picture',
             'groupIds',
-            'fullLengthPicture',
+            'characterIds',
         ])
         if (body.tagIds)
             target.tags = await this.tagService.findByIds(parseIds(body.tagIds))
@@ -98,47 +95,44 @@ export class CharacterService {
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )
-        if (body.avatar)
-            target.avatar =
-                '/avatars/' +
+        if (body.picture)
+            target.picture =
+                '/pictures/' +
                 (await this._saveImage(
-                    config.STORAGE_PATH + 'avatars',
-                    body.avatar
+                    config.STORAGE_PATH + 'pictures',
+                    body.picture
                 ))
-        if (body.fullLengthPicture)
-            target.fullLengthPicture =
-                '/fullLengthPictures/' +
-                (await this._saveImage(
-                    config.STORAGE_PATH + 'fullLengthPictures',
-                    body.fullLengthPicture
-                ))
+        if (body.characterIds)
+            target.characters = await this.charService.findByIds(
+                parseIds(body.characterIds)
+            )
         return target
     }
 
-    public async create(body: ICharacter) {
-        const char = await this._mergeBodyToEntity(new CharacterEntity(), body)
+    public async create(body: IPicture) {
+        const pic = await this._mergeBodyToEntity(new PictureEntity(), body)
 
-        const errors = await validate(char)
+        const errors = await validate(pic)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        const newChar = await this.charRepo.save(char)
-        return await this.charRepo.findOne(newChar.id)
+        const newPic = await this.picRepo.save(pic)
+        return await this.picRepo.findOne(newPic.id)
     }
 
-    public async update(id: number, body: ICharacter) {
-        const char = await this.findById(id)
-        await this._mergeBodyToEntity(char, body)
+    public async update(id: number, body: IPicture) {
+        const pic = await this.findById(id)
+        await this._mergeBodyToEntity(pic, body)
 
-        const errors = await validate(char)
+        const errors = await validate(pic)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        return await this.charRepo.save(char)
+        return await this.picRepo.save(pic)
     }
 
     public async delete(id: number) {
         await this.findById(id)
-        return await this.charRepo.delete(id)
+        return await this.picRepo.delete(id)
     }
 }

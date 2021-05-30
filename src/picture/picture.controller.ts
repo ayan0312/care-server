@@ -15,23 +15,23 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
-    ICharacter,
-    ICharacterSearch,
-} from 'src/interface/character/character.interface'
+    IPicture,
+    IPictureSearch,
+} from 'src/interface/picture/picture.interface'
 import { ISettings } from 'src/interface/settings.interface'
 import { CategoryService } from './category/category.service'
-import { CharacterService } from './character.service'
+import { PictureService } from './picture.service'
 import { GroupService } from './group/group.service'
 import { TagService } from './tag/tag.service'
 
-@ApiTags('characters')
-@Controller('characters')
-export class CharacterController {
+@ApiTags('pictures')
+@Controller('pictures')
+export class PictureController {
     constructor(
         private readonly tagService: TagService,
         private readonly groupService: GroupService,
         private readonly categoryService: CategoryService,
-        private readonly charService: CharacterService
+        private readonly picService: PictureService
     ) {}
 
     @Post('settings')
@@ -57,8 +57,8 @@ export class CharacterController {
     }
 
     @Get()
-    public async find(@Query() body: ICharacterSearch) {
-        return await this.charService.search(body)
+    public async find(@Query() body: IPictureSearch) {
+        return await this.picService.search(body)
     }
 
     @Post()
@@ -67,8 +67,8 @@ export class CharacterController {
         status: HttpStatus.CREATED,
         description: 'create tag',
     })
-    public async create(@Body() body: ICharacter) {
-        return await this.charService.create(body)
+    public async create(@Body() body: IPicture) {
+        return await this.picService.create(body)
     }
 
     @Get(':id')
@@ -81,19 +81,19 @@ export class CharacterController {
         )
         relations: string[]
     ) {
-        return await this.charService.findById(id, relations)
+        return await this.picService.findById(id, relations)
     }
 
     @Patch(':id')
     public async updateById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body() body: ICharacter
+        @Body() body: IPicture
     ) {
-        return await this.charService.update(id, body)
+        return await this.picService.update(id, body)
     }
 
     @Delete(':id')
     public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.charService.delete(id)
+        return await this.picService.delete(id)
     }
 }

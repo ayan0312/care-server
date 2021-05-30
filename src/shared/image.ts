@@ -75,11 +75,16 @@ export async function saveImage(
     return metadata
 }
 
-export function patchURL<T extends Record<string, any>>(entity: T, keys: string[]) {
+export function patchURL<T extends Record<string, any>>(
+    entity: T,
+    keys: string[]
+) {
     if (keys.length === 0) return
-    Object.keys(entity).forEach(key => {
+    Object.keys(entity).forEach((key) => {
         if (keys.includes(key))
-            (entity as any)[key] = `http://localhost:${config.PORT}${entity[key]}`
+            (entity as any)[
+                key
+            ] = `http://localhost:${config.PORT}${entity[key]}`
     })
     return entity
 }

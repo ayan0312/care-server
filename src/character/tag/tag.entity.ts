@@ -9,6 +9,6 @@ export class CharacterTagEntity extends NameEntity {
     @ManyToOne((type) => CharacterCategoryEntity, (category) => category.tags)
     public category: CharacterCategoryEntity
 
-    @ManyToMany(type => CharacterEntity, character => character.tags)
+    @ManyToMany((type) => CharacterEntity, (character) => character.tags)
     public characters: CharacterEntity[]
 }

@@ -1,17 +1,16 @@
 import { IStarName } from '../name.interface'
 
-export interface ICharacter extends IStarName {
+export interface IPicture extends IStarName {
     intro?: string
     avatar?: string
     remark?: string
     tagIds?: string
+    picture: string
     groupIds?: string
-    relationships?: string[]
-    staicCategories?: string[]
-    fullLengthPicture?: string
+    characterIds?: string
 }
 
-export interface ICharacterSearch {
+export interface IPictureSearch {
     name?: string
     page?: number
     size?: number

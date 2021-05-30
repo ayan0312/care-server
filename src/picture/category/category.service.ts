@@ -9,13 +9,13 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { Repository } from 'typeorm'
 
-import { CharacterCategoryEntity } from './category.entity'
+import { PictureCategoryEntity } from './category.entity'
 
 @Injectable()
 export class CategoryService {
     constructor(
-        @InjectRepository(CharacterCategoryEntity)
-        private readonly categoryRepo: Repository<CharacterCategoryEntity>
+        @InjectRepository(PictureCategoryEntity)
+        private readonly categoryRepo: Repository<PictureCategoryEntity>
     ) {}
 
     public async find(name: string) {
@@ -45,7 +45,7 @@ export class CategoryService {
     }
 
     public async create(name: string) {
-        const category = new CharacterCategoryEntity()
+        const category = new PictureCategoryEntity()
         category.name = name
 
         const errors = await validate(category)

@@ -1,6 +1,6 @@
-import { IName, IStarName } from "./name.interface";
+import { IName, IStarName } from './name.interface'
 
-export interface ISettingsGroup extends Required<IStarName> { }
+export interface ISettingsGroup extends Required<IStarName> {}
 
 export interface ISettingsCategory extends Required<IName> {
     tags: string[]

@@ -1,5 +1,5 @@
 import { IName } from '../name.interface'
 
-export interface ICharacterTag extends IName {
+export interface IPictureTag extends IName {
     categoryId?: number
 }

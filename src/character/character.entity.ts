@@ -5,10 +5,11 @@ import { PictureEntity } from 'src/picture/picture.entity'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterGroupEntity } from './group/group.entity'
 import { CharacterTagEntity } from './tag/tag.entity'
+import { PictureGroupEntity } from 'src/picture/group/group.entity'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
-    @ManyToMany(type => CharacterTagEntity, tag => tag.characters)
+    @ManyToMany((type) => CharacterTagEntity, (tag) => tag.characters)
     @JoinTable()
     public tags: CharacterTagEntity[]
 
@@ -16,7 +17,7 @@ export class CharacterEntity extends StarNameEntity {
     @JoinTable()
     public groups: CharacterGroupEntity[]
 
-    @OneToMany((type) => PictureEntity, (picture) => picture.character)
+    @ManyToMany((type) => PictureEntity, (picture) => picture.characters)
     public pictures: PictureEntity[]
 
     @Column({ default: '' })

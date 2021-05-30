@@ -14,16 +14,16 @@ import {
     DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
-import { ICharacterTag } from 'src/interface/character/tag.interface'
+import { IPictureTag } from 'src/interface/picture/tag.interface'
 import { TagService } from './tag.service'
 
-@ApiTags('character_tags')
-@Controller('character/tags')
+@ApiTags('picture_tags')
+@Controller('picture/tags')
 export class TagController {
     constructor(private readonly tagService: TagService) {}
 
     @Get()
-    public async find(@Query() query: ICharacterTag) {
+    public async find(@Query() query: IPictureTag) {
         return await this.tagService.find(query)
     }
 
@@ -33,7 +33,7 @@ export class TagController {
         status: HttpStatus.CREATED,
         description: 'create tag',
     })
-    public async create(@Body() body: ICharacterTag) {
+    public async create(@Body() body: IPictureTag) {
         return await this.tagService.create(body)
     }
 
@@ -63,7 +63,7 @@ export class TagController {
     @Patch(':id')
     public async updateById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body() body: ICharacterTag
+        @Body() body: IPictureTag
     ) {
         return await this.tagService.update(id, body)
     }
