@@ -47,6 +47,11 @@ export class CharacterService {
         return this.charRepo.findByIds(ids)
     }
 
+    public async findCategoryRelationsById(id: number) {
+        const char = await this.findById(id, ['tags'])
+        return await this.tagService.tranformCategoryRelationByIds(char.tags.map(tag => tag.id))
+    }
+
     public async search(body: ICharacterSearch) {
         const { name = '', size = 20, page = 1 } = body
 
@@ -173,7 +178,7 @@ export class CharacterService {
     }
 
     public async delete(id: number) {
-        await this.findById(id)
-        return await this.charRepo.delete(id)
+        const char = await this.findById(id)
+        return await this.charRepo.remove(char)
     }
 }

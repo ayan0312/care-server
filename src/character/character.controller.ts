@@ -32,7 +32,7 @@ export class CharacterController {
         private readonly groupService: GroupService,
         private readonly categoryService: CategoryService,
         private readonly charService: CharacterService
-    ) {}
+    ) { }
 
     @Post('settings')
     public async uploadSettings(@Body() settings: ISettings) {
@@ -81,6 +81,8 @@ export class CharacterController {
         )
         relations: string[]
     ) {
+        if (relations.includes('category'))
+            return await this.charService.findCategoryRelationsById(id)
         return await this.charService.findById(id, relations)
     }
 
