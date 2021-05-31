@@ -1,3 +1,4 @@
+import fs from 'fs'
 import { NestFactory } from '@nestjs/core'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 
@@ -5,6 +6,7 @@ import { ApplicationModule } from './app.module'
 import { AllExceptionsFilter } from './shared/allExceptions.filter'
 import { config } from './shared/config'
 import { ResponseInterceptor } from './shared/response.interceptor'
+import { autoMkdirSync } from './shared/image'
 
 async function bootstrap() {
     const appOptions = { cors: true }
@@ -26,4 +28,27 @@ async function bootstrap() {
     await app.listen(config.PORT)
 }
 
-bootstrap()
+function autoMkdir() {
+    autoMkdirSync(config.STORAGE_PATH)
+    autoMkdirSync(config.TEMP_PATH)
+    autoMkdirSync(config.BACKUPS_PATH)
+    autoMkdirSync(config.AVATARS_PATH)
+    autoMkdirSync(config.AVATARS_PATH + '/200')
+    autoMkdirSync(config.PICTURES_PATH)
+    autoMkdirSync(config.PICTURES_PATH + '/300')
+    autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH)
+    autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH + '/300')
+}
+
+function backups() {
+    if (fs.statSync(config.DATABASE_FILENAME))
+        fs.copyFileSync(config.DATABASE_FILENAME, `${config.BACKUPS_PATH}/${Date.now()}.db`)
+}
+
+function main() {
+    autoMkdir()
+    backups()
+    bootstrap()
+}
+
+main()

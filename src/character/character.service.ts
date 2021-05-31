@@ -10,6 +10,7 @@ import { validate } from 'class-validator'
 import {
     ICharacter,
     ICharacterSearch,
+    ICharacterSearchCondition,
 } from 'src/interface/character/character.interface'
 import { config } from 'src/shared/config'
 import { patchURL, saveImage } from 'src/shared/image'
@@ -52,13 +53,40 @@ export class CharacterService {
         return await this.tagService.tranformCategoryRelationByIds(char.tags.map(tag => tag.id))
     }
 
-    public async search(body: ICharacterSearch) {
-        const { name = '', size = 20, page = 1 } = body
-
-        const qb = await this.charRepo
+    private _createConditionQB(condition: ICharacterSearchCondition) {
+        let qb = this.charRepo
             .createQueryBuilder('character')
-            .where('character.name like :name', { name: '%' + name + '%' })
-            .orderBy('created', 'DESC')
+            .where('character.name like :name', { name: `%${condition.name ? condition.name : ''}%` })
+
+        if (condition.tagIds != null)
+            qb = qb
+                .leftJoin('character.tags', 'tag')
+                .andWhere('tag.id IN (:...tagIds)', { tagIds: condition.tagIds.split(',') })
+        if (condition.groupIds != null)
+            qb = qb
+                .leftJoin('character.groups', 'group')
+                .andWhere('group.id IN (:...groupIds)', { groupIds: condition.groupIds.split(',') })
+        if (condition.star != null)
+            qb = qb.andWhere('character.star = :star', { star: !!condition.star })
+        if (condition.intro != null)
+            qb = qb.andWhere('character.intro like :intro', { intro: `%${condition.intro}%` })
+        if (condition.remark != null)
+            qb = qb.andWhere('character.remark like :remark', { remark: `%${condition.remark}%` })
+        if (condition.rating != null)
+            qb = qb.andWhere('character.rating = :rating', { rating: condition.rating })
+
+        return qb
+    }
+
+    public async search(body: ICharacterSearch) {
+        const { condition = { name: '' }, orderBy = { sort: 'created', order: 'DESC' }, size = 20, page = 1 } = body
+
+        let qb = this._createConditionQB(condition)
+        if (orderBy != null)
+            qb = qb
+                .orderBy(`character.${orderBy.sort}`, orderBy.order)
+
+        const data = await qb
             .skip(size * (page - 1))
             .take(size)
             .getManyAndCount()
@@ -66,7 +94,7 @@ export class CharacterService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: qb[0].map((entity) => {
+            rows: data[0].map((entity) => {
                 patchURL(entity, ['avatar', 'fullLengthPicture'])
                 return Object.assign({}, entity, {
                     ['xsmall']: {
@@ -75,7 +103,7 @@ export class CharacterService {
                     }
                 })
             }),
-            total: qb[1],
+            total: data[1],
         }
     }
 

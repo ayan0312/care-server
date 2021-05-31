@@ -15,8 +15,7 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
-    ICharacter,
-    ICharacterSearch,
+    ICharacter
 } from 'src/interface/character/character.interface'
 import { ISettings } from 'src/interface/settings.interface'
 import { CategoryService } from './category/category.service'
@@ -57,8 +56,8 @@ export class CharacterController {
     }
 
     @Get()
-    public async find(@Query() body: ICharacterSearch) {
-        return await this.charService.search(body)
+    public async find(@Query('options') options: string) {
+        return await this.charService.search(JSON.parse(options))
     }
 
     @Post()

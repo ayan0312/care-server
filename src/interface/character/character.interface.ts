@@ -1,4 +1,5 @@
 import { IStarName } from '../name.interface'
+import { ISearch } from '../search.interface';
 
 export interface ICharacter extends IStarName {
     intro?: string
@@ -11,8 +12,13 @@ export interface ICharacter extends IStarName {
     fullLengthPicture?: string
 }
 
-export interface ICharacterSearch {
-    name?: string
-    page?: number
-    size?: number
+export interface ICharacterSearchCondition extends IStarName {
+    intro?: string
+    remark?: string
+    tagIds?: string
+    groupIds?: string
 }
+
+export interface ICharacterSearch extends ISearch<ICharacterSearchCondition> { }
+
+

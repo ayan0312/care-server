@@ -5,7 +5,6 @@ import { PictureEntity } from 'src/picture/picture.entity'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterGroupEntity } from './group/group.entity'
 import { CharacterTagEntity } from './tag/tag.entity'
-import { PictureGroupEntity } from 'src/picture/group/group.entity'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
@@ -40,7 +39,7 @@ export class CharacterEntity extends StarNameEntity {
     public relationships: string[] = []
 
     @Column('simple-array')
-    public staicCategories: string[] = []
+    public staticCategories: string[] = []
 
     @Column({ default: '' })
     @Length(0, 100)

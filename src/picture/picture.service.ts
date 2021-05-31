@@ -10,11 +10,12 @@ import { validate } from 'class-validator'
 import {
     IPicture,
     IPictureSearch,
+    IPictureSearchCondition,
 } from 'src/interface/picture/picture.interface'
 import { config } from 'src/shared/config'
 import { patchURL, saveImage } from 'src/shared/image'
 import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
-import { Repository } from 'typeorm'
+import { Repository, SelectQueryBuilder } from 'typeorm'
 import { PictureEntity } from './picture.entity'
 import { GroupService } from './group/group.service'
 import { TagService } from './tag/tag.service'
@@ -49,13 +50,53 @@ export class PictureService {
         return this.picRepo.findByIds(ids)
     }
 
-    public async search(body: IPictureSearch) {
-        const { name = '', size = 20, page = 1 } = body
-
-        const qb = await this.picRepo
+    private async _createConditionQB(condition: IPictureSearchCondition) {
+        let qb = this.picRepo
             .createQueryBuilder('picture')
-            .where('picture.name like :name', { name: '%' + name + '%' })
-            .orderBy('created', 'DESC')
+            .where('picture.name like :name', { name: `%${condition.name ? condition.name : ''}%` })
+
+        if (condition.star != null)
+            qb = qb.andWhere('picture.star = :star', { star: !!condition.star })
+        if (condition.intro != null)
+            qb = qb.andWhere('picture.intro like :intro', { intro: `%${condition.intro}%` })
+        if (condition.remark != null)
+            qb = qb.andWhere('picture.remark like :remark', { remark: `%${condition.remark}%` })
+        if (condition.rating != null)
+            qb = qb.andWhere('picture.rating = :rating', { rating: condition.rating })
+        if (condition.tagIds != null)
+            qb = qb.leftJoinAndSelect(
+                'picture.tags',
+                'tag',
+                'tag.id IN (:...tagIds)',
+                { tagIds: condition.tagIds.split(',') }
+            )
+        if (condition.groupIds != null)
+            qb = qb.leftJoinAndSelect(
+                'picture.groups',
+                'group',
+                'group.id IN (:...groupIds)',
+                { groupIds: condition.groupIds.split(',') }
+            )
+        if (condition.characterIds != null)
+            qb = qb.leftJoinAndSelect(
+                'picture.characters',
+                'character',
+                'character.id IN (:...characterIds)',
+                { characterIds: condition.characterIds.split(',') }
+            )
+        return qb
+    }
+
+    public async search(body: IPictureSearch) {
+        const { condition = { name: '' }, orderBy = { sort: 'created', order: 'DESC' }, size = 20, page = 1 } = body
+
+        let qb = await this._createConditionQB(condition)
+
+        if (orderBy != null)
+            qb = qb
+                .orderBy(orderBy.sort, orderBy.order)
+
+        const data = await qb
             .skip(size * (page - 1))
             .take(size)
             .getManyAndCount()
@@ -63,7 +104,7 @@ export class PictureService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: qb[0].map((entity) => {
+            rows: data[0].map((entity) => {
                 patchURL(entity, ['pictures'])
                 return Object.assign({}, entity, {
                     ['xsmall']: {
@@ -71,7 +112,7 @@ export class PictureService {
                     }
                 })
             }),
-            total: qb[1],
+            total: data[1],
         }
     }
 
@@ -154,7 +195,7 @@ export class PictureService {
     }
 
     public async delete(id: number) {
-        await this.findById(id)
-        return await this.picRepo.delete(id)
+        const pic = await this.findById(id)
+        return await this.picRepo.remove(pic)
     }
 }
