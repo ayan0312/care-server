@@ -55,6 +55,22 @@ export class PictureService {
             .createQueryBuilder('picture')
             .where('picture.name like :name', { name: `%${condition.name ? condition.name : ''}%` })
 
+        if (condition.tagIds != null)
+            qb = qb
+                .leftJoin('picture.tags', 'tag')
+                .andWhere('tag.id IN (:...tagIds)', { tagIds: condition.tagIds.split(',') })
+        if (condition.groupIds != null)
+            qb = qb
+                .leftJoin('picture.groups', 'group')
+                .andWhere('group.id IN (:...groupIds)',
+                    { groupIds: condition.groupIds.split(',') })
+        if (condition.characterIds != null)
+            qb = qb
+                .leftJoin('picture.characters', 'character')
+                .andWhere(
+                    'character.id IN (:...characterIds)',
+                    { characterIds: condition.characterIds.split(',') }
+                )
         if (condition.star != null)
             qb = qb.andWhere('picture.star = :star', { star: !!condition.star })
         if (condition.intro != null)
@@ -63,27 +79,7 @@ export class PictureService {
             qb = qb.andWhere('picture.remark like :remark', { remark: `%${condition.remark}%` })
         if (condition.rating != null)
             qb = qb.andWhere('picture.rating = :rating', { rating: condition.rating })
-        if (condition.tagIds != null)
-            qb = qb.leftJoinAndSelect(
-                'picture.tags',
-                'tag',
-                'tag.id IN (:...tagIds)',
-                { tagIds: condition.tagIds.split(',') }
-            )
-        if (condition.groupIds != null)
-            qb = qb.leftJoinAndSelect(
-                'picture.groups',
-                'group',
-                'group.id IN (:...groupIds)',
-                { groupIds: condition.groupIds.split(',') }
-            )
-        if (condition.characterIds != null)
-            qb = qb.leftJoinAndSelect(
-                'picture.characters',
-                'character',
-                'character.id IN (:...characterIds)',
-                { characterIds: condition.characterIds.split(',') }
-            )
+
         return qb
     }
 
@@ -94,7 +90,7 @@ export class PictureService {
 
         if (orderBy != null)
             qb = qb
-                .orderBy(orderBy.sort, orderBy.order)
+                .orderBy(`picture.${orderBy.sort}`, orderBy.order)
 
         const data = await qb
             .skip(size * (page - 1))

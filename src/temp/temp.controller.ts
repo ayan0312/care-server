@@ -3,6 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import multer from 'multer'
 import { config } from 'src/shared/config'
+import { patchURL } from 'src/shared/image'
 
 let tempId = 0
 
@@ -20,7 +21,7 @@ const storage = multer.diskStorage({
 @ApiTags('temps')
 @Controller('temps')
 export class TempController {
-    constructor() {}
+    constructor() { }
 
     @Post()
     @UseInterceptors(
@@ -30,11 +31,12 @@ export class TempController {
         })
     )
     public async uploadImage(@UploadedFile() file: Express.Multer.File) {
-        return {
+        return patchURL({
             size: file.size,
+            preview: `/temps/${file.filename}`,
             filename: file.filename,
             mimetype: file.mimetype,
             originalname: file.originalname,
-        }
+        }, ['preview'])
     }
 }
