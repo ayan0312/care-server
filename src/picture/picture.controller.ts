@@ -32,7 +32,7 @@ export class PictureController {
         private readonly groupService: GroupService,
         private readonly categoryService: CategoryService,
         private readonly picService: PictureService
-    ) {}
+    ) { }
 
     @Post('settings')
     public async uploadSettings(@Body() settings: ISettings) {
@@ -57,8 +57,8 @@ export class PictureController {
     }
 
     @Get()
-    public async find(@Query() body: IPictureSearch) {
-        return await this.picService.search(body)
+    public async find(@Query('options') options: string) {
+        return await this.picService.search(JSON.parse(options))
     }
 
     @Post()

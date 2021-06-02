@@ -14,8 +14,8 @@ import {
 } from 'src/interface/picture/picture.interface'
 import { config } from 'src/shared/config'
 import { patchURL, saveImage } from 'src/shared/image'
-import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
-import { Repository, SelectQueryBuilder } from 'typeorm'
+import { formatDate, mergeObjectToEntity, parseIds } from 'src/shared/utilities'
+import { Repository } from 'typeorm'
 import { PictureEntity } from './picture.entity'
 import { GroupService } from './group/group.service'
 import { TagService } from './tag/tag.service'
@@ -31,6 +31,7 @@ export class PictureService {
         private readonly groupService: GroupService
     ) { }
 
+    private _nameId = 0
     private _imageId = 0
 
     public async findById(id: number, relations: string[] = []) {
@@ -101,10 +102,10 @@ export class PictureService {
             page: Number(page),
             size: Number(size),
             rows: data[0].map((entity) => {
-                patchURL(entity, ['pictures'])
+                patchURL(entity, ['picture'])
                 return Object.assign({}, entity, {
-                    ['xsmall']: {
-                        avatar: entity.picture.replace('pictures', 'pictures/300'),
+                    xsmall: {
+                        picture: entity.picture.replace('pictures', 'pictures/300'),
                     }
                 })
             }),
@@ -165,10 +166,14 @@ export class PictureService {
             target.characters = await this.charService.findByIds(
                 parseIds(body.characterIds)
             )
+
         return target
     }
 
     public async create(body: IPicture) {
+        if (!body.name)
+            body.name = `${formatDate('y-M-d H:m:s', new Date())}-${this._nameId++}`
+
         const pic = await this._mergeBodyToEntity(new PictureEntity(), body)
 
         const errors = await validate(pic)

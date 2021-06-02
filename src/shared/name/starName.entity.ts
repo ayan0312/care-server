@@ -6,9 +6,9 @@ import { NameEntity } from './name.entity'
 @Entity()
 export abstract class StarNameEntity extends NameEntity {
     @Column('boolean', { default: false })
-    public star: boolean
+    public star: boolean = false
 
-    @Column()
+    @Column({ default: 0 })
     @IsInt()
     @Min(0)
     @Max(10)

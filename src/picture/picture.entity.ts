@@ -10,11 +10,11 @@ import { CharacterEntity } from 'src/character/character.entity'
 export class PictureEntity extends StarNameEntity {
     @Column({ default: '' })
     @Length(0, 1000)
-    public intro: string
+    public intro: string = ''
 
     @Column({ default: '' })
     @Length(0, 255)
-    public remark: string
+    public remark: string = ''
 
     @ManyToMany((type) => PictureTagEntity, (tag) => tag.pictures)
     @JoinTable()

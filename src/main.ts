@@ -40,14 +40,8 @@ function autoMkdir() {
     autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH + '/300')
 }
 
-function backups() {
-    if (fs.statSync(config.DATABASE_FILENAME))
-        fs.copyFileSync(config.DATABASE_FILENAME, `${config.BACKUPS_PATH}/${Date.now()}.db`)
-}
-
 function main() {
     autoMkdir()
-    backups()
     bootstrap()
 }
 

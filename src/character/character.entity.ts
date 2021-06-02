@@ -36,9 +36,6 @@ export class CharacterEntity extends StarNameEntity {
     public remark: string = ''
 
     @Column('simple-array')
-    public relationships: string[] = []
-
-    @Column('simple-array')
     public staticCategories: string[] = []
 
     @Column({ default: '' })
