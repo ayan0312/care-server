@@ -4,6 +4,7 @@ import {
     HttpStatus,
     Injectable,
     NotFoundException,
+    UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
@@ -13,6 +14,7 @@ import { CategoryService } from 'src/picture/category/category.service'
 import { PictureTagEntity } from './tag.entity'
 import { IPictureTag } from 'src/interface/picture/tag.interface'
 import { mergeObjectToEntity } from 'src/shared/utilities'
+import { PictureEntity } from '../picture.entity'
 
 @Injectable()
 export class TagService {
@@ -20,7 +22,7 @@ export class TagService {
         @InjectRepository(PictureTagEntity)
         private readonly tagRepo: Repository<PictureTagEntity>,
         private readonly categoryService: CategoryService
-    ) {}
+    ) { }
 
     public async find(query: IPictureTag) {
         const opts: { name?: string; category?: PictureCategoryEntity } = {}
@@ -90,8 +92,16 @@ export class TagService {
     }
 
     public async delete(id: number) {
-        await this.findById(id)
-        return await this.tagRepo.delete(id)
+        const tag = await this.findById(id)
+        const result = await this.tagRepo
+            .createQueryBuilder()
+            .relation('pictures')
+            .of(tag)
+            .loadOne<PictureEntity>()
+
+        if (result)
+            throw new UnprocessableEntityException()
+        return await this.tagRepo.remove(tag)
     }
 
     public async hasName(name: string) {

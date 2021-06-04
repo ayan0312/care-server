@@ -4,10 +4,12 @@ import {
     HttpStatus,
     Injectable,
     NotFoundException,
+    UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { Repository } from 'typeorm'
+import { PictureTagEntity } from '../tag/tag.entity'
 
 import { PictureCategoryEntity } from './category.entity'
 
@@ -69,8 +71,16 @@ export class CategoryService {
     }
 
     public async delete(id: number) {
-        await this.findById(id)
-        return await this.categoryRepo.delete(id)
+        const category = await this.findById(id)
+        const result = await this.categoryRepo
+            .createQueryBuilder()
+            .relation('tags')
+            .of(category)
+            .loadOne<PictureTagEntity>()
+
+        if (result)
+            throw new UnprocessableEntityException()
+        return await this.categoryRepo.remove(category)
     }
 
     public async hasName(name: string) {

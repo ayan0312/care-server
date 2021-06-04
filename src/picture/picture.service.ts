@@ -13,7 +13,7 @@ import {
     IPictureSearchCondition,
 } from 'src/interface/picture/picture.interface'
 import { config } from 'src/shared/config'
-import { patchURL, saveImage } from 'src/shared/image'
+import { ImageMetadata, patchURL, saveImage } from 'src/shared/image'
 import { formatDate, mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { PictureEntity } from './picture.entity'
@@ -128,6 +128,18 @@ export class PictureService {
         }
     }
 
+    private async _savePicture300(metadata: ImageMetadata) {
+        return new Promise((resolve, reject) => {
+            gm(metadata.filename)
+                .resize(300)
+                .write(`${metadata.path}/300/${metadata.name}`, (err) => {
+                    if (err)
+                        console.error(err)
+                    resolve(undefined)
+                })
+        })
+    }
+
     private async _savePicture(tempFilename: string) {
         const metadata = await this._saveImage(
             config.STORAGE_PATH + 'pictures',
@@ -137,12 +149,7 @@ export class PictureService {
         if (metadata === null)
             return '/pictures/package.png'
 
-        gm(metadata.filename)
-            .resize(300)
-            .write(`${metadata.path}/300/${metadata.name}`, (err) => {
-                if (err)
-                    console.error(err)
-            })
+        await this._savePicture300(metadata)
 
         return '/pictures/' + metadata.name
     }

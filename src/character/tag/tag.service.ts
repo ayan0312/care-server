@@ -4,6 +4,7 @@ import {
     HttpStatus,
     Injectable,
     NotFoundException,
+    UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
@@ -13,6 +14,7 @@ import { CategoryService } from 'src/character/category/category.service'
 import { CharacterTagEntity } from './tag.entity'
 import { ICharacterTag } from 'src/interface/character/tag.interface'
 import { mergeObjectToEntity } from 'src/shared/utilities'
+import { CharacterEntity } from '../character.entity'
 
 @Injectable()
 export class TagService {
@@ -20,7 +22,7 @@ export class TagService {
         @InjectRepository(CharacterTagEntity)
         private readonly tagRepo: Repository<CharacterTagEntity>,
         private readonly categoryService: CategoryService
-    ) {}
+    ) { }
 
     public async find(query: ICharacterTag) {
         const opts: { name?: string; category?: CharacterCategoryEntity } = {}
@@ -90,8 +92,16 @@ export class TagService {
     }
 
     public async delete(id: number) {
-        await this.findById(id)
-        return await this.tagRepo.delete(id)
+        const tag = await this.findById(id)
+        const result = await this.tagRepo
+            .createQueryBuilder()
+            .relation('characters')
+            .of(tag)
+            .loadOne<CharacterEntity>()
+
+        if (result)
+            throw new UnprocessableEntityException()
+        return await this.tagRepo.remove(tag)
     }
 
     public async hasName(name: string) {

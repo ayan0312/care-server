@@ -13,7 +13,7 @@ import {
     ICharacterSearchCondition,
 } from 'src/interface/character/character.interface'
 import { config } from 'src/shared/config'
-import { patchURL, saveImage } from 'src/shared/image'
+import { ImageMetadata, patchURL, saveImage } from 'src/shared/image'
 import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { CharacterEntity } from './character.entity'
@@ -122,6 +122,18 @@ export class CharacterService {
         }
     }
 
+    private async _saveAvatar200(metadata: ImageMetadata) {
+        return new Promise((resolve, reject) => {
+            gm(metadata.filename)
+                .resize(200, 200, '!')
+                .write(`${metadata.path}/200/${metadata.name}`, (err) => {
+                    if (err)
+                        console.error(err)
+                    resolve(undefined)
+                })
+        })
+    }
+
     private async _saveAvatar(tempFilename: string) {
         const metadata = await this._saveImage(
             config.STORAGE_PATH + 'avatars',
@@ -131,14 +143,21 @@ export class CharacterService {
         if (metadata === null)
             return '/avatars/package.png'
 
-        gm(metadata.filename)
-            .resize(200, 200, '!')
-            .write(`${metadata.path}/200/${metadata.name}`, (err) => {
-                if (err)
-                    console.error(err)
-            })
+        await this._saveAvatar200(metadata)
 
         return '/avatars/' + metadata.name
+    }
+
+    private async _saveFullLengthPicture300(metadata: ImageMetadata) {
+        return new Promise((resolve, reject) => {
+            gm(metadata.filename)
+                .resize(300)
+                .write(`${metadata.path}/300/${metadata.name}`, (err) => {
+                    if (err)
+                        console.error(err)
+                    resolve(undefined)
+                })
+        })
     }
 
     private async _saveFullLengthPicture(tempFilename: string) {
@@ -150,12 +169,7 @@ export class CharacterService {
         if (metadata === null)
             return '/fullLengthPictures/package.png'
 
-        gm(metadata.filename)
-            .resize(300)
-            .write(`${metadata.path}/300/${metadata.name}`, (err) => {
-                if (err)
-                    console.error(err)
-            })
+        await this._saveFullLengthPicture300(metadata)
 
         return '/fullLengthPictures/' + metadata.name
     }

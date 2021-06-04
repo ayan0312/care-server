@@ -23,7 +23,7 @@ import { PictureModule } from './picture/picture.module'
             exclude: [config.DATABASE_FILENAME],
             serveStaticOptions: {
                 cacheControl: true,
-                maxAge: 31536000
+                maxAge: 60 * 60 * 24 * 365
             }
         }),
         MulterModule,
