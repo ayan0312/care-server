@@ -3,18 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { PictureEntity } from './picture.entity'
 import { PictureService } from './picture.service'
 import { PictureController } from './picture.controller'
-import { TagModule } from './tag/tag.module'
 import { GroupModule } from './group/group.module'
-import { CategoryModule } from './category/category.module'
 import { CharacterModule } from 'src/character/character.module'
+import { TagModule } from 'src/tag/tag.module'
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([PictureEntity]),
-        CharacterModule,
-        CategoryModule,
-        GroupModule,
         TagModule,
+        GroupModule,
+        CharacterModule,
     ],
     providers: [PictureService],
     controllers: [PictureController],

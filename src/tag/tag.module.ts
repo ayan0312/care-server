@@ -1,13 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
-import { PictureTagEntity } from './tag.entity'
+import { TagEntity } from './tag.entity'
 import { TagService } from './tag.service'
 import { TagController } from './tag.controller'
-import { CategoryModule } from 'src/picture/category/category.module'
+import { CategoryModule } from '../category/category.module'
 
 @Module({
-    imports: [TypeOrmModule.forFeature([PictureTagEntity]), CategoryModule],
+    imports: [TypeOrmModule.forFeature([TagEntity]), CategoryModule],
     providers: [TagService],
     controllers: [TagController],
     exports: [TagService],

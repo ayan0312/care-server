@@ -9,6 +9,8 @@ import { config } from './shared/config'
 import { TempModule } from './temp/temp.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { PictureModule } from './picture/picture.module'
+import { CategoryModule } from './category/category.module'
+import { TagModule } from './tag/tag.module'
 
 @Module({
     imports: [
@@ -27,8 +29,10 @@ import { PictureModule } from './picture/picture.module'
             }
         }),
         MulterModule,
+        TagModule,
         TempModule,
         PictureModule,
+        CategoryModule,
         CharacterModule,
     ],
     controllers: [AppController],

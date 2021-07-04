@@ -1,9 +1,9 @@
-import { IName, IStarName } from './name.interface'
-
-export interface ISettingsGroup extends Required<IStarName> {}
+import { IName } from './name.interface'
+import { CategoryType } from './category.interface';
 
 export interface ISettingsCategory extends Required<IName> {
     tags: string[]
+    type: CategoryType
 }
 
 export interface ISettingsStaticCategory extends Required<IName> {
@@ -16,7 +16,6 @@ export interface ISettingsRelationship extends Required<IName> {
 }
 
 export interface ISettings {
-    groups?: ISettingsGroup[]
     categories?: ISettingsCategory[]
     relationships?: ISettingsRelationship[]
     staticCategories?: ISettingsStaticCategory[]

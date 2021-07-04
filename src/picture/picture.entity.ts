@@ -3,8 +3,8 @@ import { Column, Entity, JoinTable, ManyToMany } from 'typeorm'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { PictureGroupEntity } from './group/group.entity'
 import { Length } from 'class-validator'
-import { PictureTagEntity } from './tag/tag.entity'
 import { CharacterEntity } from 'src/character/character.entity'
+import { CharacterPictureSetEntity } from 'src/character/pictureSet/pictureSet.entity'
 
 @Entity('picture')
 export class PictureEntity extends StarNameEntity {
@@ -16,9 +16,12 @@ export class PictureEntity extends StarNameEntity {
     @Length(0, 255)
     public remark: string = ''
 
-    @ManyToMany((type) => PictureTagEntity, (tag) => tag.pictures)
-    @JoinTable()
-    public tags: PictureTagEntity[]
+    @Column({ type: 'varchar', default: '' })
+    public tagIds: string = ''
+
+    @Column({ default: '' })
+    @Length(0, 100)
+    public picture: string = ''
 
     @ManyToMany((type) => PictureGroupEntity, (group) => group.pictures)
     public groups: PictureGroupEntity[]
@@ -27,6 +30,6 @@ export class PictureEntity extends StarNameEntity {
     @JoinTable()
     public characters: CharacterEntity[]
 
-    @Column()
-    public picture: string
+    @ManyToMany((type) => CharacterPictureSetEntity, (pictureSet) => pictureSet.pictures)
+    public pictureSets: CharacterPictureSetEntity[]
 }

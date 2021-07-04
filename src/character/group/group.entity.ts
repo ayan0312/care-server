@@ -1,5 +1,4 @@
 import { Entity, ManyToMany } from 'typeorm'
-
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterEntity } from 'src/character/character.entity'
 

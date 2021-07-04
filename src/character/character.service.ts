@@ -18,7 +18,8 @@ import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { CharacterEntity } from './character.entity'
 import { GroupService } from './group/group.service'
-import { TagService } from './tag/tag.service'
+import { TagService } from 'src/tag/tag.service'
+import { CategoryType } from 'src/interface/category.interface'
 
 @Injectable()
 export class CharacterService {
@@ -49,8 +50,8 @@ export class CharacterService {
     }
 
     public async findCategoryRelationsById(id: number) {
-        const char = await this.findById(id, ['tags'])
-        return await this.tagService.tranformCategoryRelationByIds(char.tags.map(tag => tag.id))
+        const char = await this.findById(id)
+        return await this.tagService.tranformCategoryRelationByIds(parseIds(char.tagIds))
     }
 
     private _createConditionQB(condition: ICharacterSearchCondition) {
@@ -184,8 +185,8 @@ export class CharacterService {
             'groupIds',
             'fullLengthPicture',
         ])
-        if (body.tagIds)
-            target.tags = await this.tagService.findByIds(parseIds(body.tagIds))
+        if (body.tagIds) 
+            target.tagIds = (await this.tagService.matchTagIds(parseIds(body.tagIds), CategoryType.character)).join(',')
         if (body.groupIds)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)

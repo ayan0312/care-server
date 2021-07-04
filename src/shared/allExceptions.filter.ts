@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common'
 import { Response } from 'express'
 
-import { ErrorCodes, getErrorMessage } from './errorCodes'
+import { ErrorCodeException, ErrorCodes, getErrorMessage } from './errorCodes'
+import { isPlainObject } from './utilities'
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -23,8 +24,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         if (exception instanceof HttpException) {
             statusCode = exception.getStatus()
             const res: any = exception.getResponse()
+
             if (typeof res === 'string') message = res
-            else if (res) {
+            else if (typeof res === 'number') message = String(res)
+            else if (isPlainObject(res) as any) {
                 if (Array.isArray(res.errors) && res.errors.length > 0) {
                     message = 'Input data validation failed'
                     errors = res.errors.map((err: any) => {
@@ -33,6 +36,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
                 }
                 if (typeof res.message === 'string') message = res.message
             }
+
+            if (exception instanceof ErrorCodeException)
+                errorCode = res.code
         }
 
         response.status(statusCode).json({

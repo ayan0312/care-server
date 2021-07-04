@@ -18,8 +18,9 @@ import { formatDate, mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { PictureEntity } from './picture.entity'
 import { GroupService } from './group/group.service'
-import { TagService } from './tag/tag.service'
 import { CharacterService } from 'src/character/character.service'
+import { TagService } from 'src/tag/tag.service'
+import { CategoryType } from 'src/interface/category.interface'
 
 @Injectable()
 export class PictureService {
@@ -162,7 +163,7 @@ export class PictureService {
             'characterIds',
         ])
         if (body.tagIds)
-            target.tags = await this.tagService.findByIds(parseIds(body.tagIds))
+            target.tagIds = (await this.tagService.matchTagIds(parseIds(body.tagIds), CategoryType.picture)).join(',')
         if (body.groupIds)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)

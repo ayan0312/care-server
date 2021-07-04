@@ -3,16 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { CharacterEntity } from './character.entity'
 import { CharacterService } from './character.service'
 import { CharacterController } from './character.controller'
-import { TagModule } from './tag/tag.module'
+import { TagModule } from 'src/tag/tag.module'
 import { GroupModule } from './group/group.module'
-import { CategoryModule } from './category/category.module'
+import { PictureSetModule } from './pictureSet/pictureSet.module'
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([CharacterEntity]),
-        CategoryModule,
-        GroupModule,
         TagModule,
+        GroupModule,
+        PictureSetModule
     ],
     providers: [CharacterService],
     controllers: [CharacterController],

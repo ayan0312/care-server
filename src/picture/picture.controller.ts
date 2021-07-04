@@ -16,45 +16,15 @@ import {
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
     IPicture,
-    IPictureSearch,
 } from 'src/interface/picture/picture.interface'
-import { ISettings } from 'src/interface/settings.interface'
-import { CategoryService } from './category/category.service'
 import { PictureService } from './picture.service'
-import { GroupService } from './group/group.service'
-import { TagService } from './tag/tag.service'
 
 @ApiTags('pictures')
 @Controller('pictures')
 export class PictureController {
     constructor(
-        private readonly tagService: TagService,
-        private readonly groupService: GroupService,
-        private readonly categoryService: CategoryService,
-        private readonly picService: PictureService
+        private readonly picService: PictureService,
     ) { }
-
-    @Post('settings')
-    public async uploadSettings(@Body() settings: ISettings) {
-        // groups
-        if (settings.groups && settings.groups.length > 0)
-            for (let i in settings.groups)
-                await this.groupService.create(settings.groups[i])
-
-        // categories
-        if (settings.categories && settings.categories.length > 0) {
-            for (let i in settings.categories) {
-                const { name, tags } = settings.categories[i]
-                const category = await this.categoryService.create(name)
-                for (let j in tags) {
-                    this.tagService.create({
-                        name: tags[j],
-                        categoryId: category.id,
-                    })
-                }
-            }
-        }
-    }
 
     @Get()
     public async find(@Query('options') options: string) {

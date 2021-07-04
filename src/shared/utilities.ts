@@ -18,6 +18,11 @@ export const mergeObjectToEntity = <
     })
 }
 
+export const toTypeString = (value: unknown): string =>
+    Object.prototype.toString.call(value)
+export const isPlainObject = (val: unknown): val is object =>
+    toTypeString(val) === '[object Object]'
+
 export const isNumber = (val: unknown): val is number =>
     typeof val === 'number' && !isNaN(val)
 

@@ -84,7 +84,7 @@ export function patchURL<T extends Record<string, any>>(
         if (keys.includes(key))
             (entity as any)[
                 key
-            ] = `http://localhost:${config.PORT}${entity[key]}`
+            ] = entity[key] ? `http://${config.IP}:${config.PORT}${entity[key]}` : ''
     })
     return entity
 }

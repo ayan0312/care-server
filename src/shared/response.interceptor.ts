@@ -8,7 +8,10 @@ import { map } from 'rxjs/operators'
 import { Observable } from 'rxjs'
 
 interface Response<T> {
-    result: T
+    result: T | {
+        rows: T,
+        count: number
+    }
 }
 
 @Injectable()
@@ -21,7 +24,10 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
             map((result) => {
                 return {
                     code: 0,
-                    result: result,
+                    result: Array.isArray(result) ? {
+                        rows: result,
+                        count: result.length
+                    } : result,
                     success: true,
                     message: 'request success',
                 }

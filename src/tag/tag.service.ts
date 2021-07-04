@@ -9,23 +9,23 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { Repository } from 'typeorm'
-import { CharacterCategoryEntity } from 'src/character/category/category.entity'
-import { CategoryService } from 'src/character/category/category.service'
-import { CharacterTagEntity } from './tag.entity'
-import { ICharacterTag } from 'src/interface/character/tag.interface'
+import { TagEntity } from './tag.entity'
+import { CategoryEntity } from 'src/category/category.entity'
+import { CategoryService } from 'src/category/category.service'
 import { mergeObjectToEntity } from 'src/shared/utilities'
-import { CharacterEntity } from '../character.entity'
+import { CategoryType } from 'src/interface/category.interface'
+import { ITag } from 'src/interface/tag.interface'
 
 @Injectable()
 export class TagService {
     constructor(
-        @InjectRepository(CharacterTagEntity)
-        private readonly tagRepo: Repository<CharacterTagEntity>,
+        @InjectRepository(TagEntity)
+        private readonly tagRepo: Repository<TagEntity>,
         private readonly categoryService: CategoryService
     ) { }
 
-    public async find(query: ICharacterTag) {
-        const opts: { name?: string; category?: CharacterCategoryEntity } = {}
+    public async find(query: ITag) {
+        const opts: { name?: string; category?: CategoryEntity } = {}
 
         if (query.name) opts.name = query.name
 
@@ -47,6 +47,17 @@ export class TagService {
         return await this.tagRepo.findByIds(ids)
     }
 
+    public async checkTagTypeByIds(ids: number[], type: CategoryType) {
+        const tags = await this.findRelationsByIds(ids)
+        return tags.every(tag => {
+            if (
+                tag.category.type === CategoryType.common
+                || tag.category.type === type
+            ) return true
+            return false
+        })
+    }
+
     public async findRelations() {
         return await this.tagRepo.find({
             relations: ['category'],
@@ -59,8 +70,8 @@ export class TagService {
         })
     }
 
-    public async create(body: ICharacterTag) {
-        const tag = new CharacterTagEntity()
+    public async create(body: ITag) {
+        const tag = new TagEntity()
         mergeObjectToEntity(tag, body, ['categoryId'])
         if (body.categoryId)
             tag.category = await this.categoryService.findById(body.categoryId)
@@ -69,13 +80,13 @@ export class TagService {
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        if (await this.hasName(tag.name))
+        if (await this.hasName(tag.category, tag.name))
             throw new ConflictException('has the same name')
 
         return this.tagRepo.save(tag)
     }
 
-    public async update(id: number, body: ICharacterTag) {
+    public async update(id: number, body: ITag) {
         const tag = await this.findById(id)
         mergeObjectToEntity(tag, body, ['categoryId'])
         if (body.categoryId)
@@ -85,7 +96,7 @@ export class TagService {
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        if (await this.hasName(tag.name))
+        if (await this.hasName(tag.category, tag.name))
             throw new ConflictException('has the same name')
 
         return await this.tagRepo.save(tag)
@@ -97,26 +108,32 @@ export class TagService {
             .createQueryBuilder()
             .relation('characters')
             .of(tag)
-            .loadOne<CharacterEntity>()
+            .loadOne<CategoryEntity>()
 
         if (result)
             throw new UnprocessableEntityException()
         return await this.tagRepo.remove(tag)
     }
 
-    public async hasName(name: string) {
-        const tag = await this.tagRepo.findOne({ name })
+    public async matchTagIds(tagIds: number[], type: CategoryType) {
+        if (await this.checkTagTypeByIds(tagIds, type))
+            return tagIds.sort((a, b) => a - b)
+        throw 'unmatch tag'
+    }
+
+    public async hasName(category: CategoryEntity, name: string) {
+        const tag = await this.tagRepo.findOne({ category, name })
         return !!tag
     }
 
     public async tranformCategoryRelationByIds(ids: number[]) {
-        let tags: CharacterTagEntity[] = await this.tagRepo.findByIds(ids, {
+        let tags: TagEntity[] = await this.tagRepo.findByIds(ids, {
             relations: ['category'],
         })
 
         const map: Record<
             number,
-            CharacterCategoryEntity & { tags: CharacterTagEntity[] }
+            CategoryEntity & { tags: TagEntity[] }
         > = {}
 
         tags.forEach((tag) => {

@@ -4,20 +4,12 @@ import { Length } from 'class-validator'
 import { PictureEntity } from 'src/picture/picture.entity'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterGroupEntity } from './group/group.entity'
-import { CharacterTagEntity } from './tag/tag.entity'
+import { CharacterPictureSetEntity } from './pictureSet/pictureSet.entity'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
-    @ManyToMany((type) => CharacterTagEntity, (tag) => tag.characters)
-    @JoinTable()
-    public tags: CharacterTagEntity[]
-
-    @ManyToMany((type) => CharacterGroupEntity, (group) => group.characters)
-    @JoinTable()
-    public groups: CharacterGroupEntity[]
-
-    @ManyToMany((type) => PictureEntity, (picture) => picture.characters)
-    public pictures: PictureEntity[]
+    @Column({ type: 'varchar', default: '' })
+    public tagIds: string = ''
 
     @Column({ default: '' })
     @Length(0, 25)
@@ -41,4 +33,14 @@ export class CharacterEntity extends StarNameEntity {
     @Column({ default: '' })
     @Length(0, 100)
     public fullLengthPicture: string = ''
+
+    @ManyToMany((type) => CharacterGroupEntity, (group) => group.characters)
+    @JoinTable()
+    public groups: CharacterGroupEntity[]
+
+    @ManyToMany((type) => PictureEntity, (picture) => picture.characters)
+    public pictures: PictureEntity[]
+
+    @OneToMany((type) => CharacterPictureSetEntity, (pictureSet) => pictureSet.character)
+    public pictureSets: CharacterPictureSetEntity[]
 }
