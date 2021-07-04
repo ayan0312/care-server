@@ -1,23 +1,23 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { PictureEntity } from './picture.entity'
-import { PictureService } from './picture.service'
-import { PictureController } from './picture.controller'
+import { AssetEntity } from './asset.entity'
+import { AssetService } from './asset.service'
+import { AssetController } from './asset.controller'
 import { GroupModule } from './group/group.module'
 import { CharacterModule } from 'src/character/character.module'
 import { TagModule } from 'src/tag/tag.module'
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([PictureEntity]),
+        TypeOrmModule.forFeature([AssetEntity]),
         TagModule,
         GroupModule,
         CharacterModule,
     ],
-    providers: [PictureService],
-    controllers: [PictureController],
-    exports: [PictureService],
+    providers: [AssetService],
+    controllers: [AssetController],
+    exports: [AssetService],
 })
-export class PictureModule implements NestModule {
+export class AssetModule implements NestModule {
     public configure(consumer: MiddlewareConsumer) {}
 }

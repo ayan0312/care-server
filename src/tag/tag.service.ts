@@ -22,7 +22,7 @@ export class TagService {
         @InjectRepository(TagEntity)
         private readonly tagRepo: Repository<TagEntity>,
         private readonly categoryService: CategoryService
-    ) { }
+    ) {}
 
     public async find(query: ITag) {
         const opts: { name?: string; category?: CategoryEntity } = {}
@@ -49,11 +49,12 @@ export class TagService {
 
     public async checkTagTypeByIds(ids: number[], type: CategoryType) {
         const tags = await this.findRelationsByIds(ids)
-        return tags.every(tag => {
+        return tags.every((tag) => {
             if (
-                tag.category.type === CategoryType.common
-                || tag.category.type === type
-            ) return true
+                tag.category.type === CategoryType.common ||
+                tag.category.type === type
+            )
+                return true
             return false
         })
     }
@@ -110,8 +111,7 @@ export class TagService {
             .of(tag)
             .loadOne<CategoryEntity>()
 
-        if (result)
-            throw new UnprocessableEntityException()
+        if (result) throw new UnprocessableEntityException()
         return await this.tagRepo.remove(tag)
     }
 
@@ -131,10 +131,7 @@ export class TagService {
             relations: ['category'],
         })
 
-        const map: Record<
-            number,
-            CategoryEntity & { tags: TagEntity[] }
-        > = {}
+        const map: Record<number, CategoryEntity & { tags: TagEntity[] }> = {}
 
         tags.forEach((tag) => {
             if (map[tag.category.id]) map[tag.category.id].tags.push(tag)

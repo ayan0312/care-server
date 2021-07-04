@@ -28,7 +28,7 @@ export class CharacterService {
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
         private readonly groupService: GroupService
-    ) { }
+    ) {}
 
     private _imageId = 0
 
@@ -37,8 +37,8 @@ export class CharacterService {
             id,
             relations
                 ? {
-                    relations,
-                }
+                      relations,
+                  }
                 : {}
         )
         if (!result) throw new NotFoundException()
@@ -51,41 +51,61 @@ export class CharacterService {
 
     public async findCategoryRelationsById(id: number) {
         const char = await this.findById(id)
-        return await this.tagService.tranformCategoryRelationByIds(parseIds(char.tagIds))
+        return await this.tagService.tranformCategoryRelationByIds(
+            parseIds(char.tagIds)
+        )
     }
 
     private _createConditionQB(condition: ICharacterSearchCondition) {
         let qb = this.charRepo
             .createQueryBuilder('character')
-            .where('character.name like :name', { name: `%${condition.name ? condition.name : ''}%` })
+            .where('character.name like :name', {
+                name: `%${condition.name ? condition.name : ''}%`,
+            })
 
         if (condition.tagIds != null)
             qb = qb
                 .leftJoin('character.tags', 'tag')
-                .andWhere('tag.id IN (:...tagIds)', { tagIds: condition.tagIds.split(',') })
+                .andWhere('tag.id IN (:...tagIds)', {
+                    tagIds: condition.tagIds.split(','),
+                })
         if (condition.groupIds != null)
             qb = qb
                 .leftJoin('character.groups', 'group')
-                .andWhere('group.id IN (:...groupIds)', { groupIds: condition.groupIds.split(',') })
+                .andWhere('group.id IN (:...groupIds)', {
+                    groupIds: condition.groupIds.split(','),
+                })
         if (condition.star != null)
-            qb = qb.andWhere('character.star = :star', { star: !!condition.star })
+            qb = qb.andWhere('character.star = :star', {
+                star: !!condition.star,
+            })
         if (condition.intro != null)
-            qb = qb.andWhere('character.intro like :intro', { intro: `%${condition.intro}%` })
+            qb = qb.andWhere('character.intro like :intro', {
+                intro: `%${condition.intro}%`,
+            })
         if (condition.remark != null)
-            qb = qb.andWhere('character.remark like :remark', { remark: `%${condition.remark}%` })
+            qb = qb.andWhere('character.remark like :remark', {
+                remark: `%${condition.remark}%`,
+            })
         if (condition.rating != null)
-            qb = qb.andWhere('character.rating = :rating', { rating: condition.rating })
+            qb = qb.andWhere('character.rating = :rating', {
+                rating: condition.rating,
+            })
 
         return qb
     }
 
     public async search(body: ICharacterSearch) {
-        const { condition = { name: '' }, orderBy = { sort: 'created', order: 'DESC' }, size = 20, page = 1 } = body
+        const {
+            condition = { name: '' },
+            orderBy = { sort: 'created', order: 'DESC' },
+            size = 20,
+            page = 1,
+        } = body
 
         let qb = this._createConditionQB(condition)
         if (orderBy != null)
-            qb = qb
-                .orderBy(`character.${orderBy.sort}`, orderBy.order)
+            qb = qb.orderBy(`character.${orderBy.sort}`, orderBy.order)
 
         const data = await qb
             .skip(size * (page - 1))
@@ -100,8 +120,11 @@ export class CharacterService {
                 return Object.assign({}, entity, {
                     ['xsmall']: {
                         avatar: entity.avatar.replace('avatars', 'avatars/200'),
-                        fullLengthPicture: entity.fullLengthPicture.replace('fullLengthPictures', 'fullLengthPictures/300')
-                    }
+                        fullLengthPicture: entity.fullLengthPicture.replace(
+                            'fullLengthPictures',
+                            'fullLengthPictures/300'
+                        ),
+                    },
                 })
             }),
             total: data[1],
@@ -128,8 +151,7 @@ export class CharacterService {
             gm(metadata.filename)
                 .resize(200, 200, '!')
                 .write(`${metadata.path}/200/${metadata.name}`, (err) => {
-                    if (err)
-                        console.error(err)
+                    if (err) console.error(err)
                     resolve(undefined)
                 })
         })
@@ -141,8 +163,7 @@ export class CharacterService {
             tempFilename
         )
 
-        if (metadata === null)
-            return '/avatars/package.png'
+        if (metadata === null) return '/avatars/package.png'
 
         await this._saveAvatar200(metadata)
 
@@ -154,8 +175,7 @@ export class CharacterService {
             gm(metadata.filename)
                 .resize(300)
                 .write(`${metadata.path}/300/${metadata.name}`, (err) => {
-                    if (err)
-                        console.error(err)
+                    if (err) console.error(err)
                     resolve(undefined)
                 })
         })
@@ -167,8 +187,7 @@ export class CharacterService {
             tempFilename
         )
 
-        if (metadata === null)
-            return '/fullLengthPictures/package.png'
+        if (metadata === null) return '/fullLengthPictures/package.png'
 
         await this._saveFullLengthPicture300(metadata)
 
@@ -185,16 +204,22 @@ export class CharacterService {
             'groupIds',
             'fullLengthPicture',
         ])
-        if (body.tagIds) 
-            target.tagIds = (await this.tagService.matchTagIds(parseIds(body.tagIds), CategoryType.character)).join(',')
+        if (body.tagIds)
+            target.tagIds = (
+                await this.tagService.matchTagIds(
+                    parseIds(body.tagIds),
+                    CategoryType.character
+                )
+            ).join(',')
         if (body.groupIds)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )
-        if (body.avatar)
-            target.avatar = await this._saveAvatar(body.avatar)
+        if (body.avatar) target.avatar = await this._saveAvatar(body.avatar)
         if (body.fullLengthPicture)
-            target.fullLengthPicture = await this._saveFullLengthPicture(body.fullLengthPicture)
+            target.fullLengthPicture = await this._saveFullLengthPicture(
+                body.fullLengthPicture
+            )
         return target
     }
 

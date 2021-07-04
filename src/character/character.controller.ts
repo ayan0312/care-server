@@ -14,17 +14,13 @@ import {
     DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
-import {
-    ICharacter
-} from 'src/interface/character/character.interface'
+import { ICharacter } from 'src/interface/character/character.interface'
 import { CharacterService } from './character.service'
 
 @ApiTags('characters')
 @Controller('characters')
 export class CharacterController {
-    constructor(
-        private readonly charService: CharacterService
-    ) { }
+    constructor(private readonly charService: CharacterService) {}
 
     @Get()
     public async find(@Query('options') options: string) {

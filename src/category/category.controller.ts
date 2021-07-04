@@ -21,16 +21,14 @@ import { CategoryService } from './category.service'
 @ApiTags('categories')
 @Controller('categories')
 export class CategoryController {
-    constructor(private readonly categoryService: CategoryService) { }
+    constructor(private readonly categoryService: CategoryService) {}
     @Get()
     public async find(
         @Query('type', new ParseIntPipe()) type: number,
-        @Query('name') name?: string,
+        @Query('name') name?: string
     ) {
         return await this.categoryService.find(
-            name
-                ? Object.assign({ type }, { name })
-                : { type }
+            name ? Object.assign({ type }, { name }) : { type }
         )
     }
 
@@ -40,9 +38,7 @@ export class CategoryController {
         status: HttpStatus.CREATED,
         description: 'create category',
     })
-    public async create(
-        @Body() body: ICategory
-    ) {
+    public async create(@Body() body: ICategory) {
         if (!body.name || !body.type)
             throw new BadRequestException('name and type cannot be empty')
         return await this.categoryService.create(body.name, parseInt(body.type))

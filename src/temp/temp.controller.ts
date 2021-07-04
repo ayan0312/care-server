@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 @ApiTags('temps')
 @Controller('temps')
 export class TempController {
-    constructor() { }
+    constructor() {}
 
     @Post()
     @UseInterceptors(
@@ -31,12 +31,15 @@ export class TempController {
         })
     )
     public async uploadImage(@UploadedFile() file: Express.Multer.File) {
-        return patchURL({
-            size: file.size,
-            preview: `/temps/${file.filename}`,
-            filename: file.filename,
-            mimetype: file.mimetype,
-            originalname: file.originalname,
-        }, ['preview'])
+        return patchURL(
+            {
+                size: file.size,
+                preview: `/temps/${file.filename}`,
+                filename: file.filename,
+                mimetype: file.mimetype,
+                originalname: file.originalname,
+            },
+            ['preview']
+        )
     }
 }

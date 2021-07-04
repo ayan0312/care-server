@@ -33,8 +33,8 @@ function autoMkdir() {
     autoMkdirSync(config.BACKUPS_PATH)
     autoMkdirSync(config.AVATARS_PATH)
     autoMkdirSync(config.AVATARS_PATH + '/200')
-    autoMkdirSync(config.PICTURES_PATH)
-    autoMkdirSync(config.PICTURES_PATH + '/300')
+    autoMkdirSync(config.ASSETS_PATH)
+    autoMkdirSync(config.ASSETS_PATH + '/300')
     autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH)
     autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH + '/300')
 }

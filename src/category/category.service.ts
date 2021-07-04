@@ -18,9 +18,9 @@ export class CategoryService {
     constructor(
         @InjectRepository(CategoryEntity)
         private readonly categoryRepo: Repository<CategoryEntity>
-    ) { }
+    ) {}
 
-    public async find(opts: { name?: string, type: CategoryType }) {
+    public async find(opts: { name?: string; type: CategoryType }) {
         return await this.categoryRepo.find(opts)
     }
 
@@ -33,11 +33,12 @@ export class CategoryService {
     public async findRelations(type: CategoryType) {
         return await this.categoryRepo
             .createQueryBuilder('category')
-            .leftJoinAndSelect("category.tags", "tag")
+            .leftJoinAndSelect('category.tags', 'tag')
             .where('category.type IN (:...types)', {
-                types: type === CategoryType.common
-                    ? [type]
-                    : [type, CategoryType.common]
+                types:
+                    type === CategoryType.common
+                        ? [type]
+                        : [type, CategoryType.common],
             })
             .getMany()
     }
@@ -79,20 +80,20 @@ export class CategoryService {
             .of(category)
             .loadOne<TagEntity>()
 
-        if (result)
-            throw new UnprocessableEntityException()
+        if (result) throw new UnprocessableEntityException()
         return await this.categoryRepo.remove(category)
     }
 
     public async hasName(name: string, type: CategoryType) {
-        return !!await this.categoryRepo
+        return !!(await this.categoryRepo
             .createQueryBuilder('category')
             .where('category.name = :name', { name })
             .andWhere('category.type IN (:...types)', {
-                types: type === CategoryType.common
-                    ? [type]
-                    : [type, CategoryType.common]
+                types:
+                    type === CategoryType.common
+                        ? [type]
+                        : [type, CategoryType.common],
             })
-            .getOne()
+            .getOne())
     }
 }

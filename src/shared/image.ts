@@ -82,9 +82,9 @@ export function patchURL<T extends Record<string, any>>(
     if (keys.length === 0) return
     Object.keys(entity).forEach((key) => {
         if (keys.includes(key))
-            (entity as any)[
-                key
-            ] = entity[key] ? `http://${config.IP}:${config.PORT}${entity[key]}` : ''
+            (entity as any)[key] = entity[key]
+                ? `http://${config.IP}:${config.PORT}${entity[key]}`
+                : ''
     })
     return entity
 }

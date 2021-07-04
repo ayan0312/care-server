@@ -8,29 +8,29 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import {
-    IPicture,
-    IPictureSearch,
-    IPictureSearchCondition,
-} from 'src/interface/picture/picture.interface'
+    IAsset,
+    IAssetSearch,
+    IAssetSearchCondition,
+} from 'src/interface/asset/asset.interface'
 import { config } from 'src/shared/config'
 import { ImageMetadata, patchURL, saveImage } from 'src/shared/image'
 import { formatDate, mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
-import { PictureEntity } from './picture.entity'
+import { AssetEntity } from './asset.entity'
 import { GroupService } from './group/group.service'
 import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 
 @Injectable()
-export class PictureService {
+export class AssetService {
     constructor(
-        @InjectRepository(PictureEntity)
-        private readonly picRepo: Repository<PictureEntity>,
+        @InjectRepository(AssetEntity)
+        private readonly picRepo: Repository<AssetEntity>,
         private readonly tagService: TagService,
         private readonly charService: CharacterService,
         private readonly groupService: GroupService
-    ) { }
+    ) {}
 
     private _nameId = 0
     private _imageId = 0
@@ -40,8 +40,8 @@ export class PictureService {
             id,
             relations
                 ? {
-                    relations,
-                }
+                      relations,
+                  }
                 : {}
         )
         if (!result) throw new NotFoundException()
@@ -52,47 +52,61 @@ export class PictureService {
         return this.picRepo.findByIds(ids)
     }
 
-    private async _createConditionQB(condition: IPictureSearchCondition) {
+    private async _createConditionQB(condition: IAssetSearchCondition) {
         let qb = this.picRepo
-            .createQueryBuilder('picture')
-            .where('picture.name like :name', { name: `%${condition.name ? condition.name : ''}%` })
+            .createQueryBuilder('asset')
+            .where('asset.name like :name', {
+                name: `%${condition.name ? condition.name : ''}%`,
+            })
 
         if (condition.tagIds != null)
             qb = qb
-                .leftJoin('picture.tags', 'tag')
-                .andWhere('tag.id IN (:...tagIds)', { tagIds: condition.tagIds.split(',') })
+                .leftJoin('asset.tags', 'tag')
+                .andWhere('tag.id IN (:...tagIds)', {
+                    tagIds: condition.tagIds.split(','),
+                })
         if (condition.groupIds != null)
             qb = qb
-                .leftJoin('picture.groups', 'group')
-                .andWhere('group.id IN (:...groupIds)',
-                    { groupIds: condition.groupIds.split(',') })
+                .leftJoin('asset.groups', 'group')
+                .andWhere('group.id IN (:...groupIds)', {
+                    groupIds: condition.groupIds.split(','),
+                })
         if (condition.characterIds != null)
             qb = qb
-                .leftJoin('picture.characters', 'character')
-                .andWhere(
-                    'character.id IN (:...characterIds)',
-                    { characterIds: condition.characterIds.split(',') }
-                )
+                .leftJoin('asset.characters', 'character')
+                .andWhere('character.id IN (:...characterIds)', {
+                    characterIds: condition.characterIds.split(','),
+                })
         if (condition.star != null)
-            qb = qb.andWhere('picture.star = :star', { star: !!condition.star })
+            qb = qb.andWhere('asset.star = :star', { star: !!condition.star })
         if (condition.intro != null)
-            qb = qb.andWhere('picture.intro like :intro', { intro: `%${condition.intro}%` })
+            qb = qb.andWhere('asset.intro like :intro', {
+                intro: `%${condition.intro}%`,
+            })
         if (condition.remark != null)
-            qb = qb.andWhere('picture.remark like :remark', { remark: `%${condition.remark}%` })
+            qb = qb.andWhere('asset.remark like :remark', {
+                remark: `%${condition.remark}%`,
+            })
         if (condition.rating != null)
-            qb = qb.andWhere('picture.rating = :rating', { rating: condition.rating })
+            qb = qb.andWhere('asset.rating = :rating', {
+                rating: condition.rating,
+            })
 
         return qb
     }
 
-    public async search(body: IPictureSearch) {
-        const { condition = { name: '' }, orderBy = { sort: 'created', order: 'DESC' }, size = 20, page = 1 } = body
+    public async search(body: IAssetSearch) {
+        const {
+            condition = { name: '' },
+            orderBy = { sort: 'created', order: 'DESC' },
+            size = 20,
+            page = 1,
+        } = body
 
         let qb = await this._createConditionQB(condition)
 
         if (orderBy != null)
-            qb = qb
-                .orderBy(`picture.${orderBy.sort}`, orderBy.order)
+            qb = qb.orderBy(`asset.${orderBy.sort}`, orderBy.order)
 
         const data = await qb
             .skip(size * (page - 1))
@@ -103,11 +117,14 @@ export class PictureService {
             page: Number(page),
             size: Number(size),
             rows: data[0].map((entity) => {
-                patchURL(entity, ['picture'])
+                patchURL(entity, ['asset'])
                 return Object.assign({}, entity, {
                     xsmall: {
-                        picture: entity.picture.replace('pictures', 'pictures/300'),
-                    }
+                        asset: entity.asset.replace(
+                            'assets',
+                            'assets/300'
+                        ),
+                    },
                 })
             }),
             total: data[1],
@@ -129,47 +146,49 @@ export class PictureService {
         }
     }
 
-    private async _savePicture300(metadata: ImageMetadata) {
+    private async _saveAsset300(metadata: ImageMetadata) {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
                 .resize(300)
                 .write(`${metadata.path}/300/${metadata.name}`, (err) => {
-                    if (err)
-                        console.error(err)
+                    if (err) console.error(err)
                     resolve(undefined)
                 })
         })
     }
 
-    private async _savePicture(tempFilename: string) {
+    private async _saveAsset(tempFilename: string) {
         const metadata = await this._saveImage(
-            config.STORAGE_PATH + 'pictures',
+            config.STORAGE_PATH + 'assets',
             tempFilename
         )
 
-        if (metadata === null)
-            return '/pictures/package.png'
+        if (metadata === null) return '/assets/package.png'
 
-        await this._savePicture300(metadata)
+        await this._saveAsset300(metadata)
 
-        return '/pictures/' + metadata.name
+        return '/assets/' + metadata.name
     }
 
-    private async _mergeBodyToEntity(target: PictureEntity, body: IPicture) {
+    private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
         mergeObjectToEntity(target, body, [
+            'asset',
             'tagIds',
-            'picture',
             'groupIds',
             'characterIds',
         ])
         if (body.tagIds)
-            target.tagIds = (await this.tagService.matchTagIds(parseIds(body.tagIds), CategoryType.picture)).join(',')
+            target.tagIds = (
+                await this.tagService.matchTagIds(
+                    parseIds(body.tagIds),
+                    CategoryType.asset
+                )
+            ).join(',')
         if (body.groupIds)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )
-        if (body.picture)
-            target.picture = await this._savePicture(body.picture)
+        if (body.asset) target.asset = await this._saveAsset(body.asset)
         if (body.characterIds)
             target.characters = await this.charService.findByIds(
                 parseIds(body.characterIds)
@@ -178,11 +197,12 @@ export class PictureService {
         return target
     }
 
-    public async create(body: IPicture) {
+    public async create(body: IAsset) {
         if (!body.name)
-            body.name = `${formatDate('y-M-d H:m:s', new Date())}-${this._nameId++}`
+            body.name = `${formatDate('y-M-d H:m:s', new Date())}-${this
+                ._nameId++}`
 
-        const pic = await this._mergeBodyToEntity(new PictureEntity(), body)
+        const pic = await this._mergeBodyToEntity(new AssetEntity(), body)
 
         const errors = await validate(pic)
         if (errors.length > 0)
@@ -192,7 +212,7 @@ export class PictureService {
         return await this.picRepo.findOne(newPic.id)
     }
 
-    public async update(id: number, body: IPicture) {
+    public async update(id: number, body: IAsset) {
         const pic = await this.findById(id)
         await this._mergeBodyToEntity(pic, body)
 

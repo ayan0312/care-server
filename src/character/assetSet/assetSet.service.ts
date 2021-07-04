@@ -10,14 +10,14 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { IStarName } from 'src/interface/name.interface'
 import { mergeObjectToEntity } from 'src/shared/utilities'
-import { CharacterPictureSetEntity } from './pictureSet.entity'
+import { CharacterAssetSetEntity } from './assetSet.entity'
 
 @Injectable()
-export class PictureSetService {
+export class AssetSetService {
     constructor(
-        @InjectRepository(CharacterPictureSetEntity)
-        private readonly picSetRepo: Repository<CharacterPictureSetEntity>
-    ) { }
+        @InjectRepository(CharacterAssetSetEntity)
+        private readonly picSetRepo: Repository<CharacterAssetSetEntity>
+    ) {}
 
     public async find(name: string) {
         return await this.picSetRepo.find({ name })
@@ -38,7 +38,7 @@ export class PictureSetService {
     }
 
     public async create(body: IStarName) {
-        const picSet = new CharacterPictureSetEntity()
+        const picSet = new CharacterAssetSetEntity()
         mergeObjectToEntity(picSet, body)
 
         const errors = await validate(picSet)

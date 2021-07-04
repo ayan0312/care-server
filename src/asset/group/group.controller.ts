@@ -16,8 +16,8 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IStarName } from 'src/interface/name.interface'
 import { GroupService } from './group.service'
 
-@ApiTags('picture_groups')
-@Controller('picture/groups')
+@ApiTags('asset_groups')
+@Controller('asset/groups')
 export class GroupController {
     constructor(private readonly groupService: GroupService) {}
 

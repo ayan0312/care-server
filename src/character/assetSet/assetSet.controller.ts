@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IStarName } from 'src/interface/name.interface'
-import { PictureSetService } from './pictureSet.service'
+import { AssetSetService } from './assetSet.service'
 
-@ApiTags('character_picture_sets')
-@Controller('character/pictureSets')
-export class PictureSetController {
-    constructor(private readonly picSetService: PictureSetService) {}
+@ApiTags('character_asset_sets')
+@Controller('character/assetSets')
+export class AssetSetController {
+    constructor(private readonly picSetService: AssetSetService) {}
 
     @Get()
     public async find(@Query('name', new DefaultValuePipe('')) name: string) {
@@ -31,7 +31,7 @@ export class PictureSetController {
     @HttpCode(HttpStatus.CREATED)
     @ApiResponse({
         status: HttpStatus.CREATED,
-        description: 'create picture set',
+        description: 'create asset set',
     })
     public async create(@Body() body: IStarName) {
         return await this.picSetService.create(body)

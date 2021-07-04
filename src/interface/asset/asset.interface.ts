@@ -1,16 +1,16 @@
 import { IStarName } from '../name.interface'
-import { ISearch } from '../search.interface';
+import { ISearch } from '../search.interface'
 
-export interface IPicture extends IStarName {
+export interface IAsset extends IStarName {
     intro?: string
+    asset: string
     remark?: string
     tagIds?: string
-    picture: string
     groupIds?: string
     characterIds?: string
 }
 
-export interface IPictureSearchCondition extends IStarName {
+export interface IAssetSearchCondition extends IStarName {
     name?: string
     intro?: string
     remark?: string
@@ -19,5 +19,4 @@ export interface IPictureSearchCondition extends IStarName {
     characterIds?: string
 }
 
-export interface IPictureSearch extends ISearch<IPictureSearchCondition> { }
-
+export interface IAssetSearch extends ISearch<IAssetSearchCondition> {}

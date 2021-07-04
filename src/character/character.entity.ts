@@ -1,10 +1,10 @@
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
-import { PictureEntity } from 'src/picture/picture.entity'
+import { AssetEntity } from 'src/asset/asset.entity'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterGroupEntity } from './group/group.entity'
-import { CharacterPictureSetEntity } from './pictureSet/pictureSet.entity'
+import { CharacterAssetSetEntity } from './assetSet/assetSet.entity'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
@@ -38,9 +38,12 @@ export class CharacterEntity extends StarNameEntity {
     @JoinTable()
     public groups: CharacterGroupEntity[]
 
-    @ManyToMany((type) => PictureEntity, (picture) => picture.characters)
-    public pictures: PictureEntity[]
+    @ManyToMany((type) => AssetEntity, (asset) => asset.characters)
+    public assets: AssetEntity[]
 
-    @OneToMany((type) => CharacterPictureSetEntity, (pictureSet) => pictureSet.character)
-    public pictureSets: CharacterPictureSetEntity[]
+    @OneToMany(
+        (type) => CharacterAssetSetEntity,
+        (assetSet) =>assetSet.character
+    )
+    public assetSets: CharacterAssetSetEntity[]
 }

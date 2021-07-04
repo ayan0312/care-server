@@ -1,5 +1,5 @@
 import { IStarName } from '../name.interface'
-import { ISearch } from '../search.interface';
+import { ISearch } from '../search.interface'
 
 export interface ICharacter extends IStarName {
     intro?: string
@@ -19,6 +19,4 @@ export interface ICharacterSearchCondition extends IStarName {
     groupIds?: string
 }
 
-export interface ICharacterSearch extends ISearch<ICharacterSearchCondition> { }
-
-
+export interface ICharacterSearch extends ISearch<ICharacterSearchCondition> {}

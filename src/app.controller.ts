@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Post } from '@nestjs/common'
+import {
+    Body,
+    Controller,
+    DefaultValuePipe,
+    Get,
+    Post,
+    Query,
+} from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { CategoryService } from './category/category.service'
+import { CharacterService } from './character/character.service'
 import { ISettings } from './interface/settings.interface'
 import { TagService } from './tag/tag.service'
 
@@ -9,16 +17,22 @@ import { TagService } from './tag/tag.service'
 export class AppController {
     constructor(
         private readonly tagService: TagService,
-        private readonly categoryService: CategoryService,
-    ) { }
+        private readonly charService: CharacterService,
+        private readonly categoryService: CategoryService
+    ) {}
 
     @Get()
     public getApi() {
         return '<h1>care server</h1>'
     }
 
+    @Get('settings')
+    public async exportSettings(
+        @Query('path', new DefaultValuePipe('')) path: string
+    ) {}
+
     @Post('settings')
-    public async uploadSettings(@Body() settings: ISettings) {
+    public async importSettings(@Body() settings: ISettings) {
         if (settings.categories && settings.categories.length > 0) {
             for (let i in settings.categories) {
                 const { name, type, tags } = settings.categories[i]

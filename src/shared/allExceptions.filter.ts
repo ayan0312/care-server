@@ -37,8 +37,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
                 if (typeof res.message === 'string') message = res.message
             }
 
-            if (exception instanceof ErrorCodeException)
-                errorCode = res.code
+            if (exception instanceof ErrorCodeException) errorCode = res.code
         }
 
         response.status(statusCode).json({

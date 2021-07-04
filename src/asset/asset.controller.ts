@@ -14,17 +14,13 @@ import {
     DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
-import {
-    IPicture,
-} from 'src/interface/picture/picture.interface'
-import { PictureService } from './picture.service'
+import { IAsset } from 'src/interface/asset/asset.interface'
+import { AssetService } from './asset.service'
 
-@ApiTags('pictures')
-@Controller('pictures')
-export class PictureController {
-    constructor(
-        private readonly picService: PictureService,
-    ) { }
+@ApiTags('assets')
+@Controller('assets')
+export class AssetController {
+    constructor(private readonly picService: AssetService) {}
 
     @Get()
     public async find(@Query('options') options: string) {
@@ -37,7 +33,7 @@ export class PictureController {
         status: HttpStatus.CREATED,
         description: 'create tag',
     })
-    public async create(@Body() body: IPicture) {
+    public async create(@Body() body: IAsset) {
         return await this.picService.create(body)
     }
 
@@ -57,7 +53,7 @@ export class PictureController {
     @Patch(':id')
     public async updateById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body() body: IPicture
+        @Body() body: IAsset
     ) {
         return await this.picService.update(id, body)
     }

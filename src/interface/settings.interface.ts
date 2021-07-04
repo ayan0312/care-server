@@ -1,5 +1,5 @@
 import { IName } from './name.interface'
-import { CategoryType } from './category.interface';
+import { CategoryType } from './category.interface'
 
 export interface ISettingsCategory extends Required<IName> {
     tags: string[]

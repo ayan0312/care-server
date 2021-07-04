@@ -11,5 +11,5 @@ import { CategoryEntity } from './category.entity'
     exports: [CategoryService],
 })
 export class CategoryModule implements NestModule {
-    public configure(consumer: MiddlewareConsumer) { }
+    public configure(consumer: MiddlewareConsumer) {}
 }

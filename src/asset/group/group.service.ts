@@ -10,13 +10,13 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { IStarName } from 'src/interface/name.interface'
 import { mergeObjectToEntity } from 'src/shared/utilities'
-import { PictureGroupEntity } from './group.entity'
+import { AssetGroupEntity } from './group.entity'
 
 @Injectable()
 export class GroupService {
     constructor(
-        @InjectRepository(PictureGroupEntity)
-        private readonly groupRepo: Repository<PictureGroupEntity>
+        @InjectRepository(AssetGroupEntity)
+        private readonly groupRepo: Repository<AssetGroupEntity>
     ) {}
 
     public async find(name: string) {
@@ -38,7 +38,7 @@ export class GroupService {
     }
 
     public async create(body: IStarName) {
-        const group = new PictureGroupEntity()
+        const group = new AssetGroupEntity()
         mergeObjectToEntity(group, body)
 
         const errors = await validate(group)

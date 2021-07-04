@@ -1,9 +1,9 @@
-import { IName } from "./name.interface";
+import { IName } from './name.interface'
 
 export const enum CategoryType {
     common = 0,
+    asset,
     character,
-    picture,
 }
 
 export interface ICategory extends IName {

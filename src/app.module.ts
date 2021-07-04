@@ -8,7 +8,7 @@ import { CharacterModule } from './character/character.module'
 import { config } from './shared/config'
 import { TempModule } from './temp/temp.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
-import { PictureModule } from './picture/picture.module'
+import { AssetModule } from './asset/asset.module'
 import { CategoryModule } from './category/category.module'
 import { TagModule } from './tag/tag.module'
 
@@ -25,13 +25,13 @@ import { TagModule } from './tag/tag.module'
             exclude: [config.DATABASE_FILENAME],
             serveStaticOptions: {
                 cacheControl: true,
-                maxAge: 60 * 60 * 24 * 365
-            }
+                maxAge: 60 * 60 * 24 * 365,
+            },
         }),
         MulterModule,
         TagModule,
         TempModule,
-        PictureModule,
+        AssetModule,
         CategoryModule,
         CharacterModule,
     ],
@@ -39,5 +39,5 @@ import { TagModule } from './tag/tag.module'
     providers: [],
 })
 export class ApplicationModule {
-    constructor(private readonly connection: Connection) { }
+    constructor(private readonly connection: Connection) {}
 }
