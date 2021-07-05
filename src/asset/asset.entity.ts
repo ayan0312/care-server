@@ -1,4 +1,4 @@
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm'
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { AssetGroupEntity } from './group/group.entity'
@@ -6,11 +6,8 @@ import { Length } from 'class-validator'
 import { CharacterEntity } from 'src/character/character.entity'
 import { CharacterAssetSetEntity } from 'src/character/assetSet/assetSet.entity'
 import { TagEntity } from 'src/tag/tag.entity'
-
-export const enum AssetType {
-    file = 1,
-    folder,
-}
+import { AssetType } from 'src/interface/asset/asset.interface'
+import { ExtensionEntity } from 'src/extension/extension.entity'
 
 @Entity('asset')
 export class AssetEntity extends StarNameEntity {
@@ -31,6 +28,9 @@ export class AssetEntity extends StarNameEntity {
 
     @ManyToMany((type) => TagEntity, (tag) => tag.assets)
     public tags: TagEntity[]
+
+    @ManyToOne((type) => ExtensionEntity, (extension) => extension.assets)
+    public extension: ExtensionEntity
 
     @ManyToMany((type) => AssetGroupEntity, (group) => group.assets)
     public groups: AssetGroupEntity[]

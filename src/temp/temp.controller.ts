@@ -4,8 +4,7 @@ import { ApiTags } from '@nestjs/swagger'
 import multer from 'multer'
 import { config } from 'src/shared/config'
 import { URL } from 'url'
-
-let tempId = 0
+import { v4 as uuidv4 } from 'uuid'
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -14,7 +13,7 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         let exts = file.mimetype.split('/')
         let ext = exts[exts.length - 1]
-        cb(null, `${Date.now()}.${++tempId}.${ext}`)
+        cb(null, `${uuidv4()}.${ext}`)
     },
 })
 

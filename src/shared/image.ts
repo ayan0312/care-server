@@ -1,5 +1,4 @@
 import fs from 'fs'
-import { config } from './config'
 
 export interface ImageMetadata {
     name: string

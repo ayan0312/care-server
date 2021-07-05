@@ -1,11 +1,4 @@
-import {
-    Body,
-    Controller,
-    DefaultValuePipe,
-    Get,
-    Post,
-    Query,
-} from '@nestjs/common'
+import { Body, Controller, Get, Post } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { AssetService } from './asset/asset.service'
 import { AssetGroupService } from './asset/group/group.service'
@@ -15,6 +8,9 @@ import { CharacterService } from './character/character.service'
 import { Exporter } from './exporter'
 import { ISettings } from './interface/settings.interface'
 import { TagService } from './tag/tag.service'
+
+import fs from 'fs-extra'
+import { Importer } from './importer'
 
 @ApiTags('root')
 @Controller()
@@ -34,9 +30,50 @@ export class AppController {
     }
 
     @Post('data')
-    public async exportData(
-        @Body('path', new DefaultValuePipe('')) path: string
-    ) {
+    public async importData(@Body('path') path?: string) {
+        if (!path) return
+
+        const importer = new Importer(path)
+
+        importer.on('message', (msg) => {
+            console.log(msg)
+        })
+
+        const {
+            tags,
+            categories,
+            assetGroups,
+            characterGroups,
+        } = await importer.inputContext()
+
+        try {
+            for (let i = 0; i < categories.length; i++)
+                await this.categoryService.create(
+                    categories[i].name,
+                    Number(categories[i].type)
+                )
+
+            for (let i = 0; i < tags.length; i++)
+                await this.tagService.create(tags[i])
+
+            for (let i = 0; i < assetGroups.length; i++)
+                await this.assetGroupService.create(assetGroups[i])
+
+            for (let i = 0; i < characterGroups.length; i++)
+                await this.charGroupService.create(characterGroups[i])
+
+            for await (let char of importer.characterGenerator())
+                await this.charService.create(char)
+
+            for await (let asset of importer.assetGenerator())
+                await this.assetService.create(asset)
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    @Get('data')
+    public async exportData(@Body('path') path?: string) {
         if (!path) return
 
         const categories = await this.categoryService.findRelations()
@@ -72,22 +109,6 @@ export class AppController {
                 await exporter.outputAsset(asset.data)
         } catch (err) {
             console.log(err)
-        }
-    }
-
-    @Post('settings')
-    public async importSettings(@Body() settings: ISettings) {
-        if (settings.categories && settings.categories.length > 0) {
-            for (let i in settings.categories) {
-                const { name, type, tags } = settings.categories[i]
-                const category = await this.categoryService.create(name, type)
-                for (let j in tags) {
-                    this.tagService.create({
-                        name: tags[j],
-                        categoryId: category.id,
-                    })
-                }
-            }
         }
     }
 }

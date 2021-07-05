@@ -9,7 +9,8 @@ import fs from 'fs-extra'
 import path from 'path'
 import { EventEmitter } from 'events'
 import { config } from 'src/shared/config'
-import { AssetEntity, AssetType } from 'src/asset/asset.entity'
+import { AssetEntity } from 'src/asset/asset.entity'
+import { AssetType } from './interface/asset/asset.interface'
 
 export interface ExporterOptions {
     categories: CategoryEntity[]
@@ -37,14 +38,14 @@ function transformNameEntity<T extends NameEntity>(entity: T) {
     }
 }
 
-function transformStarNameEntity<T extends StarNameEntity>(entity: T) {
+export function transformStarNameEntity<T extends StarNameEntity>(entity: T) {
     return Object.assign(transformNameEntity(entity), {
         star: entity.star,
         rating: entity.rating,
     })
 }
 
-function transformAssetEntity(asset: AssetEntity) {
+export function transformAssetEntity(asset: AssetEntity) {
     return Object.assign(transformStarNameEntity(asset), {
         intro: asset.intro,
         remark: asset.remark,
@@ -57,7 +58,7 @@ function transformAssetEntity(asset: AssetEntity) {
     })
 }
 
-function transformCharacterEntity(char: CharacterEntity) {
+export function transformCharacterEntity(char: CharacterEntity) {
     return Object.assign(transformStarNameEntity(char), {
         intro: char.intro,
         remark: char.remark,
@@ -67,7 +68,7 @@ function transformCharacterEntity(char: CharacterEntity) {
     })
 }
 
-function createContext(options: ExporterOptions) {
+export function createContext(options: ExporterOptions) {
     return {
         categories: options.categories.map((category) =>
             transformCategoryEntity(category)

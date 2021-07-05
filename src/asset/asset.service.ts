@@ -23,6 +23,7 @@ import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
+import { v4 as uuidv4 } from 'uuid'
 
 @Injectable()
 export class AssetService {
@@ -35,7 +36,6 @@ export class AssetService {
     ) {}
 
     private _nameId = 0
-    private _imageId = 0
 
     public async findById(id: number, relations: string[] = []) {
         const result = await this.assetRepo.findOne(
@@ -158,7 +158,7 @@ export class AssetService {
     private async _saveImage(targetPath: string, filename: string) {
         try {
             const metadata = await saveImage(
-                `${Date.now()}.${++this._imageId}`,
+                uuidv4(),
                 targetPath,
                 `${config.TEMP_PATH}/${filename}`,
                 true

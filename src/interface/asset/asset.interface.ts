@@ -1,5 +1,10 @@
-import { IStarName } from '../name.interface'
-import { ISearch } from '../search.interface'
+import { IStarName } from 'src/interface/name.interface'
+import { ISearch } from 'src/interface/search.interface'
+
+export const enum AssetType {
+    file = 1,
+    folder,
+}
 
 export interface IAsset extends IStarName {
     path?: string
@@ -7,6 +12,8 @@ export interface IAsset extends IStarName {
     remark?: string
     tagIds?: string
     groupIds?: string
+    assetType?: AssetType
+    assetSetIds?: string
     characterIds?: string
 }
 
@@ -16,6 +23,8 @@ export interface IAssetSearchCondition extends IStarName {
     remark?: string
     tagIds?: string
     groupIds?: string
+    assetType?: AssetType
+    assetSetIds?: string
     characterIds?: string
 }
 

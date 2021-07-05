@@ -7,6 +7,7 @@ export interface ICharacter extends IStarName {
     remark?: string
     tagIds?: string
     groupIds?: string
+    assetSetIds?: string
     relationships?: string[]
     staicCategories?: string[]
     fullLengthPicture?: string
@@ -17,6 +18,7 @@ export interface ICharacterSearchCondition extends IStarName {
     remark?: string
     tagIds?: string
     groupIds?: string
+    assetSetIds?: string
 }
 
 export interface ICharacterSearch extends ISearch<ICharacterSearchCondition> {}

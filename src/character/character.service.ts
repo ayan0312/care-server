@@ -21,6 +21,7 @@ import { CharacterGroupService } from 'src/character/group/group.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
+import { v4 as uuidv4 } from 'uuid'
 
 @Injectable()
 export class CharacterService {
@@ -30,8 +31,6 @@ export class CharacterService {
         private readonly tagService: TagService,
         private readonly groupService: CharacterGroupService
     ) {}
-
-    private _imageId = 0
 
     public async *generator(relations?: string[]) {
         let next = 0
@@ -167,7 +166,7 @@ export class CharacterService {
     private async _saveImage(targetPath: string, filename: string) {
         try {
             const metadata = await saveImage(
-                `${Date.now()}.${++this._imageId}`,
+                uuidv4(),
                 targetPath,
                 `${config.TEMP_PATH}/${filename}`,
                 true
