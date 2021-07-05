@@ -20,11 +20,11 @@ import { AssetService } from './asset.service'
 @ApiTags('assets')
 @Controller('assets')
 export class AssetController {
-    constructor(private readonly picService: AssetService) {}
+    constructor(private readonly assetService: AssetService) {}
 
     @Get()
     public async find(@Query('options') options: string) {
-        return await this.picService.search(JSON.parse(options))
+        return await this.assetService.search(JSON.parse(options))
     }
 
     @Post()
@@ -34,7 +34,7 @@ export class AssetController {
         description: 'create tag',
     })
     public async create(@Body() body: IAsset) {
-        return await this.picService.create(body)
+        return await this.assetService.create(body)
     }
 
     @Get(':id')
@@ -47,7 +47,7 @@ export class AssetController {
         )
         relations: string[]
     ) {
-        return await this.picService.findById(id, relations)
+        return await this.assetService.findById(id, relations)
     }
 
     @Patch(':id')
@@ -55,11 +55,11 @@ export class AssetController {
         @Param('id', new ParseIntPipe()) id: number,
         @Body() body: IAsset
     ) {
-        return await this.picService.update(id, body)
+        return await this.assetService.update(id, body)
     }
 
     @Delete(':id')
     public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.picService.delete(id)
+        return await this.assetService.delete(id)
     }
 }

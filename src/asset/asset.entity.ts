@@ -5,10 +5,11 @@ import { AssetGroupEntity } from './group/group.entity'
 import { Length } from 'class-validator'
 import { CharacterEntity } from 'src/character/character.entity'
 import { CharacterAssetSetEntity } from 'src/character/assetSet/assetSet.entity'
+import { TagEntity } from 'src/tag/tag.entity'
 
-export const enum DataType {
+export const enum AssetType {
     file = 1,
-    folder
+    folder,
 }
 
 @Entity('asset')
@@ -21,12 +22,15 @@ export class AssetEntity extends StarNameEntity {
     @Length(0, 255)
     public remark: string = ''
 
-    @Column({ type: 'varchar', default: '' })
-    public tagIds: string = ''
-
     @Column({ default: '' })
     @Length(0, 100)
-    public asset: string = ''
+    public path: string = ''
+
+    @Column('simple-enum')
+    public assetType: AssetType = AssetType.file
+
+    @ManyToMany((type) => TagEntity, (tag) => tag.characters)
+    public tags: TagEntity[]
 
     @ManyToMany((type) => AssetGroupEntity, (group) => group.assets)
     public groups: AssetGroupEntity[]

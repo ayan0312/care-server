@@ -32,6 +32,25 @@ export class CharacterService {
 
     private _imageId = 0
 
+    public async *generator() {
+        let next = 0
+        while (true) {
+            next++
+            const result = await this.charRepo
+                .createQueryBuilder('character')
+                .skip(1 * (next - 1))
+                .take(1)
+                .getManyAndCount()
+
+            if (result[0] == null && next == result[1]) break
+
+            yield {
+                data: result[0][0],
+                count: result[1],
+            }
+        }
+    }
+
     public async findById(id: number, relations: string[] = []) {
         const result = await this.charRepo.findOne(
             id,
@@ -50,9 +69,9 @@ export class CharacterService {
     }
 
     public async findCategoryRelationsById(id: number) {
-        const char = await this.findById(id)
+        const char = await this.findById(id, ['tags'])
         return await this.tagService.tranformCategoryRelationByIds(
-            parseIds(char.tagIds)
+            char.tags.map((tag) => tag.id)
         )
     }
 
@@ -205,12 +224,10 @@ export class CharacterService {
             'fullLengthPicture',
         ])
         if (body.tagIds)
-            target.tagIds = (
-                await this.tagService.matchTagIds(
-                    parseIds(body.tagIds),
-                    CategoryType.character
-                )
-            ).join(',')
+            target.tags = await this.tagService.matchByIds(
+                parseIds(body.tagIds),
+                CategoryType.character
+            )
         if (body.groupIds)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)

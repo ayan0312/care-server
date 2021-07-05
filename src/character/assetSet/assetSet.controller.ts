@@ -19,12 +19,12 @@ import { AssetSetService } from './assetSet.service'
 @ApiTags('character_asset_sets')
 @Controller('character/assetSets')
 export class AssetSetController {
-    constructor(private readonly picSetService: AssetSetService) {}
+    constructor(private readonly assetSetService: AssetSetService) {}
 
     @Get()
     public async find(@Query('name', new DefaultValuePipe('')) name: string) {
-        if (name) return await this.picSetService.find(name)
-        return await this.picSetService.findAll()
+        if (name) return await this.assetSetService.find(name)
+        return await this.assetSetService.findAll()
     }
 
     @Post()
@@ -34,12 +34,12 @@ export class AssetSetController {
         description: 'create asset set',
     })
     public async create(@Body() body: IStarName) {
-        return await this.picSetService.create(body)
+        return await this.assetSetService.create(body)
     }
 
     @Get(':id')
     public async findById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.picSetService.findById(id)
+        return await this.assetSetService.findById(id)
     }
 
     @Patch(':id')
@@ -47,11 +47,11 @@ export class AssetSetController {
         @Param('id', new ParseIntPipe()) id: number,
         @Body() body: IStarName
     ) {
-        return await this.picSetService.update(id, body)
+        return await this.assetSetService.update(id, body)
     }
 
     @Delete(':id')
     public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.picSetService.delete(id)
+        return await this.assetSetService.delete(id)
     }
 }

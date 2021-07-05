@@ -26,7 +26,7 @@ import { CategoryType } from 'src/interface/category.interface'
 export class AssetService {
     constructor(
         @InjectRepository(AssetEntity)
-        private readonly picRepo: Repository<AssetEntity>,
+        private readonly assetRepo: Repository<AssetEntity>,
         private readonly tagService: TagService,
         private readonly charService: CharacterService,
         private readonly groupService: GroupService
@@ -36,7 +36,7 @@ export class AssetService {
     private _imageId = 0
 
     public async findById(id: number, relations: string[] = []) {
-        const result = await this.picRepo.findOne(
+        const result = await this.assetRepo.findOne(
             id,
             relations
                 ? {
@@ -49,11 +49,30 @@ export class AssetService {
     }
 
     public async findByIds(ids: number[]) {
-        return this.picRepo.findByIds(ids)
+        return this.assetRepo.findByIds(ids)
+    }
+
+    public async *generator() {
+        let next = 0
+        while (true) {
+            next++
+            const result = await this.assetRepo
+                .createQueryBuilder('asset')
+                .skip(1 * (next - 1))
+                .take(1)
+                .getManyAndCount()
+
+            if (result[0] == null && next == result[1]) break
+
+            yield {
+                data: result[0][0],
+                count: result[1],
+            }
+        }
     }
 
     private async _createConditionQB(condition: IAssetSearchCondition) {
-        let qb = this.picRepo
+        let qb = this.assetRepo
             .createQueryBuilder('asset')
             .where('asset.name like :name', {
                 name: `%${condition.name ? condition.name : ''}%`,
@@ -120,10 +139,7 @@ export class AssetService {
                 patchURL(entity, ['asset'])
                 return Object.assign({}, entity, {
                     xsmall: {
-                        asset: entity.asset.replace(
-                            'assets',
-                            'assets/300'
-                        ),
+                        path: entity.path.replace('assets', 'assets/300'),
                     },
                 })
             }),
@@ -172,23 +188,21 @@ export class AssetService {
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
         mergeObjectToEntity(target, body, [
-            'asset',
+            'path',
             'tagIds',
             'groupIds',
             'characterIds',
         ])
         if (body.tagIds)
-            target.tagIds = (
-                await this.tagService.matchTagIds(
-                    parseIds(body.tagIds),
-                    CategoryType.asset
-                )
-            ).join(',')
+            target.tags = await this.tagService.matchByIds(
+                parseIds(body.tagIds),
+                CategoryType.asset
+            )
         if (body.groupIds)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )
-        if (body.asset) target.asset = await this._saveAsset(body.asset)
+        if (body.path) target.path = await this._saveAsset(body.path)
         if (body.characterIds)
             target.characters = await this.charService.findByIds(
                 parseIds(body.characterIds)
@@ -202,29 +216,29 @@ export class AssetService {
             body.name = `${formatDate('y-M-d H:m:s', new Date())}-${this
                 ._nameId++}`
 
-        const pic = await this._mergeBodyToEntity(new AssetEntity(), body)
+        const asset = await this._mergeBodyToEntity(new AssetEntity(), body)
 
-        const errors = await validate(pic)
+        const errors = await validate(asset)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        const newPic = await this.picRepo.save(pic)
-        return await this.picRepo.findOne(newPic.id)
+        const newPic = await this.assetRepo.save(asset)
+        return await this.assetRepo.findOne(newPic.id)
     }
 
     public async update(id: number, body: IAsset) {
-        const pic = await this.findById(id)
-        await this._mergeBodyToEntity(pic, body)
+        const asset = await this.findById(id)
+        await this._mergeBodyToEntity(asset, body)
 
-        const errors = await validate(pic)
+        const errors = await validate(asset)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        return await this.picRepo.save(pic)
+        return await this.assetRepo.save(asset)
     }
 
     public async delete(id: number) {
-        const pic = await this.findById(id)
-        return await this.picRepo.remove(pic)
+        const asset = await this.findById(id)
+        return await this.assetRepo.remove(asset)
     }
 }

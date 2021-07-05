@@ -16,63 +16,63 @@ import { CharacterAssetSetEntity } from './assetSet.entity'
 export class AssetSetService {
     constructor(
         @InjectRepository(CharacterAssetSetEntity)
-        private readonly picSetRepo: Repository<CharacterAssetSetEntity>
+        private readonly assetSetRepo: Repository<CharacterAssetSetEntity>
     ) {}
 
     public async find(name: string) {
-        return await this.picSetRepo.find({ name })
+        return await this.assetSetRepo.find({ name })
     }
 
     public async findAll() {
-        return await this.picSetRepo.find()
+        return await this.assetSetRepo.find()
     }
 
     public async findById(id: number) {
-        const result = await this.picSetRepo.findOne(id)
+        const result = await this.assetSetRepo.findOne(id)
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return await this.picSetRepo.findByIds(ids)
+        return await this.assetSetRepo.findByIds(ids)
     }
 
     public async create(body: IStarName) {
-        const picSet = new CharacterAssetSetEntity()
-        mergeObjectToEntity(picSet, body)
+        const assetSet = new CharacterAssetSetEntity()
+        mergeObjectToEntity(assetSet, body)
 
-        const errors = await validate(picSet)
+        const errors = await validate(assetSet)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        if (await this.hasName(picSet.name))
+        if (await this.hasName(assetSet.name))
             throw new ConflictException('has the same name')
 
-        return this.picSetRepo.save(picSet)
+        return this.assetSetRepo.save(assetSet)
     }
 
     public async update(id: number, body: IStarName) {
-        const picSet = await this.findById(id)
+        const assetSet = await this.findById(id)
         if (body.name)
-            if (picSet.name !== body.name && (await this.hasName(body.name)))
+            if (assetSet.name !== body.name && (await this.hasName(body.name)))
                 throw new ConflictException('has the same name')
 
-        mergeObjectToEntity(picSet, body)
+        mergeObjectToEntity(assetSet, body)
 
-        const errors = await validate(picSet)
+        const errors = await validate(assetSet)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        return await this.picSetRepo.save(picSet)
+        return await this.assetSetRepo.save(assetSet)
     }
 
     public async delete(id: number) {
-        const picSet = await this.findById(id)
-        return await this.picSetRepo.remove(picSet)
+        const assetSet = await this.findById(id)
+        return await this.assetSetRepo.remove(assetSet)
     }
 
     public async hasName(name: string) {
-        const picSet = await this.picSetRepo.findOne({ name })
-        return !!picSet
+        const assetSet = await this.assetSetRepo.findOne({ name })
+        return !!assetSet
     }
 }

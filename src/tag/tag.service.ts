@@ -47,9 +47,9 @@ export class TagService {
         return await this.tagRepo.findByIds(ids)
     }
 
-    public async checkTagTypeByIds(ids: number[], type: CategoryType) {
+    public async matchByIds(ids: number[], type: CategoryType) {
         const tags = await this.findRelationsByIds(ids)
-        return tags.every((tag) => {
+        const result = tags.every((tag) => {
             if (
                 tag.category.type === CategoryType.common ||
                 tag.category.type === type
@@ -57,6 +57,9 @@ export class TagService {
                 return true
             return false
         })
+
+        if (result) return tags
+        throw 'unmatch tag'
     }
 
     public async findRelations() {
@@ -113,12 +116,6 @@ export class TagService {
 
         if (result) throw new UnprocessableEntityException()
         return await this.tagRepo.remove(tag)
-    }
-
-    public async matchTagIds(tagIds: number[], type: CategoryType) {
-        if (await this.checkTagTypeByIds(tagIds, type))
-            return tagIds.sort((a, b) => a - b)
-        throw 'unmatch tag'
     }
 
     public async hasName(category: CategoryEntity, name: string) {

@@ -30,17 +30,20 @@ export class CategoryService {
         return result
     }
 
-    public async findRelations(type: CategoryType) {
-        return await this.categoryRepo
+    public async findRelations(type?: CategoryType) {
+        let qb = this.categoryRepo
             .createQueryBuilder('category')
             .leftJoinAndSelect('category.tags', 'tag')
-            .where('category.type IN (:...types)', {
+
+        if (type != null)
+            qb = qb.where('category.type IN (:...types)', {
                 types:
                     type === CategoryType.common
                         ? [type]
                         : [type, CategoryType.common],
             })
-            .getMany()
+
+        return await qb.getMany()
     }
 
     public async findRelationsByIds(ids: number[]) {
