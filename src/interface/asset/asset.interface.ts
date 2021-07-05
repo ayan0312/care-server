@@ -2,7 +2,7 @@ import { IStarName } from '../name.interface'
 import { ISearch } from '../search.interface'
 
 export interface IAsset extends IStarName {
-    path: string
+    path?: string
     intro?: string
     remark?: string
     tagIds?: string

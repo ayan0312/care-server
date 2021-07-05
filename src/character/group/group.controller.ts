@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IStarName } from 'src/interface/name.interface'
-import { GroupService } from './group.service'
+import { CharacterGroupService } from './group.service'
 
 @ApiTags('character_groups')
 @Controller('character/groups')
-export class GroupController {
-    constructor(private readonly groupService: GroupService) {}
+export class CharacterGroupController {
+    constructor(private readonly groupService: CharacterGroupService) {}
 
     @Get()
     public async find(@Query('name', new DefaultValuePipe('')) name: string) {

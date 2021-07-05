@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IStarName } from 'src/interface/name.interface'
-import { GroupService } from './group.service'
+import { AssetGroupService } from './group.service'
 
 @ApiTags('asset_groups')
 @Controller('asset/groups')
-export class GroupController {
-    constructor(private readonly groupService: GroupService) {}
+export class AssetGroupController {
+    constructor(private readonly groupService: AssetGroupService) {}
 
     @Get()
     public async find(@Query('name', new DefaultValuePipe('')) name: string) {

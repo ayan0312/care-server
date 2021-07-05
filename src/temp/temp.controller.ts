@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import multer from 'multer'
 import { config } from 'src/shared/config'
-import { patchURL } from 'src/shared/image'
+import { URL } from 'url'
 
 let tempId = 0
 
@@ -31,15 +31,12 @@ export class TempController {
         })
     )
     public async uploadImage(@UploadedFile() file: Express.Multer.File) {
-        return patchURL(
-            {
-                size: file.size,
-                preview: `/temps/${file.filename}`,
-                filename: file.filename,
-                mimetype: file.mimetype,
-                originalname: file.originalname,
-            },
-            ['preview']
-        )
+        return {
+            size: file.size,
+            preview: new URL(file.filename, config.URL.TEMP_PATH),
+            filename: file.filename,
+            mimetype: file.mimetype,
+            originalname: file.originalname,
+        }
     }
 }

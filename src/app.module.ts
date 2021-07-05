@@ -11,8 +11,8 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { AssetModule } from './asset/asset.module'
 import { CategoryModule } from './category/category.module'
 import { TagModule } from './tag/tag.module'
-import { GroupModule as AssetGroupModule } from './asset/group/group.module'
-import { GroupModule as CharacterGroupModule } from './character/group/group.module'
+import { AssetGroupModule } from './asset/group/group.module'
+import { CharacterGroupModule } from './character/group/group.module'
 
 @Module({
     imports: [

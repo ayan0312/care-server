@@ -50,6 +50,7 @@ function transformAssetEntity(asset: AssetEntity) {
         remark: asset.remark,
         tags: asset.tags.map((tag) => tag.id),
         groups: asset.groups.map((group) => group.id),
+        path: asset.path,
         assetType: asset.assetType,
         assetSets: asset.assetSets.map((assetSet) => assetSet.id),
         characters: asset.characters.map((char) => char.id),
@@ -101,9 +102,9 @@ export class Exporter extends EventEmitter {
     public async outputAsset(asset: AssetEntity) {
         const infoHeader = `export asset ${asset.id}: `
         this.emit('message', infoHeader + 'start')
-        const targetDir = path.resolve(this.dir, `assets`)
+        const targetDir = path.join(this.dir, `assets`)
         await fs.outputJson(
-            path.resolve(targetDir, `${asset.id}.json`),
+            path.join(targetDir, `${asset.id}.json`),
             transformAssetEntity(asset)
         )
 
@@ -112,11 +113,8 @@ export class Exporter extends EventEmitter {
                 this.emit('message', infoHeader + 'file')
             if (asset.assetType === AssetType.folder)
                 this.emit('message', infoHeader + 'folder')
-            const src = path.resolve(config.ASSETS_PATH, asset.path)
-            const dest = path.resolve(
-                targetDir,
-                `${asset.id}${path.extname(asset.path)}`
-            )
+            const src = path.join(config.ASSETS_PATH, asset.path)
+            const dest = path.join(targetDir, `${asset.path}`)
             await fs.copyFile(src, dest)
         }
 
@@ -130,31 +128,31 @@ export class Exporter extends EventEmitter {
     public async outputCharacter(char: CharacterEntity) {
         const infoHeader = `export character ${char.id}(${char.name}): `
         this.emit('message', infoHeader + 'start')
-        const targetDir = path.resolve(this.dir, `characters/${char.id}`)
+        const targetDir = path.join(this.dir, `characters/${char.id}`)
         await fs.outputJson(
-            path.resolve(targetDir, 'character.json'),
+            path.join(targetDir, 'character.json'),
             transformCharacterEntity(char)
         )
 
         if (char.avatar) {
             this.emit('message', infoHeader + 'avatar')
-            const src = path.resolve(config.AVATARS_PATH, char.avatar)
-            const dest = path.resolve(
+            const src = path.join(config.AVATARS_PATH, char.avatar)
+            const dest = path.join(
                 targetDir,
-                `avatar.${path.extname(char.avatar)}`
+                `avatar${path.extname(char.avatar)}`
             )
             await fs.copy(src, dest)
         }
 
         if (char.fullLengthPicture) {
             this.emit('message', infoHeader + 'full-length picture')
-            const src = path.resolve(
+            const src = path.join(
                 config.FULL_LENGTH_PICTURES_PATH,
                 char.fullLengthPicture
             )
-            const dest = path.resolve(
+            const dest = path.join(
                 targetDir,
-                `fullLengthPicture.${path.extname(char.fullLengthPicture)}`
+                `fullLengthPicture${path.extname(char.fullLengthPicture)}`
             )
             await fs.copy(src, dest)
         }

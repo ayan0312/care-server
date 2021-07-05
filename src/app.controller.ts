@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { AssetService } from './asset/asset.service'
-import { GroupService as AssetGroupService } from './asset/group/group.service'
-import { GroupService as CharacterGroupService } from './character/group/group.service'
+import { AssetGroupService } from './asset/group/group.service'
+import { CharacterGroupService } from './character/group/group.service'
 import { CategoryService } from './category/category.service'
 import { CharacterService } from './character/character.service'
 import { Exporter } from './exporter'
@@ -26,22 +26,23 @@ export class AppController {
         private readonly categoryService: CategoryService,
         private readonly charGroupService: CharacterGroupService,
         private readonly assetGroupService: AssetGroupService
-    ) { }
+    ) {}
 
     @Get()
     public getApi() {
         return '<h1>care server</h1>'
     }
 
-    @Get('settings')
-    public async exportSettings(
-        @Query('path', new DefaultValuePipe('')) path: string
+    @Post('data')
+    public async exportData(
+        @Body('path', new DefaultValuePipe('')) path: string
     ) {
         if (!path) return
 
         const categories = await this.categoryService.findRelations()
         const assetGroups = await this.assetGroupService.findAll()
         const characterGroups = await this.charGroupService.findAll()
+
         const exporter = new Exporter(path, {
             categories,
             assetGroups,
@@ -52,13 +53,26 @@ export class AppController {
             console.log(msg)
         })
 
-        await exporter.outputContext()
+        try {
+            await exporter.outputContext()
 
-        for await (let char of this.charService.generator())
-            await exporter.outputCharacter(char.data)
+            for await (let char of this.charService.generator([
+                'tags',
+                'groups',
+                'assetSets',
+            ]))
+                await exporter.outputCharacter(char.data)
 
-        for await (let asset of this.assetService.generator())
-            await exporter.outputAsset(asset.data)
+            for await (let asset of this.assetService.generator([
+                'tags',
+                'groups',
+                'assetSets',
+                'characters',
+            ]))
+                await exporter.outputAsset(asset.data)
+        } catch (err) {
+            console.log(err)
+        }
     }
 
     @Post('settings')

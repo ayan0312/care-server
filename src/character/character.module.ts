@@ -4,15 +4,15 @@ import { CharacterEntity } from './character.entity'
 import { CharacterService } from './character.service'
 import { CharacterController } from './character.controller'
 import { TagModule } from 'src/tag/tag.module'
-import { GroupModule } from './group/group.module'
+import { CharacterGroupModule } from './group/group.module'
 import { AssetSetModule } from './assetSet/assetSet.module'
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([CharacterEntity]),
         TagModule,
-        GroupModule,
         AssetSetModule,
+        CharacterGroupModule,
     ],
     providers: [CharacterService],
     controllers: [CharacterController],

@@ -29,7 +29,7 @@ export class AssetEntity extends StarNameEntity {
     @Column('simple-enum')
     public assetType: AssetType = AssetType.file
 
-    @ManyToMany((type) => TagEntity, (tag) => tag.characters)
+    @ManyToMany((type) => TagEntity, (tag) => tag.assets)
     public tags: TagEntity[]
 
     @ManyToMany((type) => AssetGroupEntity, (group) => group.assets)

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm'
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
 import { AssetEntity } from 'src/asset/asset.entity'
@@ -36,7 +36,6 @@ export class CharacterEntity extends StarNameEntity {
     public tags: TagEntity[]
 
     @ManyToMany((type) => CharacterGroupEntity, (group) => group.characters)
-    @JoinTable()
     public groups: CharacterGroupEntity[]
 
     @ManyToMany((type) => AssetEntity, (asset) => asset.characters)

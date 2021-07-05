@@ -1,5 +1,6 @@
 import gm from 'gm'
 import {
+    BadRequestException,
     HttpException,
     HttpStatus,
     Injectable,
@@ -13,14 +14,15 @@ import {
     IAssetSearchCondition,
 } from 'src/interface/asset/asset.interface'
 import { config } from 'src/shared/config'
-import { ImageMetadata, patchURL, saveImage } from 'src/shared/image'
+import { ImageMetadata, saveImage } from 'src/shared/image'
 import { formatDate, mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { AssetEntity } from './asset.entity'
-import { GroupService } from './group/group.service'
+import { AssetGroupService } from './group/group.service'
 import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
+import { URL } from 'url'
 
 @Injectable()
 export class AssetService {
@@ -29,7 +31,7 @@ export class AssetService {
         private readonly assetRepo: Repository<AssetEntity>,
         private readonly tagService: TagService,
         private readonly charService: CharacterService,
-        private readonly groupService: GroupService
+        private readonly groupService: AssetGroupService
     ) {}
 
     private _nameId = 0
@@ -52,17 +54,23 @@ export class AssetService {
         return this.assetRepo.findByIds(ids)
     }
 
-    public async *generator() {
+    public async *generator(relations?: string[]) {
         let next = 0
         while (true) {
             next++
-            const result = await this.assetRepo
-                .createQueryBuilder('asset')
+            let qb = this.assetRepo.createQueryBuilder('asset')
+
+            if (relations)
+                relations.forEach((relation) => {
+                    qb = qb.leftJoinAndSelect(`asset.${relation}`, relation)
+                })
+
+            const result = await qb
                 .skip(1 * (next - 1))
                 .take(1)
                 .getManyAndCount()
 
-            if (result[0] == null && next == result[1]) break
+            if (result[0].length === 0 || next > result[1]) break
 
             yield {
                 data: result[0][0],
@@ -136,10 +144,10 @@ export class AssetService {
             page: Number(page),
             size: Number(size),
             rows: data[0].map((entity) => {
-                patchURL(entity, ['asset'])
-                return Object.assign({}, entity, {
+                return Object.assign(entity, {
+                    path: new URL(entity.path, config.URL.ASSETS_PATH),
                     xsmall: {
-                        path: entity.path.replace('assets', 'assets/300'),
+                        path: new URL(entity.path, config.URL.ASSETS_300_PATH),
                     },
                 })
             }),
@@ -183,10 +191,14 @@ export class AssetService {
 
         await this._saveAsset300(metadata)
 
-        return '/assets/' + metadata.name
+        return metadata.name
     }
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
+        if (!body.path) throw new BadRequestException('path cannot be empty')
+
+        target.path = await this._saveAsset(body.path)
+
         mergeObjectToEntity(target, body, [
             'path',
             'tagIds',
@@ -202,7 +214,6 @@ export class AssetService {
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )
-        if (body.path) target.path = await this._saveAsset(body.path)
         if (body.characterIds)
             target.characters = await this.charService.findByIds(
                 parseIds(body.characterIds)

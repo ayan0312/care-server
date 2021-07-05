@@ -13,13 +13,14 @@ import {
     ICharacterSearchCondition,
 } from 'src/interface/character/character.interface'
 import { config } from 'src/shared/config'
-import { ImageMetadata, patchURL, saveImage } from 'src/shared/image'
+import { ImageMetadata, saveImage } from 'src/shared/image'
 import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
-import { CharacterEntity } from './character.entity'
-import { GroupService } from './group/group.service'
+import { CharacterEntity } from 'src/character/character.entity'
+import { CharacterGroupService } from 'src/character/group/group.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
+import { URL } from 'url'
 
 @Injectable()
 export class CharacterService {
@@ -27,22 +28,28 @@ export class CharacterService {
         @InjectRepository(CharacterEntity)
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
-        private readonly groupService: GroupService
+        private readonly groupService: CharacterGroupService
     ) {}
 
     private _imageId = 0
 
-    public async *generator() {
+    public async *generator(relations?: string[]) {
         let next = 0
         while (true) {
             next++
-            const result = await this.charRepo
-                .createQueryBuilder('character')
+            let qb = this.charRepo.createQueryBuilder('character')
+
+            if (relations)
+                relations.forEach((relation) => {
+                    qb = qb.leftJoinAndSelect(`character.${relation}`, relation)
+                })
+
+            const result = await qb
                 .skip(1 * (next - 1))
                 .take(1)
                 .getManyAndCount()
 
-            if (result[0] == null && next == result[1]) break
+            if (result[0].length === 0 || next > result[1]) break
 
             yield {
                 data: result[0][0],
@@ -135,13 +142,20 @@ export class CharacterService {
             page: Number(page),
             size: Number(size),
             rows: data[0].map((entity) => {
-                patchURL(entity, ['avatar', 'fullLengthPicture'])
                 return Object.assign({}, entity, {
+                    avatar: new URL(entity.avatar, config.URL.AVATARS_PATH),
+                    fullLengthPicture: new URL(
+                        entity.fullLengthPicture,
+                        config.URL.FULL_LENGTH_PICTURES_PATH
+                    ),
                     ['xsmall']: {
-                        avatar: entity.avatar.replace('avatars', 'avatars/200'),
-                        fullLengthPicture: entity.fullLengthPicture.replace(
-                            'fullLengthPictures',
-                            'fullLengthPictures/300'
+                        avatar: new URL(
+                            entity.avatar,
+                            config.URL.AVATARS_200_PATH
+                        ),
+                        fullLengthPicture: new URL(
+                            entity.fullLengthPicture,
+                            config.URL.FULL_LENGTH_PICTURES_300_PATH
                         ),
                     },
                 })
@@ -186,7 +200,7 @@ export class CharacterService {
 
         await this._saveAvatar200(metadata)
 
-        return '/avatars/' + metadata.name
+        return metadata.name
     }
 
     private async _saveFullLengthPicture300(metadata: ImageMetadata) {
@@ -210,7 +224,7 @@ export class CharacterService {
 
         await this._saveFullLengthPicture300(metadata)
 
-        return '/fullLengthPictures/' + metadata.name
+        return metadata.name
     }
 
     private async _mergeBodyToEntity(
@@ -247,8 +261,7 @@ export class CharacterService {
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        const newChar = await this.charRepo.save(char)
-        return await this.charRepo.findOne(newChar.id)
+        return await this.charRepo.save(char)
     }
 
     public async update(id: number, body: ICharacter) {
@@ -259,7 +272,8 @@ export class CharacterService {
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        return await this.charRepo.save(char)
+        await this.charRepo.save(char)
+        return this.charRepo.findOne(id)
     }
 
     public async delete(id: number) {

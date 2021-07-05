@@ -32,11 +32,11 @@ function autoMkdir() {
     autoMkdirSync(config.TEMP_PATH)
     autoMkdirSync(config.BACKUPS_PATH)
     autoMkdirSync(config.AVATARS_PATH)
-    autoMkdirSync(config.AVATARS_PATH + '/200')
+    autoMkdirSync(config.AVATARS_200_PATH)
     autoMkdirSync(config.ASSETS_PATH)
-    autoMkdirSync(config.ASSETS_PATH + '/300')
+    autoMkdirSync(config.ASSETS_300_PATH)
     autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH)
-    autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH + '/300')
+    autoMkdirSync(config.FULL_LENGTH_PICTURES_300_PATH)
 }
 
 function main() {

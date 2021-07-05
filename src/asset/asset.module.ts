@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AssetEntity } from './asset.entity'
 import { AssetService } from './asset.service'
 import { AssetController } from './asset.controller'
-import { GroupModule } from './group/group.module'
+import { AssetGroupModule } from './group/group.module'
 import { CharacterModule } from 'src/character/character.module'
 import { TagModule } from 'src/tag/tag.module'
 
@@ -11,8 +11,8 @@ import { TagModule } from 'src/tag/tag.module'
     imports: [
         TypeOrmModule.forFeature([AssetEntity]),
         TagModule,
-        GroupModule,
         CharacterModule,
+        AssetGroupModule,
     ],
     providers: [AssetService],
     controllers: [AssetController],

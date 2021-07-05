@@ -13,7 +13,7 @@ import { mergeObjectToEntity } from 'src/shared/utilities'
 import { CharacterGroupEntity } from './group.entity'
 
 @Injectable()
-export class GroupService {
+export class CharacterGroupService {
     constructor(
         @InjectRepository(CharacterGroupEntity)
         private readonly groupRepo: Repository<CharacterGroupEntity>
