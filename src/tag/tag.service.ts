@@ -76,6 +76,7 @@ export class TagService {
 
     public async create(body: ITag) {
         const tag = new TagEntity()
+
         mergeObjectToEntity(tag, body, ['categoryId'])
         if (body.categoryId)
             tag.category = await this.categoryService.findById(body.categoryId)

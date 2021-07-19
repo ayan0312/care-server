@@ -40,7 +40,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             if (exception instanceof ErrorCodeException) errorCode = res.code
         } else if (exception instanceof Error) {
             if (exception.message) message = exception.message
-            console.error(exception)
+            if ((exception as any).status !== 404) console.error(exception)
         } else if (typeof exception === 'string') {
             message = exception
         }

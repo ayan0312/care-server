@@ -13,6 +13,7 @@ export const mergeObjectToEntity = <
 ) => {
     Object.keys(source).forEach((key) => {
         if (excludes.includes(key)) return
+        if (key === 'id') return
         const value = source[key]
         ;(entity as any)[key] = value
     })

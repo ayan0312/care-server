@@ -7,13 +7,18 @@ import {
     transformCharacterEntity,
     transformStarNameEntity,
 } from 'src/exporter'
-import { IAsset } from './interface/asset/asset.interface'
-import { ICharacter } from './interface/character/character.interface'
 import { config } from './shared/config'
 import { v4 as uuidv4 } from 'uuid'
 import { ICategory } from './interface/category.interface'
-import { IStarName } from './interface/name.interface'
 import { ITag } from './interface/tag.interface'
+
+type EntityKey =
+    | 'tag'
+    | 'category'
+    | 'assetGroup'
+    | 'characterGroup'
+    | 'character'
+    | 'asset'
 
 export class Importer extends EventEmitter {
     public readonly dir: string
@@ -29,33 +34,24 @@ export class Importer extends EventEmitter {
         if (!fs.pathExistsSync(path)) throw ''
     }
 
-    public async inputContext(): Promise<{
-        tags: Required<ITag>[]
-        categories: Required<ICategory>[]
-        assetGroups: Required<IStarName>[]
-        characterGroups: Required<IStarName>[]
-    }> {
+    public async inputContext() {
         this.emit('message', 'import context: start')
         const filename = path.join(this.dir, 'context.json')
         this.checkPathExists(filename)
         const result: ReturnType<typeof createContext> = await fs.readJson(
             filename
         )
-        const tags: Required<ITag>[] = []
-        const categories: Required<ICategory>[] = result.categories.map(
-            (category) => {
-                tags.concat(
-                    category.tags.map((tag) => ({
-                        name: tag.name,
-                        categoryId: tag.categoryId,
-                    }))
-                )
-                return {
-                    name: category.name,
-                    type: String(category.type),
-                }
+        const tags: (Required<ITag> & { id: number })[] = []
+        const categories: (Required<ICategory> & {
+            id: number
+        })[] = result.categories.map((category) => {
+            tags.push(...category.tags)
+            return {
+                id: category.id,
+                name: category.name,
+                type: String(category.type),
             }
-        )
+        })
 
         this.emit('message', 'import context: end')
 
@@ -69,85 +65,94 @@ export class Importer extends EventEmitter {
 
     private _inputStarName(d: ReturnType<typeof transformStarNameEntity>) {
         return {
+            id: d.id,
             name: d.name,
             star: d.star,
             rating: d.rating,
         }
     }
 
-    public async inputAsset(id: number): Promise<IAsset> {
+    public convertIds(type: EntityKey, ids: number[]) {
+        return ids.map((id) => this.getId(type, id)).join()
+    }
+
+    public async inputAsset(id: number) {
         const infoHeader = `import asset ${id}: `
         this.emit('message', infoHeader + 'start')
 
-        const filename = path.join(this.dir, `assets/${id}.json`)
+        const root = path.join(this.dir, 'assets')
+        const filename = path.join(root, `${id}.json`)
+
         this.checkPathExists(filename)
+
         const asset: ReturnType<
             typeof transformAssetEntity
         > = await fs.readJson(filename)
 
         this.emit('message', infoHeader + 'content')
-        const pathUUID = uuidv4()
-        if (await fs.pathExists(asset.path))
-            await fs.copy(asset.path, path.join(config.TEMP_PATH, pathUUID))
+        const pathUUID = await this.copyAsset(path.join(root, asset.path))
 
         this.emit('message', infoHeader + 'end')
 
         return Object.assign(this._inputStarName(asset), {
+            path: pathUUID,
             intro: asset.intro,
             remark: asset.remark,
-            tagIds: asset.tags.join(),
-            groupIds: asset.tags.join(),
+            tagIds: this.convertIds('tag', asset.tags),
+            groupIds: this.convertIds('assetGroup', asset.groups),
             assetType: asset.assetType,
             assetSetIds: asset.assetSets.join(),
-            characterIds: asset.characters.join(),
+            characterIds: this.convertIds('character', asset.characters),
         })
     }
 
     public async *assetGenerator() {
         let i = 0
-        const ids = (await fs.readdir(path.join(this.dir, 'assets'))).filter(
-            (base) => path.extname(base) === '.json'
-        )
+        const ids = (await fs.readdir(path.join(this.dir, 'assets')))
+            .filter((base) => path.extname(base) === '.json')
+            .map((json) => parseInt(json.split('.json')[0]))
+            .sort((a, b) => a - b)
+
         while (i < ids.length) {
             const id = ids[i]
             i++
 
             try {
-                yield await this.inputAsset(parseInt(id))
+                yield await this.inputAsset(id)
             } catch (err) {
                 this.emit('error', err)
             }
         }
     }
 
-    public async inputCharacter(id: number): Promise<ICharacter> {
+    public async copyAsset(filename: string) {
+        if (!(await fs.pathExists(filename))) return ''
+
+        const name = `${uuidv4()}${path.extname(filename)}`
+        await fs.copy(filename, path.join(config.TEMP_PATH, name))
+        return name
+    }
+
+    public async inputCharacter(id: number) {
         const infoHeader = `import character ${id}: `
         this.emit('message', infoHeader + 'start')
 
         const root = path.join(this.dir, `characters/${id}`)
-        const filename = path.join(root, 'character.json')
-        this.checkPathExists(filename)
+        const charJsonFilename = path.join(root, 'character.json')
+
+        this.checkPathExists(charJsonFilename)
+
         const char: ReturnType<
             typeof transformCharacterEntity
-        > = await fs.readJson(filename)
+        > = await fs.readJson(charJsonFilename)
 
         this.emit('message', infoHeader + 'avatar')
-        const avatarFilename = path.join(root, 'avatar.png')
-        const avatarUUID = uuidv4()
-        if (await fs.pathExists(avatarFilename))
-            await fs.copy(
-                avatarFilename,
-                path.join(config.TEMP_PATH, `${avatarUUID}.png`)
-            )
+        const avatarUUID = await this.copyAsset(path.join(root, 'avatar.png'))
 
         this.emit('message', infoHeader + 'full-length picture')
-        const flpicFilename = path.join(root, 'fullLengthPicture.png')
-        const flpicUUID = uuidv4()
-        if (await fs.pathExists(flpicFilename))
-            await fs.copy(
-                avatarFilename,
-                path.join(config.TEMP_PATH, `${flpicUUID}.png`)
-            )
+        const flpicUUID = await this.copyAsset(
+            path.join(root, 'fullLengthPicture.png')
+        )
 
         this.emit('message', infoHeader + 'end')
 
@@ -155,18 +160,36 @@ export class Importer extends EventEmitter {
             intro: char.intro,
             avatar: avatarUUID,
             remark: char.remark,
-            tagIds: char.tags.join(),
-            groupIds: char.tags.join(),
+            tagIds: this.convertIds('tag', char.tags),
+            groupIds: this.convertIds('characterGroup', char.tags),
             assetSetIds: char.assetSets.join(),
             fullLengthPicture: flpicUUID,
         })
     }
 
+    private _idMap: Record<EntityKey, Record<number, number>> = {
+        tag: {},
+        asset: {},
+        category: {},
+        character: {},
+        assetGroup: {},
+        characterGroup: {},
+    }
+
+    public setId(key: EntityKey, oldId: number, newId: number) {
+        this._idMap[key][oldId] = newId
+    }
+
+    public getId(key: EntityKey, oldId: number) {
+        return this._idMap[key][oldId]
+    }
+
     public async *characterGenerator() {
         let i = 0
-        const ids = (
-            await fs.readdir(path.join(this.dir, 'characters'))
-        ).filter((base) => path.extname(base) === '')
+        const ids = (await fs.readdir(path.join(this.dir, 'characters')))
+            .filter((base) => path.extname(base) === '')
+            .sort((a, b) => parseInt(a) - parseInt(b))
+
         while (i < ids.length) {
             const id = ids[i]
             i++

@@ -233,8 +233,7 @@ export class AssetService {
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        const newPic = await this.assetRepo.save(asset)
-        return await this.assetRepo.findOne(newPic.id)
+        return await this.assetRepo.save(asset)
     }
 
     public async update(id: number, body: IAsset) {
@@ -245,7 +244,8 @@ export class AssetService {
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        return await this.assetRepo.save(asset)
+        const newPic = await this.assetRepo.save(asset)
+        return await this.assetRepo.findOne(newPic.id)
     }
 
     public async delete(id: number) {

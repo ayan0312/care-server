@@ -6,11 +6,10 @@ import { CharacterGroupService } from './character/group/group.service'
 import { CategoryService } from './category/category.service'
 import { CharacterService } from './character/character.service'
 import { Exporter } from './exporter'
-import { ISettings } from './interface/settings.interface'
 import { TagService } from './tag/tag.service'
 
-import fs from 'fs-extra'
 import { Importer } from './importer'
+import { CategoryType } from './interface/category.interface'
 
 @ApiTags('root')
 @Controller()
@@ -48,28 +47,62 @@ export class AppController {
 
         try {
             for (let i = 0; i < categories.length; i++)
-                await this.categoryService.create(
-                    categories[i].name,
-                    Number(categories[i].type)
+                importer.setId(
+                    'category',
+                    categories[i].id,
+                    (
+                        await this.categoryService.create(
+                            categories[i].name,
+                            Number(categories[i].type) || CategoryType.character
+                        )
+                    ).id
                 )
 
-            for (let i = 0; i < tags.length; i++)
-                await this.tagService.create(tags[i])
+            for (let i = 0; i < tags.length; i++) {
+                tags[i].categoryId = importer.getId(
+                    'category',
+                    tags[i].categoryId
+                )
+                importer.setId(
+                    'tag',
+                    tags[i].id,
+                    (await this.tagService.create(tags[i])).id
+                )
+            }
 
             for (let i = 0; i < assetGroups.length; i++)
-                await this.assetGroupService.create(assetGroups[i])
+                importer.setId(
+                    'assetGroup',
+                    assetGroups[i].id,
+                    (await this.assetGroupService.create(assetGroups[i])).id
+                )
 
             for (let i = 0; i < characterGroups.length; i++)
-                await this.charGroupService.create(characterGroups[i])
+                importer.setId(
+                    'characterGroup',
+                    characterGroups[i].id,
+                    (await this.charGroupService.create(characterGroups[i])).id
+                )
 
-            for await (let char of importer.characterGenerator())
-                await this.charService.create(char)
+            for await (let char of importer.characterGenerator()) {
+                importer.setId(
+                    'character',
+                    char.id,
+                    (await this.charService.create(char)).id
+                )
+            }
 
             for await (let asset of importer.assetGenerator())
-                await this.assetService.create(asset)
+                importer.setId(
+                    'asset',
+                    asset.id,
+                    (await this.assetService.create(asset)).id
+                )
         } catch (err) {
             console.error(err)
         }
+
+        console.log('import end')
     }
 
     @Get('data')
@@ -110,5 +143,7 @@ export class AppController {
         } catch (err) {
             console.log(err)
         }
+
+        console.log('export end')
     }
 }
