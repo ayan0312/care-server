@@ -40,16 +40,16 @@ export class CharacterController {
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Query(
-            'relations',
-            new DefaultValuePipe(''),
-            new ParseArrayPipe({ items: String, separator: ',' })
-        )
-        relations: string[]
+        @Query('relations', new DefaultValuePipe(''))
+        relations: string
     ) {
         if (relations.includes('category'))
             return await this.charService.findCategoryRelationsById(id)
-        return await this.charService.findById(id, relations)
+        return await this.charService.findById(
+            id,
+            relations ? relations.split(',') : undefined,
+            true
+        )
     }
 
     @Patch(':id')

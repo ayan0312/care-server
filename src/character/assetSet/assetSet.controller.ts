@@ -22,9 +22,8 @@ export class AssetSetController {
     constructor(private readonly assetSetService: AssetSetService) {}
 
     @Get()
-    public async find(@Query('name', new DefaultValuePipe('')) name: string) {
-        if (name) return await this.assetSetService.find(name)
-        return await this.assetSetService.findAll()
+    public async find(@Query('options') options: string) {
+        return await this.assetSetService.search(JSON.parse(options))
     }
 
     @Post()

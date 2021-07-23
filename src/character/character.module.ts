@@ -5,13 +5,11 @@ import { CharacterService } from './character.service'
 import { CharacterController } from './character.controller'
 import { TagModule } from 'src/tag/tag.module'
 import { CharacterGroupModule } from './group/group.module'
-import { AssetSetModule } from './assetSet/assetSet.module'
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([CharacterEntity]),
         TagModule,
-        AssetSetModule,
         CharacterGroupModule,
     ],
     providers: [CharacterService],

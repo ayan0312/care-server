@@ -24,6 +24,7 @@ import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
+import { AssetSetService } from 'src/character/assetSet/assetSet.service'
 
 @Injectable()
 export class AssetService {
@@ -32,7 +33,8 @@ export class AssetService {
         private readonly assetRepo: Repository<AssetEntity>,
         private readonly tagService: TagService,
         private readonly charService: CharacterService,
-        private readonly groupService: AssetGroupService
+        private readonly groupService: AssetGroupService,
+        private readonly assetSetService: AssetSetService
     ) {}
 
     private _nameId = 0
@@ -104,6 +106,17 @@ export class AssetService {
                 .andWhere('character.id IN (:...characterIds)', {
                     characterIds: condition.characterIds.split(','),
                 })
+        if (condition.assetSetIds != null)
+            if (condition.assetSetIds)
+                qb = qb
+                    .leftJoin('asset.assetSets', 'assetSet')
+                    .andWhere('assetSet.id IN (:...assetSetIds)', {
+                        assetSetIds: condition.assetSetIds.split(','),
+                    })
+            else
+                qb = qb
+                    .leftJoin('asset.assetSets', 'assetSet')
+                    .andWhere('assetSet.id IS NULL')
         if (condition.star != null)
             qb = qb.andWhere('asset.star = :star', { star: !!condition.star })
         if (condition.intro != null)
@@ -195,26 +208,29 @@ export class AssetService {
     }
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
-        if (!body.path) throw new BadRequestException('path cannot be empty')
-
-        target.path = await this._saveAsset(body.path)
-
         mergeObjectToEntity(target, body, [
             'path',
             'tagIds',
             'groupIds',
+            'assetSetIds',
             'characterIds',
         ])
-        if (body.tagIds)
+
+        if (body.path) target.path = await this._saveAsset(body.path)
+        if (body.tagIds != null)
             target.tags = await this.tagService.matchByIds(
                 parseIds(body.tagIds),
                 CategoryType.asset
             )
-        if (body.groupIds)
+        if (body.groupIds != null)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )
-        if (body.characterIds)
+        if (body.assetSetIds != null)
+            target.assetSets = await this.assetSetService.findByIds(
+                parseIds(body.assetSetIds)
+            )
+        if (body.characterIds != null)
             target.characters = await this.charService.findByIds(
                 parseIds(body.characterIds)
             )

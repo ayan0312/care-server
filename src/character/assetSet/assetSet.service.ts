@@ -1,30 +1,116 @@
 import { Repository } from 'typeorm'
 import {
+    BadRequestException,
     ConflictException,
     HttpException,
     HttpStatus,
     Injectable,
     NotFoundException,
+    OnModuleInit,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { validate } from 'class-validator'
 import { IStarName } from 'src/interface/name.interface'
 import { mergeObjectToEntity } from 'src/shared/utilities'
 import { CharacterAssetSetEntity } from './assetSet.entity'
+import {
+    IAssetSet,
+    IAssetSetSearch,
+    IAssetSetSearchCondition,
+} from 'src/interface/assetSet.interface'
+import { CharacterService } from '../character.service'
+import { ModuleRef } from '@nestjs/core'
+import { AssetService } from 'src/asset/asset.service'
 
 @Injectable()
-export class AssetSetService {
+export class AssetSetService implements OnModuleInit {
     constructor(
         @InjectRepository(CharacterAssetSetEntity)
-        private readonly assetSetRepo: Repository<CharacterAssetSetEntity>
+        private readonly assetSetRepo: Repository<CharacterAssetSetEntity>,
+        private readonly charService: CharacterService,
+        private readonly moduleRef: ModuleRef
     ) {}
+
+    private assetService: AssetService
+
+    public onModuleInit() {
+        this.assetService = this.moduleRef.get(AssetService, { strict: false })
+    }
 
     public async find(name: string) {
         return await this.assetSetRepo.find({ name })
     }
 
-    public async findAll() {
-        return await this.assetSetRepo.find()
+    public async search(body: IAssetSetSearch) {
+        const {
+            condition = { name: '' },
+            orderBy = { sort: 'created', order: 'DESC' },
+            size = 20,
+            page = 1,
+        } = body
+
+        let qb = this._createConditionQB(condition)
+        if (orderBy != null)
+            qb = qb.orderBy(`assetSet.${orderBy.sort}`, orderBy.order)
+
+        const data = await qb
+            .skip(size * (page - 1))
+            .take(size)
+            .getManyAndCount()
+
+        const rows = data[0]
+        for (let i = 0; i < rows.length; i++) {
+            const assetCount = await this.findAssetsCount(rows[i].id)
+            rows[i] = Object.assign({}, rows[i], { assetCount })
+        }
+
+        return {
+            page: Number(page),
+            size: Number(size),
+            rows,
+            total: data[1],
+        }
+    }
+
+    public async findAssetsCount(id: number) {
+        return this.assetSetRepo
+            .createQueryBuilder('assetSet')
+            .where('assetSet.id = :id', {
+                id,
+            })
+            .innerJoin('assetSet.assets', 'asset')
+            .getCount()
+    }
+
+    private _createConditionQB(condition: IAssetSetSearchCondition) {
+        let qb = this.assetSetRepo
+            .createQueryBuilder('assetSet')
+            .where('assetSet.name like :name', {
+                name: `%${condition.name ? condition.name : ''}%`,
+            })
+
+        if (condition.assetIds != null)
+            qb = qb
+                .leftJoin('assetSet.assets', 'asset')
+                .andWhere('asset.id IN (:...assetIds)', {
+                    assetIds: condition.assetIds.split(','),
+                })
+        if (condition.characterId != null)
+            qb = qb
+                .leftJoin('assetSet.character', 'character')
+                .andWhere('character.id = :characterId', {
+                    characterId: condition.characterId,
+                })
+        if (condition.star != null)
+            qb = qb.andWhere('assetSet.star = :star', {
+                star: !!condition.star,
+            })
+        if (condition.rating != null)
+            qb = qb.andWhere('assetSet.rating = :rating', {
+                rating: condition.rating,
+            })
+
+        return qb
     }
 
     public async findById(id: number) {
@@ -37,9 +123,21 @@ export class AssetSetService {
         return await this.assetSetRepo.findByIds(ids)
     }
 
-    public async create(body: IStarName) {
+    private async _mergeBodyToEntity(
+        target: CharacterAssetSetEntity,
+        body: IAssetSet
+    ) {
+        mergeObjectToEntity(target, body, ['characterId'])
+
+        if (body.characterId)
+            target.character = await this.charService.findById(body.characterId)
+
+        return target
+    }
+
+    public async create(body: IAssetSet) {
         const assetSet = new CharacterAssetSetEntity()
-        mergeObjectToEntity(assetSet, body)
+        this._mergeBodyToEntity(assetSet, body)
 
         const errors = await validate(assetSet)
         if (errors.length > 0)
@@ -57,7 +155,7 @@ export class AssetSetService {
             if (assetSet.name !== body.name && (await this.hasName(body.name)))
                 throw new ConflictException('has the same name')
 
-        mergeObjectToEntity(assetSet, body)
+        this._mergeBodyToEntity(assetSet, body)
 
         const errors = await validate(assetSet)
         if (errors.length > 0)
@@ -68,6 +166,18 @@ export class AssetSetService {
 
     public async delete(id: number) {
         const assetSet = await this.findById(id)
+        const result = await this.assetService.search({
+            page: 1,
+            size: 1,
+            condition: {
+                assetSetIds: String(id),
+            },
+        })
+
+        if (result.rows.length > 0)
+            throw new BadRequestException(
+                'please remove all assets in assetSet before delete assetSet'
+            )
         return await this.assetSetRepo.remove(assetSet)
     }
 

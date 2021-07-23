@@ -57,7 +57,11 @@ export class CharacterService {
         }
     }
 
-    public async findById(id: number, relations: string[] = []) {
+    public async findById(
+        id: number,
+        relations: string[] = [],
+        patch: boolean = false
+    ) {
         const result = await this.charRepo.findOne(
             id,
             relations
@@ -67,6 +71,7 @@ export class CharacterService {
                 : {}
         )
         if (!result) throw new NotFoundException()
+        if (patch) return this._patchCharResult(result)
         return result
     }
 
@@ -140,27 +145,26 @@ export class CharacterService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: data[0].map((entity) => {
-                return Object.assign({}, entity, {
-                    avatar: new URL(entity.avatar, config.URL.AVATARS_PATH),
-                    fullLengthPicture: new URL(
-                        entity.fullLengthPicture,
-                        config.URL.FULL_LENGTH_PICTURES_PATH
-                    ),
-                    ['xsmall']: {
-                        avatar: new URL(
-                            entity.avatar,
-                            config.URL.AVATARS_200_PATH
-                        ),
-                        fullLengthPicture: new URL(
-                            entity.fullLengthPicture,
-                            config.URL.FULL_LENGTH_PICTURES_300_PATH
-                        ),
-                    },
-                })
-            }),
+            rows: data[0].map((entity) => this._patchCharResult(entity)),
             total: data[1],
         }
+    }
+
+    private _patchCharResult(entity: CharacterEntity) {
+        return Object.assign({}, entity, {
+            avatar: new URL(entity.avatar, config.URL.AVATARS_PATH),
+            fullLengthPicture: new URL(
+                entity.fullLengthPicture,
+                config.URL.FULL_LENGTH_PICTURES_PATH
+            ),
+            ['xsmall']: {
+                avatar: new URL(entity.avatar, config.URL.AVATARS_200_PATH),
+                fullLengthPicture: new URL(
+                    entity.fullLengthPicture,
+                    config.URL.FULL_LENGTH_PICTURES_300_PATH
+                ),
+            },
+        })
     }
 
     private async _saveImage(targetPath: string, filename: string) {
@@ -236,12 +240,12 @@ export class CharacterService {
             'groupIds',
             'fullLengthPicture',
         ])
-        if (body.tagIds)
+        if (body.tagIds != null)
             target.tags = await this.tagService.matchByIds(
                 parseIds(body.tagIds),
                 CategoryType.character
             )
-        if (body.groupIds)
+        if (body.groupIds != null)
             target.groups = await this.groupService.findByIds(
                 parseIds(body.groupIds)
             )

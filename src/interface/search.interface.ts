@@ -2,7 +2,7 @@ export interface ISearch<T extends Record<string, any>> {
     page?: number
     size?: number
     orderBy?: {
-        sort: 'created' | 'updated'
+        sort: string
         order: 'ASC' | 'DESC'
     }
     condition: T

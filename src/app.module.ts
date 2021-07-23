@@ -10,6 +10,7 @@ import { TempModule } from './temp/temp.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { AssetModule } from './asset/asset.module'
 import { CategoryModule } from './category/category.module'
+import { AssetSetModule } from './character/assetSet/assetSet.module'
 import { TagModule } from './tag/tag.module'
 import { AssetGroupModule } from './asset/group/group.module'
 import { CharacterGroupModule } from './character/group/group.module'
@@ -35,6 +36,7 @@ import { ExtensionModule } from './extension/extension.module'
         TagModule,
         TempModule,
         AssetModule,
+        AssetSetModule,
         CategoryModule,
         CharacterModule,
         ExtensionModule,

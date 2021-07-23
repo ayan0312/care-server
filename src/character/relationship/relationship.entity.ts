@@ -7,26 +7,6 @@ export const enum RelationshipType {
     brother,
 }
 
-/**
- * {
- *  name:'父',
- *  targetType:1,
- *  gapNames:['祖父','曾祖父']
- *  targetName:'子'
- * }
- *
- * {
- *  name:'哥哥',
- *  targetType:2,
- *  targetName:'弟弟'
- * }
- *
- * {
- *  name:'血仇',
- *  targetType:2,
- *  targetName:'血仇'
- * }
- */
 @Entity('relationship')
 export class RelationshipEntity extends NameEntity {
     @Column('int')

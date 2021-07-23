@@ -3,6 +3,7 @@ import { ISearch } from 'src/interface/search.interface'
 
 export const enum AssetType {
     file = 1,
+    files,
     folder,
 }
 
