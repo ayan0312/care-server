@@ -32,14 +32,11 @@ export class CharacterEntity extends StarNameEntity {
     @Length(0, 100)
     public fullLengthPicture: string = ''
 
-    @ManyToMany((type) => TagEntity, (tag) => tag.characters)
-    public tags: TagEntity[]
+    @Column({ default: '' })
+    public tagIds: string = ''
 
-    @ManyToMany((type) => CharacterGroupEntity, (group) => group.characters)
-    public groups: CharacterGroupEntity[]
-
-    @ManyToMany((type) => AssetEntity, (asset) => asset.characters)
-    public assets: AssetEntity[]
+    @Column({ default: '' })
+    public groupIds: string = ''
 
     @OneToMany(
         (type) => CharacterAssetSetEntity,

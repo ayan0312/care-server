@@ -26,18 +26,17 @@ export class AssetEntity extends StarNameEntity {
     @Column('simple-enum')
     public assetType: AssetType = AssetType.file
 
-    @ManyToMany((type) => TagEntity, (tag) => tag.assets)
-    public tags: TagEntity[]
+    @Column({ default: '' })
+    public tagIds: string = ''
+
+    @Column({ default: '' })
+    public groupIds: string = ''
+
+    @Column({ default: '' })
+    public characterIds: string = ''
 
     @ManyToOne((type) => ExtensionEntity, (extension) => extension.assets)
     public extension: ExtensionEntity
-
-    @ManyToMany((type) => AssetGroupEntity, (group) => group.assets)
-    public groups: AssetGroupEntity[]
-
-    @ManyToMany((type) => CharacterEntity, (character) => character.assets)
-    @JoinTable()
-    public characters: CharacterEntity[]
 
     @ManyToMany(
         (type) => CharacterAssetSetEntity,

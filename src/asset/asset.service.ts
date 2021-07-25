@@ -15,7 +15,14 @@ import {
 } from 'src/interface/asset/asset.interface'
 import { config } from 'src/shared/config'
 import { ImageMetadata, saveImage } from 'src/shared/image'
-import { formatDate, mergeObjectToEntity, parseIds } from 'src/shared/utilities'
+import {
+    createQueryIds,
+    formatDate,
+    mergeObjectToEntity,
+    parseIds,
+    patchQBIds,
+    queryQBIds,
+} from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { AssetEntity } from './asset.entity'
 import { AssetGroupService } from './group/group.service'
@@ -88,35 +95,29 @@ export class AssetService {
                 name: `%${condition.name ? condition.name : ''}%`,
             })
 
-        if (condition.tagIds != null)
-            qb = qb
-                .leftJoin('asset.tags', 'tag')
-                .andWhere('tag.id IN (:...tagIds)', {
-                    tagIds: condition.tagIds.split(','),
-                })
-        if (condition.groupIds != null)
-            qb = qb
-                .leftJoin('asset.groups', 'group')
-                .andWhere('group.id IN (:...groupIds)', {
-                    groupIds: condition.groupIds.split(','),
-                })
-        if (condition.characterIds != null)
-            qb = qb
-                .leftJoin('asset.characters', 'character')
-                .andWhere('character.id IN (:...characterIds)', {
-                    characterIds: condition.characterIds.split(','),
-                })
-        if (condition.assetSetIds != null)
-            if (condition.assetSetIds)
-                qb = qb
-                    .leftJoin('asset.assetSets', 'assetSet')
-                    .andWhere('assetSet.id IN (:...assetSetIds)', {
-                        assetSetIds: condition.assetSetIds.split(','),
-                    })
-            else
-                qb = qb
-                    .leftJoin('asset.assetSets', 'assetSet')
-                    .andWhere('assetSet.id IS NULL')
+        if (condition.tagIds)
+            qb = queryQBIds(qb, condition.tagIds, 'asset.tagIds', 'tagIds')
+        if (condition.groupIds)
+            qb = queryQBIds(
+                qb,
+                condition.groupIds,
+                'asset.groupIds',
+                'groupIds'
+            )
+        if (condition.characterIds)
+            qb = queryQBIds(
+                qb,
+                condition.characterIds,
+                'asset.characterIds',
+                'characterIds'
+            )
+        if (condition.assetSetIds)
+            qb = patchQBIds(
+                qb,
+                condition.assetSetIds,
+                'asset.assetSets',
+                'assetSet'
+            )
         if (condition.star != null)
             qb = qb.andWhere('asset.star = :star', { star: !!condition.star })
         if (condition.intro != null)
@@ -218,24 +219,78 @@ export class AssetService {
 
         if (body.path) target.path = await this._saveAsset(body.path)
         if (body.tagIds != null)
-            target.tags = await this.tagService.matchByIds(
-                parseIds(body.tagIds),
-                CategoryType.asset
+            target.tagIds = createQueryIds(
+                (
+                    await this.tagService.matchByIds(
+                        parseIds(body.tagIds),
+                        CategoryType.asset
+                    )
+                ).map((tag) => tag.id)
             )
         if (body.groupIds != null)
-            target.groups = await this.groupService.findByIds(
-                parseIds(body.groupIds)
+            target.groupIds = createQueryIds(
+                (
+                    await this.groupService.findByIds(parseIds(body.groupIds))
+                ).map((group) => group.id)
+            )
+        if (body.characterIds != null)
+            target.characterIds = createQueryIds(
+                (
+                    await this.charService.findByIds(
+                        parseIds(body.characterIds)
+                    )
+                ).map((char) => char.id)
             )
         if (body.assetSetIds != null)
             target.assetSets = await this.assetSetService.findByIds(
                 parseIds(body.assetSetIds)
             )
-        if (body.characterIds != null)
-            target.characters = await this.charService.findByIds(
-                parseIds(body.characterIds)
-            )
 
         return target
+    }
+
+    public async save(body: IAsset) {
+        const asset = new AssetEntity()
+        mergeObjectToEntity(asset, body, [
+            'tagIds',
+            'groupIds',
+            'assetSetIds',
+            'characterIds',
+        ])
+
+        if (body.tagIds != null)
+            asset.tagIds = createQueryIds(
+                (
+                    await this.tagService.matchByIds(
+                        parseIds(body.tagIds),
+                        CategoryType.asset
+                    )
+                ).map((tag) => tag.id)
+            )
+        if (body.groupIds != null)
+            asset.groupIds = createQueryIds(
+                (
+                    await this.groupService.findByIds(parseIds(body.groupIds))
+                ).map((group) => group.id)
+            )
+        if (body.characterIds != null)
+            asset.characterIds = createQueryIds(
+                (
+                    await this.charService.findByIds(
+                        parseIds(body.characterIds)
+                    )
+                ).map((char) => char.id)
+            )
+        if (body.assetSetIds != null)
+            asset.assetSets = await this.assetSetService.findByIds(
+                parseIds(body.assetSetIds)
+            )
+
+        const errors = await validate(asset)
+        if (errors.length > 0)
+            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
+
+        return await this.assetRepo.save(asset)
     }
 
     public async create(body: IAsset) {
@@ -250,6 +305,21 @@ export class AssetService {
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
         return await this.assetRepo.save(asset)
+    }
+
+    public async updateByIds(ids: number[], body: IAsset) {
+        const errors = []
+        for (let i = 0; i < ids.length; i++) {
+            try {
+                await this.update(ids[i], body)
+            } catch (err) {
+                errors.push(err)
+            }
+        }
+
+        return {
+            errors,
+        }
     }
 
     public async update(id: number, body: IAsset) {

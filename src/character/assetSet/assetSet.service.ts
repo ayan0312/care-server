@@ -60,8 +60,17 @@ export class AssetSetService implements OnModuleInit {
 
         const rows = data[0]
         for (let i = 0; i < rows.length; i++) {
-            const assetCount = await this.findAssetsCount(rows[i].id)
-            rows[i] = Object.assign({}, rows[i], { assetCount })
+            const result = await this.assetService.search({
+                page: 1,
+                size: 1,
+                condition: {
+                    assetSetIds: String(rows[i].id),
+                },
+            })
+            rows[i] = Object.assign({}, rows[i], {
+                assetCount: result.total,
+                firstAsset: result.rows[0] || null,
+            })
         }
 
         return {
@@ -70,16 +79,6 @@ export class AssetSetService implements OnModuleInit {
             rows,
             total: data[1],
         }
-    }
-
-    public async findAssetsCount(id: number) {
-        return this.assetSetRepo
-            .createQueryBuilder('assetSet')
-            .where('assetSet.id = :id', {
-                id,
-            })
-            .innerJoin('assetSet.assets', 'asset')
-            .getCount()
     }
 
     private _createConditionQB(condition: IAssetSetSearchCondition) {

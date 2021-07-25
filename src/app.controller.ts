@@ -32,7 +32,8 @@ export class AppController {
     public async importData(@Body('path') path?: string) {
         if (!path) return
 
-        const importer = new Importer(path)
+        const importAssets = false
+        const importer = new Importer(path, importAssets)
 
         importer.on('message', (msg) => {
             console.log(msg)
@@ -88,7 +89,10 @@ export class AppController {
                 importer.setId(
                     'character',
                     char.id,
-                    (await this.charService.create(char)).id
+                    (importAssets
+                        ? await this.charService.create(char)
+                        : await this.charService.save(char)
+                    ).id
                 )
             }
 
@@ -96,7 +100,10 @@ export class AppController {
                 importer.setId(
                     'asset',
                     asset.id,
-                    (await this.assetService.create(asset)).id
+                    (importAssets
+                        ? await this.assetService.create(asset)
+                        : await this.assetService.save(asset)
+                    ).id
                 )
         } catch (err) {
             console.error(err)
@@ -126,19 +133,10 @@ export class AppController {
         try {
             await exporter.outputContext()
 
-            for await (let char of this.charService.generator([
-                'tags',
-                'groups',
-                'assetSets',
-            ]))
+            for await (let char of this.charService.generator(['assetSets']))
                 await exporter.outputCharacter(char.data)
 
-            for await (let asset of this.assetService.generator([
-                'tags',
-                'groups',
-                'assetSets',
-                'characters',
-            ]))
+            for await (let asset of this.assetService.generator(['assetSets']))
                 await exporter.outputAsset(asset.data)
         } catch (err) {
             console.log(err)

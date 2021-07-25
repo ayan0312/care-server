@@ -15,14 +15,25 @@ import { CategoryService } from 'src/category/category.service'
 import { mergeObjectToEntity } from 'src/shared/utilities'
 import { CategoryType } from 'src/interface/category.interface'
 import { ITag } from 'src/interface/tag.interface'
+import { CharacterService } from 'src/character/character.service'
+import { ModuleRef } from '@nestjs/core'
 
 @Injectable()
 export class TagService {
     constructor(
         @InjectRepository(TagEntity)
         private readonly tagRepo: Repository<TagEntity>,
-        private readonly categoryService: CategoryService
+        private readonly categoryService: CategoryService,
+        private readonly moduleRef: ModuleRef
     ) {}
+
+    private charService: CharacterService
+
+    public onModuleInit() {
+        this.charService = this.moduleRef.get(CharacterService, {
+            strict: false,
+        })
+    }
 
     public async find(query: ITag) {
         const opts: { name?: string; category?: CategoryEntity } = {}
@@ -109,13 +120,15 @@ export class TagService {
 
     public async delete(id: number) {
         const tag = await this.findById(id)
-        const result = await this.tagRepo
-            .createQueryBuilder()
-            .relation('characters')
-            .of(tag)
-            .loadOne<CategoryEntity>()
+        const result = await this.charService.search({
+            page: 1,
+            size: 1,
+            condition: {
+                tagIds: String(tag.id),
+            },
+        })
 
-        if (result) throw new UnprocessableEntityException()
+        if (result.total !== 0) throw new UnprocessableEntityException()
         return await this.tagRepo.remove(tag)
     }
 

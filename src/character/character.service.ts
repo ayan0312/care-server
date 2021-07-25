@@ -1,5 +1,6 @@
 import gm from 'gm'
 import {
+    BadRequestException,
     HttpException,
     HttpStatus,
     Injectable,
@@ -14,7 +15,13 @@ import {
 } from 'src/interface/character/character.interface'
 import { config } from 'src/shared/config'
 import { ImageMetadata, saveImage } from 'src/shared/image'
-import { mergeObjectToEntity, parseIds } from 'src/shared/utilities'
+import {
+    createQueryIds,
+    mergeObjectToEntity,
+    parseIds,
+    parseQueryIds,
+    queryQBIds,
+} from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { CharacterEntity } from 'src/character/character.entity'
 import { CharacterGroupService } from 'src/character/group/group.service'
@@ -22,6 +29,8 @@ import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
+import { AssetService } from 'src/asset/asset.service'
+import { ModuleRef } from '@nestjs/core'
 
 @Injectable()
 export class CharacterService {
@@ -29,8 +38,15 @@ export class CharacterService {
         @InjectRepository(CharacterEntity)
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
-        private readonly groupService: CharacterGroupService
+        private readonly groupService: CharacterGroupService,
+        private readonly moduleRef: ModuleRef
     ) {}
+
+    private assetService: AssetService
+
+    public onModuleInit() {
+        this.assetService = this.moduleRef.get(AssetService, { strict: false })
+    }
 
     public async *generator(relations?: string[]) {
         let next = 0
@@ -80,9 +96,9 @@ export class CharacterService {
     }
 
     public async findCategoryRelationsById(id: number) {
-        const char = await this.findById(id, ['tags'])
+        const char = await this.findById(id)
         return await this.tagService.tranformCategoryRelationByIds(
-            char.tags.map((tag) => tag.id)
+            parseQueryIds(char.tagIds)
         )
     }
 
@@ -93,18 +109,15 @@ export class CharacterService {
                 name: `%${condition.name ? condition.name : ''}%`,
             })
 
-        if (condition.tagIds != null)
-            qb = qb
-                .leftJoin('character.tags', 'tag')
-                .andWhere('tag.id IN (:...tagIds)', {
-                    tagIds: condition.tagIds.split(','),
-                })
-        if (condition.groupIds != null)
-            qb = qb
-                .leftJoin('character.groups', 'group')
-                .andWhere('group.id IN (:...groupIds)', {
-                    groupIds: condition.groupIds.split(','),
-                })
+        if (condition.tagIds)
+            qb = queryQBIds(qb, condition.tagIds, 'character.tagIds', 'tagIds')
+        if (condition.groupIds)
+            qb = queryQBIds(
+                qb,
+                condition.groupIds,
+                'character.groupIds',
+                'groupIds'
+            )
         if (condition.star != null)
             qb = qb.andWhere('character.star = :star', {
                 star: !!condition.star,
@@ -152,17 +165,25 @@ export class CharacterService {
 
     private _patchCharResult(entity: CharacterEntity) {
         return Object.assign({}, entity, {
-            avatar: new URL(entity.avatar, config.URL.AVATARS_PATH),
-            fullLengthPicture: new URL(
-                entity.fullLengthPicture,
-                config.URL.FULL_LENGTH_PICTURES_PATH
-            ),
+            avatar: entity.avatar
+                ? new URL(entity.avatar, config.URL.AVATARS_PATH)
+                : '',
+            fullLengthPicture: entity.fullLengthPicture
+                ? new URL(
+                      entity.fullLengthPicture,
+                      config.URL.FULL_LENGTH_PICTURES_PATH
+                  )
+                : '',
             ['xsmall']: {
-                avatar: new URL(entity.avatar, config.URL.AVATARS_200_PATH),
-                fullLengthPicture: new URL(
-                    entity.fullLengthPicture,
-                    config.URL.FULL_LENGTH_PICTURES_300_PATH
-                ),
+                avatar: entity.avatar
+                    ? new URL(entity.avatar, config.URL.AVATARS_200_PATH)
+                    : '',
+                fullLengthPicture: entity.fullLengthPicture
+                    ? new URL(
+                          entity.fullLengthPicture,
+                          config.URL.FULL_LENGTH_PICTURES_300_PATH
+                      )
+                    : '',
             },
         })
     }
@@ -241,13 +262,19 @@ export class CharacterService {
             'fullLengthPicture',
         ])
         if (body.tagIds != null)
-            target.tags = await this.tagService.matchByIds(
-                parseIds(body.tagIds),
-                CategoryType.character
+            target.tagIds = createQueryIds(
+                (
+                    await this.tagService.matchByIds(
+                        parseIds(body.tagIds),
+                        CategoryType.character
+                    )
+                ).map((tag) => tag.id)
             )
         if (body.groupIds != null)
-            target.groups = await this.groupService.findByIds(
-                parseIds(body.groupIds)
+            target.groupIds = createQueryIds(
+                (
+                    await this.groupService.findByIds(parseIds(body.groupIds))
+                ).map((group) => group.id)
             )
         if (body.avatar) target.avatar = await this._saveAvatar(body.avatar)
         if (body.fullLengthPicture)
@@ -255,6 +282,32 @@ export class CharacterService {
                 body.fullLengthPicture
             )
         return target
+    }
+
+    public async save(body: ICharacter) {
+        const char = new CharacterEntity()
+        mergeObjectToEntity(char, body, ['tagIds', 'groupIds'])
+        if (body.tagIds != null)
+            char.tagIds = createQueryIds(
+                (
+                    await this.tagService.matchByIds(
+                        parseIds(body.tagIds),
+                        CategoryType.character
+                    )
+                ).map((tag) => tag.id)
+            )
+        if (body.groupIds != null)
+            char.groupIds = createQueryIds(
+                (
+                    await this.groupService.findByIds(parseIds(body.groupIds))
+                ).map((group) => group.id)
+            )
+
+        const errors = await validate(char)
+        if (errors.length > 0)
+            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
+
+        return await this.charRepo.save(char)
     }
 
     public async create(body: ICharacter) {
@@ -281,6 +334,19 @@ export class CharacterService {
 
     public async delete(id: number) {
         const char = await this.findById(id)
+        const result = await this.assetService.search({
+            page: 1,
+            size: 1,
+            condition: {
+                characterIds: String(id),
+            },
+        })
+
+        if (result.rows.length > 0)
+            throw new BadRequestException(
+                'please remove all assets in character before delete character'
+            )
+
         return await this.charRepo.remove(char)
     }
 }

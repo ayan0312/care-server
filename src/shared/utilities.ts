@@ -1,3 +1,5 @@
+import { SelectQueryBuilder } from 'typeorm'
+
 export const delUndefKey = <T extends Record<string, any>>(obj: T): T => {
     for (let key in obj) if (obj[key] == null) delete obj[key]
     return obj
@@ -32,6 +34,53 @@ export const parseIds = (ids: string) => {
         .split(',')
         .map((id) => Number(id))
         .filter((id) => isNumber(id))
+}
+
+export function patchQBIds<Entity>(
+    qb: SelectQueryBuilder<Entity>,
+    ids: string,
+    property: string,
+    alias: string,
+    idKeyName: string = 'id'
+) {
+    qb = qb.leftJoin(property, alias)
+
+    if (ids === 'false') qb = qb.andWhere(`${alias}.${idKeyName} IS NULL`)
+    else if (ids !== '')
+        qb = qb.andWhere(`${alias}.${idKeyName} IN (:...${alias}Ids)`, {
+            [alias + 'Ids']: ids.split(','),
+        })
+
+    return qb
+}
+
+export function queryQBIds<Entity>(
+    qb: SelectQueryBuilder<Entity>,
+    ids: string,
+    property: string,
+    paramKey: string
+) {
+    if (ids === 'false') qb = qb.andWhere(`${property} IS NULL`)
+    else if (ids !== '')
+        qb = qb.andWhere(`${property} like :${paramKey}`, {
+            [paramKey]: `%,${ids.split(',').join(',%,')},%`,
+        })
+    return qb
+}
+
+export function createQueryIds(ids: number[]) {
+    if (ids.length === 0) return ''
+    return `,${ids.join()},`
+}
+
+export function parseQueryIds(ids: string) {
+    const results = ids.split(',')
+    if (results.length > 3) {
+        results.pop()
+        results.shift()
+        return results.map((id) => Number(id))
+    }
+    return []
 }
 
 export function formatDate(formatString: string, date: Date | number) {

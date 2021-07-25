@@ -11,6 +11,7 @@ import { EventEmitter } from 'events'
 import { config } from 'src/shared/config'
 import { AssetEntity } from 'src/asset/asset.entity'
 import { AssetType } from './interface/asset/asset.interface'
+import { parseQueryIds } from './shared/utilities'
 
 export interface ExporterOptions {
     categories: CategoryEntity[]
@@ -49,12 +50,12 @@ export function transformAssetEntity(asset: AssetEntity) {
     return Object.assign(transformStarNameEntity(asset), {
         intro: asset.intro,
         remark: asset.remark,
-        tags: asset.tags.map((tag) => tag.id),
-        groups: asset.groups.map((group) => group.id),
+        tags: parseQueryIds(asset.tagIds),
+        groups: parseQueryIds(asset.groupIds),
         path: asset.path,
         assetType: asset.assetType,
         assetSets: asset.assetSets.map((assetSet) => assetSet.id),
-        characters: asset.characters.map((char) => char.id),
+        characters: parseQueryIds(asset.characterIds),
     })
 }
 
@@ -62,8 +63,10 @@ export function transformCharacterEntity(char: CharacterEntity) {
     return Object.assign(transformStarNameEntity(char), {
         intro: char.intro,
         remark: char.remark,
-        tags: char.tags.map((tag) => tag.id),
-        groups: char.groups.map((group) => group.id),
+        avatar: char.avatar,
+        fullLengthPicture: char.fullLengthPicture,
+        tags: parseQueryIds(char.tagIds),
+        groups: parseQueryIds(char.groupIds),
         assetSets: char.assetSets.map((assetSet) => assetSet.id),
     })
 }
@@ -85,11 +88,14 @@ export function createContext(options: ExporterOptions) {
 export class Exporter extends EventEmitter {
     public readonly dir: string
     public readonly context: ReturnType<typeof createContext>
+    public readonly exportAssets: boolean
 
-    constructor(dir: string, options: ExporterOptions) {
+    constructor(dir: string, options: ExporterOptions, exportAssets = false) {
         super()
+
         this.dir = dir
         this.context = createContext(options)
+        this.exportAssets = exportAssets
 
         fs.ensureDirSync(this.dir)
     }
@@ -109,7 +115,7 @@ export class Exporter extends EventEmitter {
             transformAssetEntity(asset)
         )
 
-        if (asset.path) {
+        if (asset.path && this.exportAssets) {
             if (asset.assetType === AssetType.file)
                 this.emit('message', infoHeader + 'file')
             if (asset.assetType === AssetType.folder)
@@ -135,7 +141,7 @@ export class Exporter extends EventEmitter {
             transformCharacterEntity(char)
         )
 
-        if (char.avatar) {
+        if (char.avatar && this.exportAssets) {
             this.emit('message', infoHeader + 'avatar')
             const src = path.join(config.AVATARS_PATH, char.avatar)
             const dest = path.join(
@@ -145,7 +151,7 @@ export class Exporter extends EventEmitter {
             await fs.copy(src, dest)
         }
 
-        if (char.fullLengthPicture) {
+        if (char.fullLengthPicture && this.exportAssets) {
             this.emit('message', infoHeader + 'full-length picture')
             const src = path.join(
                 config.FULL_LENGTH_PICTURES_PATH,

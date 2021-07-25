@@ -22,10 +22,12 @@ type EntityKey =
 
 export class Importer extends EventEmitter {
     public readonly dir: string
+    public readonly importAssets: boolean
 
-    constructor(dir: string) {
+    constructor(dir: string, importAssets: boolean = false) {
         super()
         this.dir = dir
+        this.importAssets = importAssets
 
         this.checkPathExists(dir)
     }
@@ -90,7 +92,9 @@ export class Importer extends EventEmitter {
         > = await fs.readJson(filename)
 
         this.emit('message', infoHeader + 'content')
-        const pathUUID = await this.copyAsset(path.join(root, asset.path))
+        const pathUUID = this.importAssets
+            ? await this.copyAsset(path.join(root, asset.path))
+            : asset.path
 
         this.emit('message', infoHeader + 'end')
 
@@ -147,12 +151,14 @@ export class Importer extends EventEmitter {
         > = await fs.readJson(charJsonFilename)
 
         this.emit('message', infoHeader + 'avatar')
-        const avatarUUID = await this.copyAsset(path.join(root, 'avatar.png'))
+        const avatarUUID = this.importAssets
+            ? await this.copyAsset(path.join(root, 'avatar.png'))
+            : char.avatar
 
         this.emit('message', infoHeader + 'full-length picture')
-        const flpicUUID = await this.copyAsset(
-            path.join(root, 'fullLengthPicture.png')
-        )
+        const flpicUUID = this.importAssets
+            ? await this.copyAsset(path.join(root, 'fullLengthPicture.png'))
+            : char.fullLengthPicture
 
         this.emit('message', infoHeader + 'end')
 

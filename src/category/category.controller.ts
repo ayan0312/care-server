@@ -39,7 +39,7 @@ export class CategoryController {
         description: 'create category',
     })
     public async create(@Body() body: ICategory) {
-        if (!body.name || !body.type)
+        if (body.name == null || body.type == null)
             throw new BadRequestException('name and type cannot be empty')
         return await this.categoryService.create(body.name, parseInt(body.type))
     }

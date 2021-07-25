@@ -37,6 +37,15 @@ export class AssetController {
         return await this.assetService.create(body)
     }
 
+    @Patch()
+    public async updateByIds(
+        @Query('ids', new ParseArrayPipe({ items: Number, separator: ',' }))
+        ids: number[],
+        @Body() body: IAsset
+    ) {
+        return await this.assetService.updateByIds(ids, body)
+    }
+
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
