@@ -80,7 +80,7 @@ export class CharacterService {
     ) {
         const result = await this.charRepo.findOne(
             id,
-            relations
+            relations.length > 0
                 ? {
                       relations,
                   }
@@ -92,7 +92,13 @@ export class CharacterService {
     }
 
     public async findByIds(ids: number[]) {
-        return this.charRepo.findByIds(ids)
+        return await this.charRepo.findByIds(ids)
+    }
+
+    public async findByIdsWithSmall(ids: number[]) {
+        return (await this.findByIds(ids)).map((char) =>
+            this._patchCharResult(char)
+        )
     }
 
     public async findCategoryRelationsById(id: number) {
@@ -103,21 +109,16 @@ export class CharacterService {
     }
 
     private _createConditionQB(condition: ICharacterSearchCondition) {
-        let qb = this.charRepo
-            .createQueryBuilder('character')
-            .where('character.name like :name', {
-                name: `%${condition.name ? condition.name : ''}%`,
-            })
+        let qb = this.charRepo.createQueryBuilder('character')
 
+        if (condition.name != null)
+            qb = qb.where('character.name like :name', {
+                name: `%${condition.name}%`,
+            })
         if (condition.tagIds)
-            qb = queryQBIds(qb, condition.tagIds, 'character.tagIds', 'tagIds')
+            qb = queryQBIds(qb, condition.tagIds, 'character.tagIds')
         if (condition.groupIds)
-            qb = queryQBIds(
-                qb,
-                condition.groupIds,
-                'character.groupIds',
-                'groupIds'
-            )
+            qb = queryQBIds(qb, condition.groupIds, 'character.groupIds')
         if (condition.star != null)
             qb = qb.andWhere('character.star = :star', {
                 star: !!condition.star,
@@ -140,7 +141,7 @@ export class CharacterService {
 
     public async search(body: ICharacterSearch) {
         const {
-            condition = { name: '' },
+            condition = {},
             orderBy = { sort: 'created', order: 'DESC' },
             size = 20,
             page = 1,

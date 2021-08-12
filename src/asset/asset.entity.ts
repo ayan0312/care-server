@@ -1,11 +1,8 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm'
+import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
-import { AssetGroupEntity } from './group/group.entity'
 import { Length } from 'class-validator'
-import { CharacterEntity } from 'src/character/character.entity'
 import { CharacterAssetSetEntity } from 'src/character/assetSet/assetSet.entity'
-import { TagEntity } from 'src/tag/tag.entity'
 import { AssetType } from 'src/interface/asset/asset.interface'
 import { ExtensionEntity } from 'src/extension/extension.entity'
 

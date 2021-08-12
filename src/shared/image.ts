@@ -1,4 +1,5 @@
 import fs from 'fs'
+import gm from 'gm'
 
 export interface ImageMetadata {
     name: string
@@ -72,4 +73,41 @@ export async function saveImage(
     else await copyImage(originFilename, metadata.filename)
 
     return metadata
+}
+
+export async function getImageSize(filename: string) {
+    return new Promise((resolve: (size: gm.Dimensions) => void, reject) => {
+        gm(filename).size(function (err, size) {
+            if (err) {
+                reject(err)
+                return
+            }
+            resolve(size)
+        })
+    })
+}
+
+const limit = 1024 * 1024 * 200
+
+export async function clipImage(
+    origin: string,
+    target: string,
+    maxWidth: number
+) {
+    const size = await getImageSize(origin)
+    let width = maxWidth
+
+    if (size.width < width) return false
+
+    return new Promise((resolve: (d: true) => void, reject) => {
+        gm(origin)
+            .resize(width)
+            .write(target, (err) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(true)
+            })
+    })
 }

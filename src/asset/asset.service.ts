@@ -46,7 +46,11 @@ export class AssetService {
 
     private _nameId = 0
 
-    public async findById(id: number, relations: string[] = []) {
+    public async findById(
+        id: number,
+        relations: string[] = [],
+        patch: boolean = false
+    ) {
         const result = await this.assetRepo.findOne(
             id,
             relations
@@ -56,6 +60,7 @@ export class AssetService {
                 : {}
         )
         if (!result) throw new NotFoundException()
+        if (patch) return this._patchAssetResult(result)
         return result
     }
 
@@ -96,21 +101,11 @@ export class AssetService {
             })
 
         if (condition.tagIds)
-            qb = queryQBIds(qb, condition.tagIds, 'asset.tagIds', 'tagIds')
+            qb = queryQBIds(qb, condition.tagIds, 'asset.tagIds')
         if (condition.groupIds)
-            qb = queryQBIds(
-                qb,
-                condition.groupIds,
-                'asset.groupIds',
-                'groupIds'
-            )
+            qb = queryQBIds(qb, condition.groupIds, 'asset.groupIds')
         if (condition.characterIds)
-            qb = queryQBIds(
-                qb,
-                condition.characterIds,
-                'asset.characterIds',
-                'characterIds'
-            )
+            qb = queryQBIds(qb, condition.characterIds, 'asset.characterIds')
         if (condition.assetSetIds)
             qb = patchQBIds(
                 qb,
@@ -157,16 +152,22 @@ export class AssetService {
         return {
             page: Number(page),
             size: Number(size),
-            rows: data[0].map((entity) => {
-                return Object.assign(entity, {
-                    path: new URL(entity.path, config.URL.ASSETS_PATH),
-                    xsmall: {
-                        path: new URL(entity.path, config.URL.ASSETS_300_PATH),
-                    },
-                })
-            }),
+            rows: data[0].map((entity) => this._patchAssetResult(entity)),
             total: data[1],
         }
+    }
+
+    private _patchAssetResult(entity: AssetEntity) {
+        return Object.assign(entity, {
+            path: entity.path
+                ? new URL(entity.path, config.URL.ASSETS_PATH)
+                : '',
+            xsmall: {
+                path: entity.path
+                    ? new URL(entity.path, config.URL.ASSETS_300_PATH)
+                    : '',
+            },
+        })
     }
 
     private async _saveImage(targetPath: string, filename: string) {
@@ -258,7 +259,7 @@ export class AssetService {
             'characterIds',
         ])
 
-        if (body.tagIds != null)
+        if (body.tagIds)
             asset.tagIds = createQueryIds(
                 (
                     await this.tagService.matchByIds(
@@ -267,13 +268,13 @@ export class AssetService {
                     )
                 ).map((tag) => tag.id)
             )
-        if (body.groupIds != null)
+        if (body.groupIds)
             asset.groupIds = createQueryIds(
                 (
                     await this.groupService.findByIds(parseIds(body.groupIds))
                 ).map((group) => group.id)
             )
-        if (body.characterIds != null)
+        if (body.characterIds)
             asset.characterIds = createQueryIds(
                 (
                     await this.charService.findByIds(
@@ -281,7 +282,7 @@ export class AssetService {
                     )
                 ).map((char) => char.id)
             )
-        if (body.assetSetIds != null)
+        if (body.assetSetIds)
             asset.assetSets = await this.assetSetService.findByIds(
                 parseIds(body.assetSetIds)
             )

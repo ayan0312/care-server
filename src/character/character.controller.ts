@@ -10,7 +10,6 @@ import {
     Patch,
     HttpCode,
     Query,
-    ParseArrayPipe,
     DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
@@ -23,8 +22,16 @@ export class CharacterController {
     constructor(private readonly charService: CharacterService) {}
 
     @Get()
-    public async find(@Query('options') options: string) {
-        return await this.charService.search(JSON.parse(options))
+    public async find(
+        @Query('options') options?: string,
+        @Query('ids') ids?: string
+    ) {
+        if (ids)
+            return await this.charService.findByIdsWithSmall(
+                ids.split(',').map((id) => Number(id))
+            )
+        else if (options)
+            return await this.charService.search(JSON.parse(options))
     }
 
     @Post()

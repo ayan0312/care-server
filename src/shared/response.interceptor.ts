@@ -12,7 +12,7 @@ interface Response<T> {
         | T
         | {
               rows: T
-              count: number
+              total: number
           }
 }
 
@@ -29,7 +29,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
                     result: Array.isArray(result)
                         ? {
                               rows: result,
-                              count: result.length,
+                              total: result.length,
                           }
                         : result,
                     success: true,

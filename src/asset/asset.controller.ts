@@ -49,14 +49,14 @@ export class AssetController {
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Query(
-            'relations',
-            new DefaultValuePipe(''),
-            new ParseArrayPipe({ items: String, separator: ',' })
-        )
-        relations: string[]
+        @Query('relations', new DefaultValuePipe(''))
+        relations: string
     ) {
-        return await this.assetService.findById(id, relations)
+        return await this.assetService.findById(
+            id,
+            relations ? relations.split(',') : undefined,
+            true
+        )
     }
 
     @Patch(':id')

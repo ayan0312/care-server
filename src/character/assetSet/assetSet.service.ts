@@ -21,6 +21,7 @@ import {
 import { CharacterService } from '../character.service'
 import { ModuleRef } from '@nestjs/core'
 import { AssetService } from 'src/asset/asset.service'
+import { CharacterEntity } from '../character.entity'
 
 @Injectable()
 export class AssetSetService implements OnModuleInit {
@@ -128,7 +129,7 @@ export class AssetSetService implements OnModuleInit {
     ) {
         mergeObjectToEntity(target, body, ['characterId'])
 
-        if (body.characterId)
+        if (body.characterId != null)
             target.character = await this.charService.findById(body.characterId)
 
         return target
@@ -136,29 +137,40 @@ export class AssetSetService implements OnModuleInit {
 
     public async create(body: IAssetSet) {
         const assetSet = new CharacterAssetSetEntity()
-        this._mergeBodyToEntity(assetSet, body)
+        if (!body.characterId)
+            throw new BadRequestException('asset set must belong character')
+
+        await this._mergeBodyToEntity(assetSet, body)
 
         const errors = await validate(assetSet)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
-        if (await this.hasName(assetSet.name))
-            throw new ConflictException('has the same name')
+        if (assetSet.name && assetSet.character)
+            if (
+                assetSet.name !== body.name &&
+                (await this.hasName(assetSet.name, assetSet.character))
+            )
+                throw new ConflictException('has the same name')
 
         return this.assetSetRepo.save(assetSet)
     }
 
-    public async update(id: number, body: IStarName) {
+    public async update(id: number, body: IAssetSet) {
         const assetSet = await this.findById(id)
-        if (body.name)
-            if (assetSet.name !== body.name && (await this.hasName(body.name)))
-                throw new ConflictException('has the same name')
 
-        this._mergeBodyToEntity(assetSet, body)
+        await this._mergeBodyToEntity(assetSet, body)
 
         const errors = await validate(assetSet)
         if (errors.length > 0)
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
+
+        if (assetSet.name && assetSet.character)
+            if (
+                assetSet.name !== body.name &&
+                (await this.hasName(assetSet.name, assetSet.character))
+            )
+                throw new ConflictException('has the same name')
 
         return await this.assetSetRepo.save(assetSet)
     }
@@ -180,8 +192,11 @@ export class AssetSetService implements OnModuleInit {
         return await this.assetSetRepo.remove(assetSet)
     }
 
-    public async hasName(name: string) {
-        const assetSet = await this.assetSetRepo.findOne({ name })
+    public async hasName(name: string, char: CharacterEntity) {
+        const assetSet = await this.assetSetRepo.findOne({
+            name,
+            character: char,
+        })
         return !!assetSet
     }
 }
