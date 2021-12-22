@@ -11,7 +11,7 @@ import { EventEmitter } from 'events'
 import { config } from 'src/shared/config'
 import { AssetEntity } from 'src/asset/asset.entity'
 import { AssetType } from './interface/asset/asset.interface'
-import { parseQueryIds } from './shared/utilities'
+import { parseIds } from './shared/utilities'
 
 export interface ExporterOptions {
     categories: CategoryEntity[]
@@ -50,12 +50,12 @@ export function transformAssetEntity(asset: AssetEntity) {
     return Object.assign(transformStarNameEntity(asset), {
         intro: asset.intro,
         remark: asset.remark,
-        tags: parseQueryIds(asset.tagIds),
-        groups: parseQueryIds(asset.groupIds),
+        tags: parseIds(asset.tagIds),
+        groups: parseIds(asset.groupIds),
         path: asset.path,
         assetType: asset.assetType,
         assetSets: asset.assetSets.map((assetSet) => assetSet.id),
-        characters: parseQueryIds(asset.characterIds),
+        characters: parseIds(asset.characterIds),
     })
 }
 
@@ -65,8 +65,8 @@ export function transformCharacterEntity(char: CharacterEntity) {
         remark: char.remark,
         avatar: char.avatar,
         fullLengthPicture: char.fullLengthPicture,
-        tags: parseQueryIds(char.tagIds),
-        groups: parseQueryIds(char.groupIds),
+        tags: parseIds(char.tagIds),
+        groups: parseIds(char.groupIds),
         assetSets: char.assetSets.map((assetSet) => assetSet.id),
     })
 }
@@ -90,7 +90,7 @@ export class Exporter extends EventEmitter {
     public readonly context: ReturnType<typeof createContext>
     public readonly exportAssets: boolean
 
-    constructor(dir: string, options: ExporterOptions, exportAssets = false) {
+    constructor(dir: string, options: ExporterOptions, exportAssets: boolean) {
         super()
 
         this.dir = dir
@@ -110,10 +110,6 @@ export class Exporter extends EventEmitter {
         const infoHeader = `export asset ${asset.id}: `
         this.emit('message', infoHeader + 'start')
         const targetDir = path.join(this.dir, `assets`)
-        await fs.outputJson(
-            path.join(targetDir, `${asset.id}.json`),
-            transformAssetEntity(asset)
-        )
 
         if (asset.path && this.exportAssets) {
             if (asset.assetType === AssetType.file)
@@ -121,9 +117,16 @@ export class Exporter extends EventEmitter {
             if (asset.assetType === AssetType.folder)
                 this.emit('message', infoHeader + 'folder')
             const src = path.join(config.ASSETS_PATH, asset.path)
-            const dest = path.join(targetDir, `${asset.path}`)
-            await fs.copyFile(src, dest)
+            asset.path = `${asset.id}${path.extname(asset.path)}`
+            const dest = path.join(targetDir, asset.path)
+
+            await fs.copy(src, dest)
         }
+
+        await fs.outputJson(
+            path.join(targetDir, `${asset.id}.json`),
+            transformAssetEntity(asset)
+        )
 
         this.emit('message', infoHeader + 'end')
     }

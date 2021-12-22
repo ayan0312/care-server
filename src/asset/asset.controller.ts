@@ -46,6 +46,14 @@ export class AssetController {
         return await this.assetService.updateByIds(ids, body)
     }
 
+    @Delete()
+    public async deleteByIds(
+        @Query('ids', new ParseArrayPipe({ items: Number, separator: ',' }))
+        ids: number[]
+    ) {
+        return await this.assetService.deleteByIds(ids)
+    }
+
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,

@@ -19,7 +19,6 @@ import {
     createQueryIds,
     mergeObjectToEntity,
     parseIds,
-    parseQueryIds,
     queryQBIds,
 } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
@@ -104,7 +103,7 @@ export class CharacterService {
     public async findCategoryRelationsById(id: number) {
         const char = await this.findById(id)
         return await this.tagService.tranformCategoryRelationByIds(
-            parseQueryIds(char.tagIds)
+            parseIds(char.tagIds)
         )
     }
 
@@ -330,7 +329,7 @@ export class CharacterService {
             throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 
         await this.charRepo.save(char)
-        return this.charRepo.findOne(id)
+        return this.findById(id, [], true)
     }
 
     public async delete(id: number) {

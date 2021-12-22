@@ -22,8 +22,12 @@ export class CharacterGroupController {
     constructor(private readonly groupService: CharacterGroupService) {}
 
     @Get()
-    public async find(@Query('name', new DefaultValuePipe('')) name: string) {
-        if (name) return await this.groupService.find(name)
+    public async find(@Query('name') name: string, @Query('ids') ids: string) {
+        if (name != null) return await this.groupService.find(name)
+        if (ids != null)
+            return await this.groupService.findByIds(
+                ids.split(',').map((n) => Number(n))
+            )
         return await this.groupService.findAll()
     }
 

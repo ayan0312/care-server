@@ -1,9 +1,27 @@
-import path from 'path'
+import os from 'os'
 
-const IP = '192.168.1.110'
+function getIP() {
+    const interfaces = os.networkInterfaces()
+    for (let netName in interfaces) {
+        const infos = interfaces[netName]
+        if (!infos) continue
+        for (let i = 0; i < infos.length; i++) {
+            const info = infos[i]
+            if (
+                info.family === 'IPv4' &&
+                info.address !== '127.0.0.1' &&
+                !info.internal
+            )
+                return info.address
+        }
+    }
+
+    return 'localhost'
+}
+
+const IP = getIP()
 const PORT = 3000
-const STORAGE_PATH = 'C:/Users/ayan0312/Desktop/storage/'
-// const STORAGE_PATH = 'C:/Spaces/Entertainments/Care/storage/'
+const STORAGE_PATH = 'F:/storage/'
 
 export const config = {
     IP,

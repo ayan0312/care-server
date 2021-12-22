@@ -11,6 +11,7 @@ import { config } from './shared/config'
 import { v4 as uuidv4 } from 'uuid'
 import { ICategory } from './interface/category.interface'
 import { ITag } from './interface/tag.interface'
+import { AssetType } from './interface/asset/asset.interface'
 
 type EntityKey =
     | 'tag'
@@ -24,7 +25,7 @@ export class Importer extends EventEmitter {
     public readonly dir: string
     public readonly importAssets: boolean
 
-    constructor(dir: string, importAssets: boolean = false) {
+    constructor(dir: string, importAssets: boolean) {
         super()
         this.dir = dir
         this.importAssets = importAssets
@@ -51,7 +52,7 @@ export class Importer extends EventEmitter {
             return {
                 id: category.id,
                 name: category.name,
-                type: String(category.type),
+                type: category.type,
             }
         })
 
@@ -104,7 +105,7 @@ export class Importer extends EventEmitter {
             remark: asset.remark,
             tagIds: this.convertIds('tag', asset.tags),
             groupIds: this.convertIds('assetGroup', asset.groups),
-            assetType: asset.assetType,
+            assetType: asset.assetType || AssetType.file,
             assetSetIds: asset.assetSets.join(),
             characterIds: this.convertIds('character', asset.characters),
         })

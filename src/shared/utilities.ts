@@ -78,16 +78,6 @@ export function createQueryIds(ids: number[]) {
     return `,${ids.join()},`
 }
 
-export function parseQueryIds(ids: string) {
-    const results = ids.split(',')
-    if (results.length > 3) {
-        results.pop()
-        results.shift()
-        return results.map((id) => Number(id))
-    }
-    return []
-}
-
 export function formatDate(formatString: string, date: Date | number) {
     if (typeof date === 'number') date = new Date(date)
 

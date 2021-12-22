@@ -29,11 +29,13 @@ export class AppController {
     }
 
     @Post('data')
-    public async importData(@Body('path') path?: string) {
+    public async importData(
+        @Body('path') path?: string,
+        @Body('file') file = false
+    ) {
         if (!path) return
 
-        const importAssets = false
-        const importer = new Importer(path, importAssets)
+        const importer = new Importer(path, file)
 
         importer.on('message', (msg) => {
             console.log(msg)
@@ -54,7 +56,7 @@ export class AppController {
                     (
                         await this.categoryService.create(
                             categories[i].name,
-                            Number(categories[i].type) || CategoryType.character
+                            categories[i].type
                         )
                     ).id
                 )
@@ -89,22 +91,23 @@ export class AppController {
                 importer.setId(
                     'character',
                     char.id,
-                    (importAssets
+                    (file
                         ? await this.charService.create(char)
                         : await this.charService.save(char)
                     ).id
                 )
             }
 
-            for await (let asset of importer.assetGenerator())
+            for await (let asset of importer.assetGenerator()) {
                 importer.setId(
                     'asset',
                     asset.id,
-                    (importAssets
+                    (file
                         ? await this.assetService.create(asset)
                         : await this.assetService.save(asset)
                     ).id
                 )
+            }
         } catch (err) {
             console.error(err)
         }
@@ -113,18 +116,25 @@ export class AppController {
     }
 
     @Get('data')
-    public async exportData(@Body('path') path?: string) {
+    public async exportData(
+        @Body('path') path?: string,
+        @Body('file') file = false
+    ) {
         if (!path) return
 
         const categories = await this.categoryService.findRelations()
         const assetGroups = await this.assetGroupService.findAll()
         const characterGroups = await this.charGroupService.findAll()
 
-        const exporter = new Exporter(path, {
-            categories,
-            assetGroups,
-            characterGroups,
-        })
+        const exporter = new Exporter(
+            path,
+            {
+                categories,
+                assetGroups,
+                characterGroups,
+            },
+            file
+        )
 
         exporter.on('message', (msg) => {
             console.log(msg)

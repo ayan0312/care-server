@@ -1,38 +1,28 @@
 import { Column, Entity } from 'typeorm'
 
 import { NameEntity } from 'src/shared/name/name.entity'
-
-export const enum RelationshipType {
-    parent = 1,
-    brother,
-}
+import { CharacterEntity } from '../character.entity'
+import { Max, Min } from 'class-validator'
 
 @Entity('relationship')
 export class RelationshipEntity extends NameEntity {
-    @Column('int')
-    public order: number
-
-    @Column('simple-array')
-    public gapNames: string[]
-
-    @Column('simple-enum')
-    public targetType: RelationshipType
-
     @Column()
-    public targetName: string
+    @Max(99)
+    @Min(-99)
+    public order: number
 }
 
 @Entity('character_relationship')
 export class CharacterRelationshipEntity {
     @Column()
-    public from: any
+    public from: CharacterEntity
 
     @Column()
-    public relationship: any
+    public FromRelationships: RelationshipEntity
 
     @Column()
-    public gap: number = 0
+    public ToRelationships: RelationshipEntity
 
     @Column()
-    public to: any
+    public to: CharacterEntity
 }

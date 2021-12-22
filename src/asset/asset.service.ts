@@ -188,7 +188,7 @@ export class AssetService {
     private async _saveAsset300(metadata: ImageMetadata) {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
-                .resize(300)
+                .resize(400, 400)
                 .write(`${metadata.path}/300/${metadata.name}`, (err) => {
                     if (err) console.error(err)
                     resolve(undefined)
@@ -321,6 +321,10 @@ export class AssetService {
         return {
             errors,
         }
+    }
+
+    public async deleteByIds(ids: number[]) {
+        return this.assetRepo.delete(ids)
     }
 
     public async update(id: number, body: IAsset) {

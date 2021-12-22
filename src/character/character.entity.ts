@@ -1,11 +1,9 @@
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm'
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
-import { AssetEntity } from 'src/asset/asset.entity'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
-import { CharacterGroupEntity } from './group/group.entity'
 import { CharacterAssetSetEntity } from './assetSet/assetSet.entity'
-import { TagEntity } from 'src/tag/tag.entity'
+import { CharacterRelationshipEntity } from './relationship/relationship.entity'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
