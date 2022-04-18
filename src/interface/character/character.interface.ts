@@ -9,7 +9,7 @@ export interface ICharacter extends IStarName {
     groupIds?: string
     assetSetIds?: string
     relationships?: string[]
-    staicCategories?: string[]
+    staicCategories?: { [propname: number]: string }
     fullLengthPicture?: string
 }
 

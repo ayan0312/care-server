@@ -1,8 +1,6 @@
 import {
     Controller,
     DefaultValuePipe,
-    ParseBoolPipe,
-    ParseIntPipe,
     Post,
     Query,
     UploadedFile,

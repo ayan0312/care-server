@@ -1,9 +1,8 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm'
+import { Column, Entity, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterAssetSetEntity } from './assetSet/assetSet.entity'
-import { CharacterRelationshipEntity } from './relationship/relationship.entity'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
@@ -23,8 +22,8 @@ export class CharacterEntity extends StarNameEntity {
     @Length(0, 255)
     public remark: string = ''
 
-    @Column('simple-array')
-    public staticCategories: string[] = []
+    @Column('simple-json')
+    public staticCategories: { [propname: number]: string } = {}
 
     @Column({ default: '' })
     @Length(0, 100)

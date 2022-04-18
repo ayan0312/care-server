@@ -27,8 +27,9 @@ function transformTagEntity(categoryId: number, tag: TagEntity) {
 
 function transformCategoryEntity(category: CategoryEntity) {
     return Object.assign(transformNameEntity(category), {
-        type: category.type,
         tags: category.tags.map((tag) => transformTagEntity(category.id, tag)),
+        type: category.type,
+        intro: category.intro,
     })
 }
 

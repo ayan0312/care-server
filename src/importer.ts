@@ -53,6 +53,7 @@ export class Importer extends EventEmitter {
                 id: category.id,
                 name: category.name,
                 type: category.type,
+                intro: category.intro,
             }
         })
 

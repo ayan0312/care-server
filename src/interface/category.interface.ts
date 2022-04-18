@@ -8,6 +8,7 @@ export const enum CategoryType {
 
 export interface ICategory extends IName {
     type?: CategoryType
+    intro?: string
 }
 
 export interface ICategoryResult extends Required<ICategory> {}

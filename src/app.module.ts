@@ -15,6 +15,7 @@ import { TagModule } from './tag/tag.module'
 import { AssetGroupModule } from './asset/group/group.module'
 import { CharacterGroupModule } from './character/group/group.module'
 import { ExtensionModule } from './extension/extension.module'
+import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 
 @Module({
     imports: [
@@ -42,6 +43,7 @@ import { ExtensionModule } from './extension/extension.module'
         ExtensionModule,
         AssetGroupModule,
         CharacterGroupModule,
+        StaticCategoryModule,
     ],
     controllers: [AppController],
     providers: [],
