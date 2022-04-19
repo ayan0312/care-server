@@ -21,14 +21,22 @@ export class StaticCategoryService {
         private readonly categoryRepo: Repository<StaticCategoryEntity>
     ) {}
 
-    public async find(name?: string) {
-        return await this.categoryRepo.find(name ? { name } : {})
+    public async find(name: string) {
+        return await this.categoryRepo.find({ name })
+    }
+
+    public async findAll() {
+        return await this.categoryRepo.find({})
     }
 
     public async findById(id: number) {
         const result = await this.categoryRepo.findOne(id)
         if (!result) throw new NotFoundException()
         return result
+    }
+
+    public async findByIds(ids: number[]) {
+        return await this.categoryRepo.findByIds(ids)
     }
 
     public async create(body: IStaticCategory) {

@@ -10,6 +10,7 @@ import { TagService } from './tag/tag.service'
 
 import { Importer } from './importer'
 import { CategoryType } from './interface/category.interface'
+import { StaticCategoryService } from './staticCategory/staticCategory.service'
 
 @ApiTags('root')
 @Controller()
@@ -20,7 +21,8 @@ export class AppController {
         private readonly assetService: AssetService,
         private readonly categoryService: CategoryService,
         private readonly charGroupService: CharacterGroupService,
-        private readonly assetGroupService: AssetGroupService
+        private readonly assetGroupService: AssetGroupService,
+        private readonly staticCategoryService: StaticCategoryService
     ) {}
 
     @Get()
@@ -46,6 +48,7 @@ export class AppController {
             categories,
             assetGroups,
             characterGroups,
+            staticCategories,
         } = await importer.inputContext()
 
         try {
@@ -87,6 +90,17 @@ export class AppController {
                     (await this.charGroupService.create(characterGroups[i])).id
                 )
 
+            for (let i = 0; i < staticCategories.length; i++)
+                importer.setId(
+                    'staticCategory',
+                    staticCategories[i].id,
+                    (
+                        await this.staticCategoryService.create(
+                            staticCategories[i]
+                        )
+                    ).id
+                )
+
             for await (let char of importer.characterGenerator()) {
                 importer.setId(
                     'character',
@@ -125,6 +139,7 @@ export class AppController {
         const categories = await this.categoryService.findRelations()
         const assetGroups = await this.assetGroupService.findAll()
         const characterGroups = await this.charGroupService.findAll()
+        const staticCategories = await this.staticCategoryService.findAll()
 
         const exporter = new Exporter(
             path,
@@ -132,6 +147,7 @@ export class AppController {
                 categories,
                 assetGroups,
                 characterGroups,
+                staticCategories,
             },
             file
         )

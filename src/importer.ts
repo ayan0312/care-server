@@ -20,6 +20,7 @@ type EntityKey =
     | 'characterGroup'
     | 'character'
     | 'asset'
+    | 'staticCategory'
 
 export class Importer extends EventEmitter {
     public readonly dir: string
@@ -64,6 +65,7 @@ export class Importer extends EventEmitter {
             categories,
             assetGroups: result.assetGroups,
             characterGroups: result.characterGroups,
+            staticCategories: result.staticCategories,
         }
     }
 
@@ -78,6 +80,15 @@ export class Importer extends EventEmitter {
 
     public convertIds(type: EntityKey, ids: number[]) {
         return ids.map((id) => this.getId(type, id)).join()
+    }
+
+    public convertIdMap(type: EntityKey, idMap: Record<number, any>) {
+        const map: Record<number, any> = {}
+        Object.keys(idMap).forEach((key) => {
+            const id = Number(key)
+            map[this.getId(type, id)] = idMap[id]
+        })
+        return map
     }
 
     public async inputAsset(id: number) {
@@ -172,6 +183,10 @@ export class Importer extends EventEmitter {
             groupIds: this.convertIds('characterGroup', char.tags),
             assetSetIds: char.assetSets.join(),
             fullLengthPicture: flpicUUID,
+            staticCategories: this.convertIdMap(
+                'staticCategory',
+                char.staticCategories
+            ),
         })
     }
 
@@ -182,6 +197,7 @@ export class Importer extends EventEmitter {
         character: {},
         assetGroup: {},
         characterGroup: {},
+        staticCategory: {},
     }
 
     public setId(key: EntityKey, oldId: number, newId: number) {

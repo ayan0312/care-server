@@ -12,17 +12,26 @@ import { config } from 'src/shared/config'
 import { AssetEntity } from 'src/asset/asset.entity'
 import { AssetType } from './interface/asset/asset.interface'
 import { parseIds } from './shared/utilities'
+import { StaticCategoryEntity } from './staticCategory/staticCategory.entity'
 
 export interface ExporterOptions {
     categories: CategoryEntity[]
     assetGroups: AssetGroupEntity[]
     characterGroups: CharacterGroupEntity[]
+    staticCategories: StaticCategoryEntity[]
 }
 
 function transformTagEntity(categoryId: number, tag: TagEntity) {
     return Object.assign(transformNameEntity(tag), {
         categoryId,
     })
+}
+
+function transformNameEntity<T extends NameEntity>(entity: T) {
+    return {
+        id: entity.id,
+        name: entity.name,
+    }
 }
 
 function transformCategoryEntity(category: CategoryEntity) {
@@ -33,11 +42,11 @@ function transformCategoryEntity(category: CategoryEntity) {
     })
 }
 
-function transformNameEntity<T extends NameEntity>(entity: T) {
-    return {
-        id: entity.id,
-        name: entity.name,
-    }
+function transformStaticCategoryEntity(category: StaticCategoryEntity) {
+    return Object.assign(transformNameEntity(category), {
+        intro: category.intro,
+        script: category.script,
+    })
 }
 
 export function transformStarNameEntity<T extends StarNameEntity>(entity: T) {
@@ -69,6 +78,7 @@ export function transformCharacterEntity(char: CharacterEntity) {
         tags: parseIds(char.tagIds),
         groups: parseIds(char.groupIds),
         assetSets: char.assetSets.map((assetSet) => assetSet.id),
+        staticCategories: char.staticCategories,
     })
 }
 
@@ -82,6 +92,9 @@ export function createContext(options: ExporterOptions) {
         ),
         characterGroups: options.characterGroups.map((charGroup) =>
             transformStarNameEntity(charGroup)
+        ),
+        staticCategories: options.staticCategories.map((category) =>
+            transformStaticCategoryEntity(category)
         ),
     }
 }

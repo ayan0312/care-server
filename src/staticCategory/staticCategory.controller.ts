@@ -23,7 +23,8 @@ export class StaticCategoryController {
     constructor(private readonly categoryService: StaticCategoryService) {}
     @Get()
     public async find(@Query('name') name?: string) {
-        return await this.categoryService.find(name)
+        if (name) return await this.categoryService.find(name)
+        return await this.categoryService.findAll()
     }
 
     @Post()

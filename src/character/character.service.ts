@@ -12,6 +12,7 @@ import {
     ICharacter,
     ICharacterSearch,
     ICharacterSearchCondition,
+    ICharacterStaticCategory,
 } from 'src/interface/character/character.interface'
 import { config } from 'src/shared/config'
 import { ImageMetadata, saveImage } from 'src/shared/image'
@@ -30,6 +31,7 @@ import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import { AssetService } from 'src/asset/asset.service'
 import { ModuleRef } from '@nestjs/core'
+import { StaticCategoryService } from 'src/staticCategory/staticCategory.service'
 
 @Injectable()
 export class CharacterService {
@@ -38,6 +40,7 @@ export class CharacterService {
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
         private readonly groupService: CharacterGroupService,
+        private readonly staticCategoryService: StaticCategoryService,
         private readonly moduleRef: ModuleRef
     ) {}
 
@@ -86,18 +89,15 @@ export class CharacterService {
                 : {}
         )
         if (!result) throw new NotFoundException()
-        if (patch) return this._patchCharResult(result)
+        if (patch) return await this._patchCharResult(result)
         return result
     }
 
-    public async findByIds(ids: number[]) {
-        return await this.charRepo.findByIds(ids)
-    }
+    public async findByIds(ids: number[], patch: boolean = false) {
+        const chars = await this.charRepo.findByIds(ids)
+        if (patch) await this._patchCharResults(chars)
 
-    public async findByIdsWithSmall(ids: number[]) {
-        return (await this.findByIds(ids)).map((char) =>
-            this._patchCharResult(char)
-        )
+        return chars
     }
 
     public async findCategoryRelationsById(id: number) {
@@ -155,37 +155,70 @@ export class CharacterService {
             .take(size)
             .getManyAndCount()
 
+        const rows = data[0]
+        await this._patchCharResults(rows)
+
         return {
             page: Number(page),
             size: Number(size),
-            rows: data[0].map((entity) => this._patchCharResult(entity)),
+            rows,
             total: data[1],
         }
     }
 
-    private _patchCharResult(entity: CharacterEntity) {
-        return Object.assign({}, entity, {
-            avatar: entity.avatar
-                ? new URL(entity.avatar, config.URL.AVATARS_PATH)
-                : '',
-            fullLengthPicture: entity.fullLengthPicture
+    private async _createPatchedStaticCategories(
+        staticCategories: ICharacterStaticCategory
+    ) {
+        const scIds = Object.keys(staticCategories).map((k) => Number(k))
+        const categories = await this.staticCategoryService.findByIds(scIds)
+        const values: [string, string][] = []
+        categories.forEach((category) => {
+            values.push([category.name, staticCategories[category.id]])
+        })
+
+        return values
+    }
+
+    private _createXSmall(avatar: string, fullLengthPicture: string) {
+        return {
+            avatar: avatar ? new URL(avatar, config.URL.AVATARS_PATH) : '',
+            fullLengthPicture: fullLengthPicture
                 ? new URL(
-                      entity.fullLengthPicture,
+                      fullLengthPicture,
                       config.URL.FULL_LENGTH_PICTURES_PATH
                   )
                 : '',
             ['xsmall']: {
-                avatar: entity.avatar
-                    ? new URL(entity.avatar, config.URL.AVATARS_200_PATH)
+                avatar: avatar
+                    ? new URL(avatar, config.URL.AVATARS_200_PATH)
                     : '',
-                fullLengthPicture: entity.fullLengthPicture
+                fullLengthPicture: fullLengthPicture
                     ? new URL(
-                          entity.fullLengthPicture,
+                          fullLengthPicture,
                           config.URL.FULL_LENGTH_PICTURES_300_PATH
                       )
                     : '',
             },
+        }
+    }
+
+    private async _patchCharResult(entity: CharacterEntity) {
+        const xSmall = this._createXSmall(
+            entity.avatar,
+            entity.fullLengthPicture
+        )
+        const patchedStaticCategories = await this._createPatchedStaticCategories(
+            entity.staticCategories
+        )
+        return Object.assign({}, entity, xSmall, {
+            patchedStaticCategories,
         })
+    }
+
+    private async _patchCharResults(entities: CharacterEntity[]) {
+        for (let index in entities) {
+            entities[index] = await this._patchCharResult(entities[index])
+        }
     }
 
     private async _saveImage(targetPath: string, filename: string) {

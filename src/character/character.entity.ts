@@ -3,6 +3,7 @@ import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterAssetSetEntity } from './assetSet/assetSet.entity'
+import { ICharacterStaticCategory } from 'src/interface/character/character.interface'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
@@ -23,7 +24,7 @@ export class CharacterEntity extends StarNameEntity {
     public remark: string = ''
 
     @Column('simple-json')
-    public staticCategories: { [propname: number]: string } = {}
+    public staticCategories: ICharacterStaticCategory = {}
 
     @Column({ default: '' })
     @Length(0, 100)

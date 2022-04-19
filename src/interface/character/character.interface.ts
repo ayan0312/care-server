@@ -1,6 +1,10 @@
 import { IStarName } from '../name.interface'
 import { ISearch } from '../search.interface'
 
+export interface ICharacterStaticCategory {
+    [propname: number]: string
+}
+
 export interface ICharacter extends IStarName {
     intro?: string
     avatar?: string
@@ -9,7 +13,7 @@ export interface ICharacter extends IStarName {
     groupIds?: string
     assetSetIds?: string
     relationships?: string[]
-    staicCategories?: { [propname: number]: string }
+    staticCategories?: ICharacterStaticCategory
     fullLengthPicture?: string
 }
 

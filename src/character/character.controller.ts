@@ -27,7 +27,7 @@ export class CharacterController {
         @Query('ids') ids?: string
     ) {
         if (ids)
-            return await this.charService.findByIdsWithSmall(
+            return await this.charService.findByIds(
                 ids.split(',').map((id) => Number(id))
             )
         else if (options)
