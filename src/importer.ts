@@ -65,7 +65,7 @@ export class Importer extends EventEmitter {
             categories,
             assetGroups: result.assetGroups,
             characterGroups: result.characterGroups,
-            staticCategories: result.staticCategories,
+            staticCategories: result.staticCategories || {},
         }
     }
 
@@ -185,7 +185,7 @@ export class Importer extends EventEmitter {
             fullLengthPicture: flpicUUID,
             staticCategories: this.convertIdMap(
                 'staticCategory',
-                char.staticCategories
+                char.staticCategories || {}
             ),
         })
     }

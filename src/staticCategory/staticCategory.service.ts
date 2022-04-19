@@ -13,13 +13,24 @@ import { Repository } from 'typeorm'
 import { TagEntity } from 'src/tag/tag.entity'
 import { StaticCategoryEntity } from './staticCategory.entity'
 import { IStaticCategory } from 'src/interface/staticCategory.interface'
+import { CharacterService } from 'src/character/character.service'
+import { ModuleRef } from '@nestjs/core'
 
 @Injectable()
 export class StaticCategoryService {
     constructor(
         @InjectRepository(StaticCategoryEntity)
-        private readonly categoryRepo: Repository<StaticCategoryEntity>
+        private readonly categoryRepo: Repository<StaticCategoryEntity>,
+        private readonly moduleRef: ModuleRef
     ) {}
+
+    private charService: CharacterService
+
+    public onModuleInit() {
+        this.charService = this.moduleRef.get(CharacterService, {
+            strict: false,
+        })
+    }
 
     public async find(name: string) {
         return await this.categoryRepo.find({ name })
@@ -67,13 +78,15 @@ export class StaticCategoryService {
 
     public async delete(id: number) {
         const category = await this.findById(id)
-        const result = await this.categoryRepo
-            .createQueryBuilder()
-            .relation('tags')
-            .of(category)
-            .loadOne<TagEntity>()
+        const result = await this.charService.search({
+            page: 1,
+            size: 1,
+            condition: {
+                staticCategoryIds: String(category.id),
+            },
+        })
 
-        if (result) throw new UnprocessableEntityException()
+        if (result.total !== 0) throw new UnprocessableEntityException()
         return await this.categoryRepo.remove(category)
     }
 

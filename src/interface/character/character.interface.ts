@@ -23,6 +23,7 @@ export interface ICharacterSearchCondition extends IStarName {
     tagIds?: string
     groupIds?: string
     assetSetIds?: string
+    staticCategoryIds?: string
 }
 
 export interface ICharacterSearch extends ISearch<ICharacterSearchCondition> {}

@@ -73,6 +73,25 @@ export function queryQBIds<Entity>(
     return qb
 }
 
+export function queryQBIdsForIdMap<Entity>(
+    qb: SelectQueryBuilder<Entity>,
+    ids: string,
+    property: string
+) {
+    if (ids === 'false') qb = qb.andWhere(`${property} IS NULL`)
+    else if (ids !== '') {
+        let query = ''
+        ids.split(',').forEach((id, i, arr) => {
+            if (arr.length !== i + 1)
+                query += `'%"${id}":%' AND ${property} LIKE`
+            else query += `'%"${id}":%'`
+        })
+
+        qb = qb.andWhere(`${property} like ${query}`)
+    }
+    return qb
+}
+
 export function createQueryIds(ids: number[]) {
     if (ids.length === 0) return ''
     return `,${ids.join()},`

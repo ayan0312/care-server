@@ -21,6 +21,7 @@ import {
     mergeObjectToEntity,
     parseIds,
     queryQBIds,
+    queryQBIdsForIdMap,
 } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { CharacterEntity } from 'src/character/character.entity'
@@ -78,7 +79,7 @@ export class CharacterService {
     public async findById(
         id: number,
         relations: string[] = [],
-        patch: boolean = false
+        patch?: boolean
     ) {
         const result = await this.charRepo.findOne(
             id,
@@ -93,10 +94,9 @@ export class CharacterService {
         return result
     }
 
-    public async findByIds(ids: number[], patch: boolean = false) {
+    public async findByIds(ids: number[], patch?: boolean) {
         const chars = await this.charRepo.findByIds(ids)
         if (patch) await this._patchCharResults(chars)
-
         return chars
     }
 
@@ -118,6 +118,12 @@ export class CharacterService {
             qb = queryQBIds(qb, condition.tagIds, 'character.tagIds')
         if (condition.groupIds)
             qb = queryQBIds(qb, condition.groupIds, 'character.groupIds')
+        if (condition.staticCategoryIds != null)
+            qb = queryQBIdsForIdMap(
+                qb,
+                condition.staticCategoryIds,
+                'character.staticCategories'
+            )
         if (condition.star != null)
             qb = qb.andWhere('character.star = :star', {
                 star: !!condition.star,
@@ -207,6 +213,7 @@ export class CharacterService {
             entity.avatar,
             entity.fullLengthPicture
         )
+
         const patchedStaticCategories = await this._createPatchedStaticCategories(
             entity.staticCategories
         )

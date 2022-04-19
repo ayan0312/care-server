@@ -24,11 +24,13 @@ export class CharacterController {
     @Get()
     public async find(
         @Query('options') options?: string,
-        @Query('ids') ids?: string
+        @Query('ids') ids?: string,
+        @Query('patch') patch?: boolean
     ) {
         if (ids)
             return await this.charService.findByIds(
-                ids.split(',').map((id) => Number(id))
+                ids.split(',').map((id) => Number(id)),
+                patch
             )
         else if (options)
             return await this.charService.search(JSON.parse(options))
