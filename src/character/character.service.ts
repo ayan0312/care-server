@@ -221,6 +221,7 @@ export class CharacterService {
             {
                 patchedStaticCategories,
                 groups: [],
+                relationships: [],
             }
         )
 
