@@ -209,17 +209,31 @@ export class CharacterService {
     }
 
     private async _patchCharResult(entity: CharacterEntity) {
-        const xSmall = this._createXSmall(
-            entity.avatar,
-            entity.fullLengthPicture
-        )
+        const result = Object.assign({}, entity)
 
         const patchedStaticCategories = await this._createPatchedStaticCategories(
             entity.staticCategories
         )
-        return Object.assign({}, entity, xSmall, {
-            patchedStaticCategories,
-        })
+
+        Object.assign(
+            result,
+            this._createXSmall(entity.avatar, entity.fullLengthPicture),
+            {
+                patchedStaticCategories,
+                groups: [],
+            }
+        )
+
+        if (entity.groupIds) {
+            const groups = await this.groupService.findByIds(
+                parseIds(entity.groupIds)
+            )
+            Object.assign(result, {
+                groups,
+            })
+        }
+
+        return result
     }
 
     private async _patchCharResults(entities: CharacterEntity[]) {
