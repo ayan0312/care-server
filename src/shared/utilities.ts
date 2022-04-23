@@ -1,3 +1,5 @@
+import { HttpException, HttpStatus } from '@nestjs/common'
+import { validate, ValidatorOptions } from 'class-validator'
 import { SelectQueryBuilder } from 'typeorm'
 
 export const delUndefKey = <T extends Record<string, any>>(obj: T): T => {
@@ -30,10 +32,21 @@ export const isNumber = (val: unknown): val is number =>
     typeof val === 'number' && !isNaN(val)
 
 export const parseIds = (ids: string) => {
-    return ids
-        .split(',')
-        .map((id) => Number(id))
-        .filter((id) => isNumber(id))
+    const results: number[] = []
+    ids.split(',').forEach((id) => {
+        if (id) results.push(Number(id))
+    })
+    return results
+}
+
+export async function throwValidatedErrors(
+    object: object,
+    validatorOptions?: ValidatorOptions
+) {
+    const errors = await validate(object, validatorOptions)
+
+    if (errors.length > 0)
+        throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 }
 
 export function patchQBIds<Entity>(
@@ -95,6 +108,13 @@ export function queryQBIdsForIdMap<Entity>(
 export function createQueryIds(ids: number[]) {
     if (ids.length === 0) return ''
     return `,${ids.join()},`
+}
+
+export async function forEachAsync<T>(
+    arr: T[],
+    aCB: (value: T, index: number, curArr: T[]) => Promise<void>
+) {
+    for (let i = 0; i < arr.length; i++) await aCB(arr[i], i, arr)
 }
 
 export function formatDate(formatString: string, date: Date | number) {

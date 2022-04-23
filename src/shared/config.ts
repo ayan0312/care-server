@@ -1,4 +1,13 @@
 import os from 'os'
+import fs from 'fs-extra'
+import path from 'path'
+
+const STORAGE_PATH = 'F:/storage/'
+const DEFAULT_CONFIG = (() => ({
+    PORT: 3000,
+    IMPORT_DIR: os.homedir(),
+    EXPORT_DIR: os.homedir(),
+}))()
 
 function getIP() {
     const interfaces = os.networkInterfaces()
@@ -19,18 +28,17 @@ function getIP() {
     return 'localhost'
 }
 
-const IP = getIP()
-const PORT = 3000
-const STORAGE_PATH = 'F:/storage/'
+function createConfig() {
+    const configPath = STORAGE_PATH + 'config.json'
+    let config: Partial<typeof DEFAULT_CONFIG> = {}
+    if (fs.pathExistsSync(configPath)) config = fs.readJSONSync(configPath)
+    else
+        fs.outputJSONSync(
+            path.join(STORAGE_PATH, 'config.json'),
+            DEFAULT_CONFIG
+        )
 
-export const config = {
-    IP,
-    PORT,
-    STORAGE_PATH,
-    ...createPaths(STORAGE_PATH),
-    URL: {
-        ...createPaths(`http://${IP}:${PORT}/`),
-    },
+    return Object.assign(DEFAULT_CONFIG, config)
 }
 
 function createPaths(root: string) {
@@ -45,4 +53,16 @@ function createPaths(root: string) {
         FULL_LENGTH_PICTURES_PATH: root + 'fullLengthPictures/',
         FULL_LENGTH_PICTURES_300_PATH: root + 'fullLengthPictures/300/',
     }
+}
+
+const IP = getIP()
+const originalConfig = createConfig()
+export const config = {
+    IP,
+    STORAGE_PATH,
+    ...originalConfig,
+    ...createPaths(STORAGE_PATH),
+    URL: {
+        ...createPaths(`http://${IP}:${originalConfig.PORT}/`),
+    },
 }

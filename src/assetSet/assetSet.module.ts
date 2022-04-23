@@ -1,6 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { CharacterModule } from '../character.module'
+import { CharacterModule } from '../character/character.module'
 import { AssetSetController } from './assetSet.controller'
 import { CharacterAssetSetEntity } from './assetSet.entity'
 import { AssetSetService } from './assetSet.service'

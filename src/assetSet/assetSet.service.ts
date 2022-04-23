@@ -2,26 +2,22 @@ import { Repository } from 'typeorm'
 import {
     BadRequestException,
     ConflictException,
-    HttpException,
-    HttpStatus,
     Injectable,
     NotFoundException,
     OnModuleInit,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
-import { IStarName } from 'src/interface/name.interface'
-import { mergeObjectToEntity } from 'src/shared/utilities'
+import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
 import { CharacterAssetSetEntity } from './assetSet.entity'
 import {
     IAssetSet,
     IAssetSetSearch,
     IAssetSetSearchCondition,
 } from 'src/interface/assetSet.interface'
-import { CharacterService } from '../character.service'
+import { CharacterService } from '../character/character.service'
 import { ModuleRef } from '@nestjs/core'
 import { AssetService } from 'src/asset/asset.service'
-import { CharacterEntity } from '../character.entity'
+import { CharacterEntity } from '../character/character.entity'
 
 @Injectable()
 export class AssetSetService implements OnModuleInit {
@@ -141,10 +137,7 @@ export class AssetSetService implements OnModuleInit {
             throw new BadRequestException('asset set must belong character')
 
         await this._mergeBodyToEntity(assetSet, body)
-
-        const errors = await validate(assetSet)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
+        await throwValidatedErrors(assetSet)
 
         if (assetSet.name && assetSet.character)
             if (
@@ -160,10 +153,7 @@ export class AssetSetService implements OnModuleInit {
         const assetSet = await this.findById(id)
 
         await this._mergeBodyToEntity(assetSet, body)
-
-        const errors = await validate(assetSet)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
+        await throwValidatedErrors(assetSet)
 
         if (assetSet.name && assetSet.character)
             if (

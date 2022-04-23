@@ -1,13 +1,10 @@
 import gm from 'gm'
 import {
     BadRequestException,
-    HttpException,
-    HttpStatus,
     Injectable,
     NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
 import {
     ICharacter,
     ICharacterSearch,
@@ -22,10 +19,11 @@ import {
     parseIds,
     queryQBIds,
     queryQBIdsForIdMap,
+    throwValidatedErrors,
 } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { CharacterEntity } from 'src/character/character.entity'
-import { CharacterGroupService } from 'src/character/group/group.service'
+import { CharacterGroupService } from 'src/group/group.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
@@ -358,31 +356,20 @@ export class CharacterService {
                 ).map((group) => group.id)
             )
 
-        const errors = await validate(char)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(char)
         return await this.charRepo.save(char)
     }
 
     public async create(body: ICharacter) {
         const char = await this._mergeBodyToEntity(new CharacterEntity(), body)
-
-        const errors = await validate(char)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(char)
         return await this.charRepo.save(char)
     }
 
     public async update(id: number, body: ICharacter) {
         const char = await this.findById(id)
         await this._mergeBodyToEntity(char, body)
-
-        const errors = await validate(char)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(char)
         await this.charRepo.save(char)
         return this.findById(id, [], true)
     }

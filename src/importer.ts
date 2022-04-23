@@ -2,35 +2,31 @@ import { EventEmitter } from 'events'
 import fs from 'fs-extra'
 import path from 'path'
 import {
-    createContext,
+    Context,
     transformAssetEntity,
     transformCharacterEntity,
     transformStarNameEntity,
 } from 'src/exporter'
 import { config } from './shared/config'
 import { v4 as uuidv4 } from 'uuid'
-import { ICategory } from './interface/category.interface'
-import { ITag } from './interface/tag.interface'
 import { AssetType } from './interface/asset/asset.interface'
 
 type EntityKey =
     | 'tag'
-    | 'category'
-    | 'assetGroup'
-    | 'characterGroup'
-    | 'character'
     | 'asset'
+    | 'category'
+    | 'character'
+    | 'assetGroup'
+    | 'relationship'
+    | 'characterGroup'
     | 'staticCategory'
 
 export class Importer extends EventEmitter {
     public readonly dir: string
-    public readonly importAssets: boolean
 
-    constructor(dir: string, importAssets: boolean) {
+    constructor(dir: string) {
         super()
         this.dir = dir
-        this.importAssets = importAssets
-
         this.checkPathExists(dir)
     }
 
@@ -42,31 +38,9 @@ export class Importer extends EventEmitter {
         this.emit('message', 'import context: start')
         const filename = path.join(this.dir, 'context.json')
         this.checkPathExists(filename)
-        const result: ReturnType<typeof createContext> = await fs.readJson(
-            filename
-        )
-        const tags: (Required<ITag> & { id: number })[] = []
-        const categories: (Required<ICategory> & {
-            id: number
-        })[] = result.categories.map((category) => {
-            tags.push(...category.tags)
-            return {
-                id: category.id,
-                name: category.name,
-                type: category.type,
-                intro: category.intro,
-            }
-        })
-
-        this.emit('message', 'import context: end')
-
-        return {
-            tags,
-            categories,
-            assetGroups: result.assetGroups,
-            characterGroups: result.characterGroups,
-            staticCategories: result.staticCategories || {},
-        }
+        const result: Context = await fs.readJson(filename)
+        this.emit('message', 'import context: finished')
+        return result
     }
 
     private _inputStarName(d: ReturnType<typeof transformStarNameEntity>) {
@@ -105,11 +79,9 @@ export class Importer extends EventEmitter {
         > = await fs.readJson(filename)
 
         this.emit('message', infoHeader + 'content')
-        const pathUUID = this.importAssets
-            ? await this.copyAsset(path.join(root, asset.path))
-            : asset.path
+        const pathUUID = await this.copyAsset(path.join(root, asset.path))
 
-        this.emit('message', infoHeader + 'end')
+        this.emit('message', infoHeader + 'finished')
 
         return Object.assign(this._inputStarName(asset), {
             path: pathUUID,
@@ -164,28 +136,26 @@ export class Importer extends EventEmitter {
         > = await fs.readJson(charJsonFilename)
 
         this.emit('message', infoHeader + 'avatar')
-        const avatarUUID = this.importAssets
-            ? await this.copyAsset(path.join(root, 'avatar.png'))
-            : char.avatar
+        const avatarUUID = await this.copyAsset(path.join(root, 'avatar.png'))
 
         this.emit('message', infoHeader + 'full-length picture')
-        const flpicUUID = this.importAssets
-            ? await this.copyAsset(path.join(root, 'fullLengthPicture.png'))
-            : char.fullLengthPicture
+        const flpicUUID = await this.copyAsset(
+            path.join(root, 'fullLengthPicture.png')
+        )
 
-        this.emit('message', infoHeader + 'end')
+        this.emit('message', infoHeader + 'finished')
 
         return Object.assign(this._inputStarName(char), {
             intro: char.intro,
             avatar: avatarUUID,
             remark: char.remark,
             tagIds: this.convertIds('tag', char.tags),
-            groupIds: this.convertIds('characterGroup', char.tags),
+            groupIds: this.convertIds('characterGroup', char.groups),
             assetSetIds: char.assetSets.join(),
             fullLengthPicture: flpicUUID,
             staticCategories: this.convertIdMap(
                 'staticCategory',
-                char.staticCategories || {}
+                char.staticCategories
             ),
         })
     }
@@ -196,6 +166,7 @@ export class Importer extends EventEmitter {
         category: {},
         character: {},
         assetGroup: {},
+        relationship: {},
         characterGroup: {},
         staticCategory: {},
     }

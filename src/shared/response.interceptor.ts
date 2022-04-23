@@ -5,25 +5,14 @@ import {
     ExecutionContext,
 } from '@nestjs/common'
 import { map } from 'rxjs/operators'
-import { Observable } from 'rxjs'
-
-interface Response<T> {
-    result:
-        | T
-        | {
-              rows: T
-              total: number
-          }
-}
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
-    intercept(
-        context: ExecutionContext,
-        next: CallHandler<T>
-    ): Observable<Response<T>> {
+export class ResponseInterceptor implements NestInterceptor {
+    intercept(context: ExecutionContext, next: CallHandler) {
         return next.handle().pipe(
             map((result) => {
+                if (result.HTML) return result.HTML
+
                 return {
                     code: 0,
                     result: Array.isArray(result)

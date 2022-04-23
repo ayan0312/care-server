@@ -2,21 +2,21 @@ import { TagEntity } from 'src/tag/tag.entity'
 import { CategoryEntity } from 'src/category/category.entity'
 import { CharacterEntity } from 'src/character/character.entity'
 import { AssetGroupEntity } from 'src/asset/group/group.entity'
-import { CharacterGroupEntity } from 'src/character/group/group.entity'
+import { CharacterGroupEntity } from 'src/group/group.entity'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { NameEntity } from 'src/shared/name/name.entity'
 import fs from 'fs-extra'
 import path from 'path'
-import { EventEmitter } from 'events'
 import { config } from 'src/shared/config'
 import { AssetEntity } from 'src/asset/asset.entity'
-import { AssetType } from './interface/asset/asset.interface'
 import { parseIds } from './shared/utilities'
 import { StaticCategoryEntity } from './staticCategory/staticCategory.entity'
+import { RelationshipEntity } from './relationship/relationship.entity'
 
-export interface ExporterOptions {
+export interface ContextOptions {
     categories: CategoryEntity[]
     assetGroups: AssetGroupEntity[]
+    relationships: RelationshipEntity[]
     characterGroups: CharacterGroupEntity[]
     staticCategories: StaticCategoryEntity[]
 }
@@ -82,13 +82,35 @@ export function transformCharacterEntity(char: CharacterEntity) {
     })
 }
 
-export function createContext(options: ExporterOptions) {
+export function transformRelationshipEntity(relationship: RelationshipEntity) {
+    return Object.assign(transformNameEntity(relationship), {
+        selfName: relationship.selfName,
+        targetName: relationship.targetName,
+    })
+}
+
+export function createContext(options: ContextOptions) {
+    const tags: ReturnType<typeof transformTagEntity>[] = []
+    const categories = options.categories
+        .map((category) => transformCategoryEntity(category))
+        .map((category) => {
+            tags.push(...category.tags)
+            return {
+                id: category.id,
+                name: category.name,
+                type: category.type,
+                intro: category.intro,
+            }
+        })
+
     return {
-        categories: options.categories.map((category) =>
-            transformCategoryEntity(category)
-        ),
+        tags,
+        categories,
         assetGroups: options.assetGroups.map((assetGroup) =>
             transformStarNameEntity(assetGroup)
+        ),
+        relationships: options.relationships.map((relationship) =>
+            transformRelationshipEntity(relationship)
         ),
         characterGroups: options.characterGroups.map((charGroup) =>
             transformStarNameEntity(charGroup)
@@ -99,37 +121,27 @@ export function createContext(options: ExporterOptions) {
     }
 }
 
-export class Exporter extends EventEmitter {
+export type Context = ReturnType<typeof createContext>
+
+export class Exporter {
     public readonly dir: string
-    public readonly context: ReturnType<typeof createContext>
-    public readonly exportAssets: boolean
 
-    constructor(dir: string, options: ExporterOptions, exportAssets: boolean) {
-        super()
-
+    constructor(dir: string) {
         this.dir = dir
-        this.context = createContext(options)
-        this.exportAssets = exportAssets
-
         fs.ensureDirSync(this.dir)
     }
 
-    public async outputContext() {
-        this.emit('message', 'export context: start')
-        await fs.outputJson(path.join(this.dir, 'context.json'), this.context)
-        this.emit('message', 'export context: end')
+    public async outputContext(context: ContextOptions) {
+        await fs.outputJson(
+            path.join(this.dir, 'context.json'),
+            createContext(context)
+        )
     }
 
     public async outputAsset(asset: AssetEntity) {
-        const infoHeader = `export asset ${asset.id}: `
-        this.emit('message', infoHeader + 'start')
         const targetDir = path.join(this.dir, `assets`)
 
-        if (asset.path && this.exportAssets) {
-            if (asset.assetType === AssetType.file)
-                this.emit('message', infoHeader + 'file')
-            if (asset.assetType === AssetType.folder)
-                this.emit('message', infoHeader + 'folder')
+        if (asset.path) {
             const src = path.join(config.ASSETS_PATH, asset.path)
             asset.path = `${asset.id}${path.extname(asset.path)}`
             const dest = path.join(targetDir, asset.path)
@@ -141,8 +153,6 @@ export class Exporter extends EventEmitter {
             path.join(targetDir, `${asset.id}.json`),
             transformAssetEntity(asset)
         )
-
-        this.emit('message', infoHeader + 'end')
     }
 
     /**
@@ -150,16 +160,13 @@ export class Exporter extends EventEmitter {
      * @param char that includes all relations without assets
      */
     public async outputCharacter(char: CharacterEntity) {
-        const infoHeader = `export character ${char.id}(${char.name}): `
-        this.emit('message', infoHeader + 'start')
         const targetDir = path.join(this.dir, `characters/${char.id}`)
         await fs.outputJson(
             path.join(targetDir, 'character.json'),
             transformCharacterEntity(char)
         )
 
-        if (char.avatar && this.exportAssets) {
-            this.emit('message', infoHeader + 'avatar')
+        if (char.avatar) {
             const src = path.join(config.AVATARS_PATH, char.avatar)
             const dest = path.join(
                 targetDir,
@@ -168,8 +175,7 @@ export class Exporter extends EventEmitter {
             await fs.copy(src, dest)
         }
 
-        if (char.fullLengthPicture && this.exportAssets) {
-            this.emit('message', infoHeader + 'full-length picture')
+        if (char.fullLengthPicture) {
             const src = path.join(
                 config.FULL_LENGTH_PICTURES_PATH,
                 char.fullLengthPicture
@@ -180,7 +186,5 @@ export class Exporter extends EventEmitter {
             )
             await fs.copy(src, dest)
         }
-
-        this.emit('message', infoHeader + 'end')
     }
 }

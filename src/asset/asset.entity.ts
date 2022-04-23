@@ -2,7 +2,7 @@ import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { Length } from 'class-validator'
-import { CharacterAssetSetEntity } from 'src/character/assetSet/assetSet.entity'
+import { CharacterAssetSetEntity } from 'src/assetSet/assetSet.entity'
 import { AssetType } from 'src/interface/asset/asset.interface'
 import { ExtensionEntity } from 'src/extension/extension.entity'
 

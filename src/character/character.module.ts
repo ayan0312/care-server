@@ -4,7 +4,7 @@ import { CharacterEntity } from './character.entity'
 import { CharacterService } from './character.service'
 import { CharacterController } from './character.controller'
 import { TagModule } from 'src/tag/tag.module'
-import { CharacterGroupModule } from './group/group.module'
+import { CharacterGroupModule } from '../group/group.module'
 import { StaticCategoryModule } from 'src/staticCategory/staticCategory.module'
 
 @Module({

@@ -6,7 +6,7 @@ import { AssetController } from './asset.controller'
 import { AssetGroupModule } from './group/group.module'
 import { CharacterModule } from 'src/character/character.module'
 import { TagModule } from 'src/tag/tag.module'
-import { AssetSetModule } from 'src/character/assetSet/assetSet.module'
+import { AssetSetModule } from 'src/assetSet/assetSet.module'
 
 @Module({
     imports: [

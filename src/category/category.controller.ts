@@ -39,9 +39,7 @@ export class CategoryController {
         description: 'create category',
     })
     public async create(@Body() body: ICategory) {
-        if (body.name == null || body.type == null)
-            throw new BadRequestException('name and type cannot be empty')
-        return await this.categoryService.create(body.name, body.type)
+        return await this.categoryService.create(body)
     }
 
     @Get('/relation')
@@ -59,9 +57,9 @@ export class CategoryController {
     @Patch(':id')
     public async renameById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body('name', new DefaultValuePipe('')) name: string
+        @Body() body: ICategory
     ) {
-        return await this.categoryService.rename(id, name)
+        return await this.categoryService.update(id, body)
     }
 
     @Delete(':id')

@@ -1,18 +1,15 @@
 import {
     ConflictException,
-    HttpException,
-    HttpStatus,
     Injectable,
     NotFoundException,
     UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
 import { Repository } from 'typeorm'
 import { TagEntity } from './tag.entity'
 import { CategoryEntity } from 'src/category/category.entity'
 import { CategoryService } from 'src/category/category.service'
-import { mergeObjectToEntity } from 'src/shared/utilities'
+import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
 import { CategoryType } from 'src/interface/category.interface'
 import { ITag } from 'src/interface/tag.interface'
 import { CharacterService } from 'src/character/character.service'
@@ -92,10 +89,7 @@ export class TagService {
         if (body.categoryId)
             tag.category = await this.categoryService.findById(body.categoryId)
 
-        const errors = await validate(tag)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(tag)
         if (await this.hasName(tag.category, tag.name))
             throw new ConflictException('has the same name')
 
@@ -108,10 +102,7 @@ export class TagService {
         if (body.categoryId)
             tag.category = await this.categoryService.findById(body.categoryId)
 
-        const errors = await validate(tag)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(tag)
         if (await this.hasName(tag.category, tag.name))
             throw new ConflictException('has the same name')
 

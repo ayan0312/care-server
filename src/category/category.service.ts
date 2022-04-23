@@ -1,17 +1,16 @@
 import {
+    BadRequestException,
     ConflictException,
-    HttpException,
-    HttpStatus,
     Injectable,
     NotFoundException,
     UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
-import { CategoryType } from 'src/interface/category.interface'
+import { CategoryType, ICategory } from 'src/interface/category.interface'
 import { Repository } from 'typeorm'
 import { TagEntity } from 'src/tag/tag.entity'
 import { CategoryEntity } from './category.entity'
+import { throwValidatedErrors } from 'src/shared/utilities'
 
 @Injectable()
 export class CategoryService {
@@ -22,6 +21,10 @@ export class CategoryService {
 
     public async find(opts: { name?: string; type: CategoryType }) {
         return await this.categoryRepo.find(opts)
+    }
+
+    public async findAll() {
+        return await this.categoryRepo.find()
     }
 
     public async findById(id: number) {
@@ -52,27 +55,33 @@ export class CategoryService {
         })
     }
 
-    public async create(name: string, type: CategoryType) {
+    public async create(body: ICategory) {
         const category = new CategoryEntity()
-        category.name = name
-        category.type = type
-
-        const errors = await validate(category)
-
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
-        if (await this.hasName(name, type))
+        if (body.name == null)
+            throw new BadRequestException('name and type cannot be empty')
+        if (body.type == null)
+            throw new BadRequestException('type and type cannot be empty')
+        if (await this.hasName(body.name, body.type))
             throw new ConflictException('has the same name')
+        category.name = body.name
+        category.type = body.type
+        if (body.intro) category.intro = body.intro
+        await throwValidatedErrors(category)
+
         return await this.categoryRepo.save(category)
     }
 
-    public async rename(id: number, name: string) {
+    public async update(id: number, body: ICategory) {
         const category = await this.findById(id)
-        if (await this.hasName(name, category.type))
-            throw new ConflictException('has the same name')
+        if (body.name) {
+            if (await this.hasName(body.name, category.type))
+                throw new ConflictException('has the same name')
+            category.name = body.name
+        }
+        if (body.intro) category.intro = body.intro
+        await throwValidatedErrors(category)
 
-        return await this.categoryRepo.update(id, { name })
+        return await this.categoryRepo.save(category)
     }
 
     public async delete(id: number) {

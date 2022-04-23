@@ -1,15 +1,12 @@
 import { Repository } from 'typeorm'
 import {
     ConflictException,
-    HttpException,
-    HttpStatus,
     Injectable,
     NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
 import { IStarName } from 'src/interface/name.interface'
-import { mergeObjectToEntity } from 'src/shared/utilities'
+import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
 import { CharacterGroupEntity } from './group.entity'
 
 @Injectable()
@@ -40,11 +37,7 @@ export class CharacterGroupService {
     public async create(body: IStarName) {
         const group = new CharacterGroupEntity()
         mergeObjectToEntity(group, body)
-
-        const errors = await validate(group)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(group)
         if (await this.hasName(group.name))
             throw new ConflictException('has the same name')
 
@@ -58,11 +51,7 @@ export class CharacterGroupService {
                 throw new ConflictException('has the same name')
 
         mergeObjectToEntity(group, body)
-
-        const errors = await validate(group)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(group)
         return await this.groupRepo.save(group)
     }
 

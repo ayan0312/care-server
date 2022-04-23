@@ -1,13 +1,6 @@
 import gm from 'gm'
-import {
-    BadRequestException,
-    HttpException,
-    HttpStatus,
-    Injectable,
-    NotFoundException,
-} from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
 import {
     IAsset,
     IAssetSearch,
@@ -22,6 +15,7 @@ import {
     parseIds,
     patchQBIds,
     queryQBIds,
+    throwValidatedErrors,
 } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { AssetEntity } from './asset.entity'
@@ -31,7 +25,7 @@ import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
-import { AssetSetService } from 'src/character/assetSet/assetSet.service'
+import { AssetSetService } from 'src/assetSet/assetSet.service'
 
 @Injectable()
 export class AssetService {
@@ -286,11 +280,7 @@ export class AssetService {
             asset.assetSets = await this.assetSetService.findByIds(
                 parseIds(body.assetSetIds)
             )
-
-        const errors = await validate(asset)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(asset)
         return await this.assetRepo.save(asset)
     }
 
@@ -300,11 +290,7 @@ export class AssetService {
                 ._nameId++}`
 
         const asset = await this._mergeBodyToEntity(new AssetEntity(), body)
-
-        const errors = await validate(asset)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(asset)
         return await this.assetRepo.save(asset)
     }
 
@@ -330,11 +316,7 @@ export class AssetService {
     public async update(id: number, body: IAsset) {
         const asset = await this.findById(id)
         await this._mergeBodyToEntity(asset, body)
-
-        const errors = await validate(asset)
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(asset)
         const newPic = await this.assetRepo.save(asset)
         return await this.assetRepo.findOne(newPic.id)
     }

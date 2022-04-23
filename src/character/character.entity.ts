@@ -1,8 +1,8 @@
-import { Column, Entity, OneToMany } from 'typeorm'
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
-import { CharacterAssetSetEntity } from './assetSet/assetSet.entity'
+import { CharacterAssetSetEntity } from '../assetSet/assetSet.entity'
 import { ICharacterStaticCategory } from 'src/interface/character/character.interface'
 
 @Entity('character')
@@ -42,3 +42,6 @@ export class CharacterEntity extends StarNameEntity {
     )
     public assetSets: CharacterAssetSetEntity[]
 }
+
+@Entity('character_relationship')
+export class CharacterRelationshipEntity {}

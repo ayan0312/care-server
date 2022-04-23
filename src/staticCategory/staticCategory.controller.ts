@@ -31,7 +31,7 @@ export class StaticCategoryController {
     @HttpCode(HttpStatus.CREATED)
     @ApiResponse({
         status: HttpStatus.CREATED,
-        description: 'create category',
+        description: 'create static category',
     })
     public async create(@Body() body: IStaticCategory) {
         return await this.categoryService.create(body)

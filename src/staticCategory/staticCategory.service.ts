@@ -1,20 +1,17 @@
 import {
     BadRequestException,
     ConflictException,
-    HttpException,
-    HttpStatus,
     Injectable,
     NotFoundException,
     UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { validate } from 'class-validator'
 import { Repository } from 'typeorm'
-import { TagEntity } from 'src/tag/tag.entity'
 import { StaticCategoryEntity } from './staticCategory.entity'
 import { IStaticCategory } from 'src/interface/staticCategory.interface'
 import { CharacterService } from 'src/character/character.service'
 import { ModuleRef } from '@nestjs/core'
+import { throwValidatedErrors } from 'src/shared/utilities'
 
 @Injectable()
 export class StaticCategoryService {
@@ -60,12 +57,7 @@ export class StaticCategoryService {
         category.name = body.name
         if (body.intro) category.intro = body.intro
         if (body.script) category.script = body.script
-
-        const errors = await validate(category)
-
-        if (errors.length > 0)
-            throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
-
+        await throwValidatedErrors(category)
         return await this.categoryRepo.save(category)
     }
 
