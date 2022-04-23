@@ -128,7 +128,10 @@ export class TagService {
             },
         })
 
-        if (result.total !== 0) throw new UnprocessableEntityException()
+        if (result.total !== 0)
+            throw new UnprocessableEntityException({
+                message: `The ID "${result.rows[0].id}" has this tag.`,
+            })
         return await this.tagRepo.remove(tag)
     }
 
