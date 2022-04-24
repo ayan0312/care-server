@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { CharacterGroupController } from './group.controller'
-import { CharacterGroupEntity } from './group.entity'
-import { CharacterGroupService } from './group.service'
+import { CharacterGroupController } from './characterGroup.controller'
+import { CharacterGroupEntity } from './characterGroup.entity'
+import { CharacterGroupService } from './characterGroup.service'
 
 @Module({
     imports: [TypeOrmModule.forFeature([CharacterGroupEntity])],

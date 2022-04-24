@@ -23,7 +23,7 @@ import {
 } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { CharacterEntity } from 'src/character/character.entity'
-import { CharacterGroupService } from 'src/group/group.service'
+import { CharacterGroupService } from 'src/characterGroup/characterGroup.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'

@@ -10,16 +10,15 @@ import {
     Patch,
     Query,
     HttpCode,
-    DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IStarName } from 'src/interface/name.interface'
-import { CharacterGroupService } from './group.service'
+import { AssetGroupService } from './assetGroup.service'
 
-@ApiTags('character_groups')
-@Controller('character/groups')
-export class CharacterGroupController {
-    constructor(private readonly groupService: CharacterGroupService) {}
+@ApiTags('asset_groups')
+@Controller('asset/groups')
+export class AssetGroupController {
+    constructor(private readonly groupService: AssetGroupService) {}
 
     @Get()
     public async find(@Query('name') name: string, @Query('ids') ids: string) {

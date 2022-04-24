@@ -1,10 +1,6 @@
 import {
-    OnGatewayConnection,
-    OnGatewayInit,
     SubscribeMessage,
     WebSocketGateway,
-    OnGatewayDisconnect,
-    WebSocketServer,
     MessageBody,
     ConnectedSocket,
 } from '@nestjs/websockets'
@@ -13,10 +9,10 @@ import { DefaultValuePipe, Logger } from '@nestjs/common'
 import { Context, Exporter } from './exporter'
 import { config } from './shared/config'
 import { AssetService } from './asset/asset.service'
-import { AssetGroupService } from './asset/group/group.service'
+import { AssetGroupService } from './assetGroup/assetGroup.service'
 import { CategoryService } from './category/category.service'
 import { CharacterService } from './character/character.service'
-import { CharacterGroupService } from './group/group.service'
+import { CharacterGroupService } from './characterGroup/characterGroup.service'
 import { StaticCategoryService } from './staticCategory/staticCategory.service'
 import { TagService } from './tag/tag.service'
 import { Importer } from './importer'

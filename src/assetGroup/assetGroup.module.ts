@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { AssetGroupController } from './group.controller'
-import { AssetGroupEntity } from './group.entity'
-import { AssetGroupService } from './group.service'
+import { AssetGroupController } from './assetGroup.controller'
+import { AssetGroupEntity } from './assetGroup.entity'
+import { AssetGroupService } from './assetGroup.service'
 
 @Module({
     imports: [TypeOrmModule.forFeature([AssetGroupEntity])],

@@ -7,13 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { IStarName } from 'src/interface/name.interface'
 import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
-import { AssetGroupEntity } from './group.entity'
+import { CharacterGroupEntity } from './characterGroup.entity'
 
 @Injectable()
-export class AssetGroupService {
+export class CharacterGroupService {
     constructor(
-        @InjectRepository(AssetGroupEntity)
-        private readonly groupRepo: Repository<AssetGroupEntity>
+        @InjectRepository(CharacterGroupEntity)
+        private readonly groupRepo: Repository<CharacterGroupEntity>
     ) {}
 
     public async find(name: string) {
@@ -35,7 +35,7 @@ export class AssetGroupService {
     }
 
     public async create(body: IStarName) {
-        const group = new AssetGroupEntity()
+        const group = new CharacterGroupEntity()
         mergeObjectToEntity(group, body)
         await throwValidatedErrors(group)
         if (await this.hasName(group.name))

@@ -20,7 +20,7 @@ import {
 } from 'src/shared/utilities'
 import { Repository } from 'typeorm'
 import { AssetEntity } from './asset.entity'
-import { AssetGroupService } from './group/group.service'
+import { AssetGroupService } from '../assetGroup/assetGroup.service'
 import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
