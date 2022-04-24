@@ -1,15 +1,6 @@
 # care-server
 
-先导出数据，记得过滤不需要的画师
-## TODO 
-关系
-websocket消息通知
-静态类型
-过滤模式，浏览中除非手动选择过滤，不然都会进入选中状态
-导出中断继续，导出格式整齐
-漫画 也就是连续帧
+## TODO
+重构asset：为file专门添加一个service和entity
+人物关系
 更加均匀的metadata和cache文件夹生成
-wiki
-连续帧查看插件(复用wiki模块)
-杂类文件查看插件(live2d 龙骨)
-音频和视频查看插件
