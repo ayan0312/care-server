@@ -12,6 +12,7 @@ export interface IAsset extends IStarName {
     intro?: string
     remark?: string
     tagIds?: string
+    recycle?: boolean
     groupIds?: string
     assetType?: AssetType
     assetSetIds?: string
@@ -23,6 +24,7 @@ export interface IAssetSearchCondition extends IStarName {
     intro?: string
     remark?: string
     tagIds?: string
+    recycle?: boolean
     groupIds?: string
     assetType?: AssetType
     assetSetIds?: string

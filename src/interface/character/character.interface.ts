@@ -10,6 +10,7 @@ export interface ICharacter extends IStarName {
     avatar?: string
     remark?: string
     tagIds?: string
+    recycle?: boolean
     groupIds?: string
     assetSetIds?: string
     relationships?: string[]
@@ -21,6 +22,7 @@ export interface ICharacterSearchCondition extends IStarName {
     intro?: string
     remark?: string
     tagIds?: string
+    recycle?: boolean
     groupIds?: string
     assetSetIds?: string
     staticCategoryIds?: string

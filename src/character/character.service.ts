@@ -139,6 +139,10 @@ export class CharacterService {
                 rating: condition.rating,
             })
 
+        qb = qb.andWhere('character.recycle = :recycle', {
+            recycle: !!condition.recycle,
+        })
+
         return qb
     }
 
@@ -376,6 +380,9 @@ export class CharacterService {
 
     public async delete(id: number) {
         const char = await this.findById(id)
+
+        if (!char.recycle) return await this.update(id, { recycle: true })
+
         const result = await this.assetService.search({
             page: 1,
             size: 1,

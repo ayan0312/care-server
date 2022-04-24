@@ -31,7 +31,7 @@ export class Importer extends EventEmitter {
     }
 
     public checkPathExists(path: string) {
-        if (!fs.pathExistsSync(path)) throw ''
+        if (!fs.pathExistsSync(path)) throw 'not found context.json'
     }
 
     public async inputContext() {

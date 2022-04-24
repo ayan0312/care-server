@@ -260,9 +260,14 @@ export class AppGateway {
         @ConnectedSocket() client: Socket
     ) {
         const importer = new Importer(path || config.IMPORT_DIR)
-        await this._importContext(importer, client)
-        await this._importCharacter(importer, client)
-        await this._importAsset(importer, client)
+
+        try {
+            await this._importContext(importer, client)
+            await this._importCharacter(importer, client)
+            await this._importAsset(importer, client)
+        } catch (err) {
+            client.emit('import_error', err)
+        }
         client.emit('import', 'finished')
     }
 }

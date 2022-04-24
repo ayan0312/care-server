@@ -63,6 +63,7 @@ export function transformAssetEntity(asset: AssetEntity) {
         tags: parseIds(asset.tagIds),
         groups: parseIds(asset.groupIds),
         path: asset.path,
+        recycle: asset.recycle,
         assetType: asset.assetType,
         assetSets: asset.assetSets.map((assetSet) => assetSet.id),
         characters: parseIds(asset.characterIds),
@@ -77,6 +78,7 @@ export function transformCharacterEntity(char: CharacterEntity) {
         fullLengthPicture: char.fullLengthPicture,
         tags: parseIds(char.tagIds),
         groups: parseIds(char.groupIds),
+        recycle: char.recycle,
         assetSets: char.assetSets.map((assetSet) => assetSet.id),
         staticCategories: char.staticCategories,
     })

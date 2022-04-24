@@ -10,6 +10,7 @@ import { config } from 'src/shared/config'
 import { ImageMetadata, saveImage } from 'src/shared/image'
 import {
     createQueryIds,
+    forEachAsync,
     formatDate,
     mergeObjectToEntity,
     parseIds,
@@ -121,6 +122,10 @@ export class AssetService {
             qb = qb.andWhere('asset.rating = :rating', {
                 rating: condition.rating,
             })
+
+        qb = qb.andWhere('asset.recycle = :recycle', {
+            recycle: !!condition.recycle,
+        })
 
         return qb
     }
@@ -310,7 +315,12 @@ export class AssetService {
     }
 
     public async deleteByIds(ids: number[]) {
-        return this.assetRepo.delete(ids)
+        const assets: AssetEntity[] = []
+        await forEachAsync(ids, async (id) => {
+            const result = await this.delete(id)
+            if (result) assets.push(result)
+        })
+        return assets
     }
 
     public async update(id: number, body: IAsset) {
@@ -323,6 +333,9 @@ export class AssetService {
 
     public async delete(id: number) {
         const asset = await this.findById(id)
+
+        if (!asset.recycle) return await this.update(id, { recycle: true })
+
         return await this.assetRepo.remove(asset)
     }
 }

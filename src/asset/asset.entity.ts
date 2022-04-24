@@ -20,6 +20,9 @@ export class AssetEntity extends StarNameEntity {
     @Length(0, 100)
     public path: string = ''
 
+    @Column({ default: false })
+    public recycle: boolean = false
+
     @Column('simple-enum')
     public assetType: AssetType = AssetType.file
 
