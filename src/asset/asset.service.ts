@@ -5,7 +5,7 @@ import {
     IAsset,
     IAssetSearch,
     IAssetSearchCondition,
-} from 'src/interface/asset/asset.interface'
+} from 'src/interface/asset.interface'
 import { config } from 'src/shared/config'
 import { ImageMetadata, saveImage } from 'src/shared/image'
 import {
@@ -157,15 +157,17 @@ export class AssetService {
     }
 
     private _patchAssetResult(entity: AssetEntity) {
+        const paths: URL[] = []
+        const smallPaths: URL[] = []
+
+        entity.filenames.forEach((filename) => {
+            paths.push(new URL(filename, config.URL.ASSETS_PATH))
+            smallPaths.push(new URL(filename, config.URL.ASSETS_300_PATH))
+        })
+
         return Object.assign(entity, {
-            path: entity.path
-                ? new URL(entity.path, config.URL.ASSETS_PATH)
-                : '',
-            xsmall: {
-                path: entity.path
-                    ? new URL(entity.path, config.URL.ASSETS_300_PATH)
-                    : '',
-            },
+            paths,
+            smallPaths,
         })
     }
 
@@ -195,10 +197,10 @@ export class AssetService {
         })
     }
 
-    private async _saveAsset(tempFilename: string) {
+    private async _saveAsset(filename: string) {
         const metadata = await this._saveImage(
             config.STORAGE_PATH + 'assets',
-            tempFilename
+            filename
         )
 
         if (metadata === null) return '/assets/package.png'
@@ -208,16 +210,28 @@ export class AssetService {
         return metadata.name
     }
 
+    private async _saveAssets(filenames: string[]) {
+        const results: string[] = []
+        await forEachAsync(filenames, async (filename) => {
+            const result = await this._saveAsset(filename)
+            results.push(result)
+        })
+        return results
+    }
+
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
         mergeObjectToEntity(target, body, [
-            'path',
             'tagIds',
             'groupIds',
+            'filenames',
             'assetSetIds',
             'characterIds',
         ])
 
-        if (body.path) target.path = await this._saveAsset(body.path)
+        if (body.filenames && body.filenames.length > 0) {
+            const filenames = await this._saveAssets(body.filenames)
+            target.filenames = filenames
+        }
         if (body.tagIds != null)
             target.tagIds = createQueryIds(
                 (
@@ -247,46 +261,6 @@ export class AssetService {
             )
 
         return target
-    }
-
-    public async save(body: IAsset) {
-        const asset = new AssetEntity()
-        mergeObjectToEntity(asset, body, [
-            'tagIds',
-            'groupIds',
-            'assetSetIds',
-            'characterIds',
-        ])
-
-        if (body.tagIds)
-            asset.tagIds = createQueryIds(
-                (
-                    await this.tagService.matchByIds(
-                        parseIds(body.tagIds),
-                        CategoryType.asset
-                    )
-                ).map((tag) => tag.id)
-            )
-        if (body.groupIds)
-            asset.groupIds = createQueryIds(
-                (
-                    await this.groupService.findByIds(parseIds(body.groupIds))
-                ).map((group) => group.id)
-            )
-        if (body.characterIds)
-            asset.characterIds = createQueryIds(
-                (
-                    await this.charService.findByIds(
-                        parseIds(body.characterIds)
-                    )
-                ).map((char) => char.id)
-            )
-        if (body.assetSetIds)
-            asset.assetSets = await this.assetSetService.findByIds(
-                parseIds(body.assetSetIds)
-            )
-        await throwValidatedErrors(asset)
-        return await this.assetRepo.save(asset)
     }
 
     public async create(body: IAsset) {

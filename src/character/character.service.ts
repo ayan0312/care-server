@@ -10,7 +10,7 @@ import {
     ICharacterSearch,
     ICharacterSearchCondition,
     ICharacterStaticCategory,
-} from 'src/interface/character/character.interface'
+} from 'src/interface/character.interface'
 import { config } from 'src/shared/config'
 import { ImageMetadata, saveImage } from 'src/shared/image'
 import {

@@ -9,7 +9,8 @@ import {
 } from 'src/exporter'
 import { config } from './shared/config'
 import { v4 as uuidv4 } from 'uuid'
-import { AssetType } from './interface/asset/asset.interface'
+import { AssetType } from './interface/asset.interface'
+import { forEachAsync } from './shared/utilities'
 
 type EntityKey =
     | 'tag'
@@ -79,17 +80,22 @@ export class Importer extends EventEmitter {
         > = await fs.readJson(filename)
 
         this.emit('message', infoHeader + 'content')
-        const pathUUID = await this.copyAsset(path.join(root, asset.path))
+
+        const filenames: string[] = []
+
+        await forEachAsync(asset.filenames, async (filename) => {
+            filenames.push(await this.copyAsset(path.join(root, filename)))
+        })
 
         this.emit('message', infoHeader + 'finished')
 
         return Object.assign(this._inputStarName(asset), {
-            path: pathUUID,
             intro: asset.intro,
             remark: asset.remark,
             tagIds: this.convertIds('tag', asset.tags),
             groupIds: this.convertIds('assetGroup', asset.groups),
-            assetType: asset.assetType || AssetType.file,
+            filenames,
+            assetType: asset.assetType || AssetType.files,
             assetSetIds: asset.assetSets.join(),
             characterIds: this.convertIds('character', asset.characters),
         })

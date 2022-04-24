@@ -3,7 +3,7 @@ import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { CharacterAssetSetEntity } from '../assetSet/assetSet.entity'
-import { ICharacterStaticCategory } from 'src/interface/character/character.interface'
+import { ICharacterStaticCategory } from 'src/interface/character.interface'
 
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {

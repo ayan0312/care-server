@@ -9,7 +9,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { config } from 'src/shared/config'
 import { AssetEntity } from 'src/asset/asset.entity'
-import { parseIds } from './shared/utilities'
+import { forEachAsync, parseIds } from './shared/utilities'
 import { StaticCategoryEntity } from './staticCategory/staticCategory.entity'
 import { RelationshipEntity } from './relationship/relationship.entity'
 
@@ -62,9 +62,9 @@ export function transformAssetEntity(asset: AssetEntity) {
         remark: asset.remark,
         tags: parseIds(asset.tagIds),
         groups: parseIds(asset.groupIds),
-        path: asset.path,
         recycle: asset.recycle,
         assetType: asset.assetType,
+        filenames: asset.filenames,
         assetSets: asset.assetSets.map((assetSet) => assetSet.id),
         characters: parseIds(asset.characterIds),
     })
@@ -143,12 +143,15 @@ export class Exporter {
     public async outputAsset(asset: AssetEntity) {
         const targetDir = path.join(this.dir, `assets`)
 
-        if (asset.path) {
-            const src = path.join(config.ASSETS_PATH, asset.path)
-            asset.path = `${asset.id}${path.extname(asset.path)}`
-            const dest = path.join(targetDir, asset.path)
-
-            await fs.copy(src, dest)
+        if (asset.filenames) {
+            await forEachAsync(asset.filenames, async (filename, index) => {
+                const src = path.join(config.ASSETS_PATH, filename)
+                asset.filenames[index] = `${asset.id}_${index}_${path.extname(
+                    filename
+                )}`
+                const dest = path.join(targetDir, filename)
+                await fs.copy(src, dest)
+            })
         }
 
         await fs.outputJson(

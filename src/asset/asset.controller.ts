@@ -14,7 +14,7 @@ import {
     DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
-import { IAsset } from 'src/interface/asset/asset.interface'
+import { IAsset } from 'src/interface/asset.interface'
 import { AssetService } from './asset.service'
 
 @ApiTags('assets')

@@ -1,10 +1,9 @@
-import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm'
+import { Column, Entity, ManyToMany } from 'typeorm'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
 import { Length } from 'class-validator'
 import { CharacterAssetSetEntity } from 'src/assetSet/assetSet.entity'
-import { AssetType } from 'src/interface/asset/asset.interface'
-import { ExtensionEntity } from 'src/extension/extension.entity'
+import { AssetType } from 'src/interface/asset.interface'
 
 @Entity('asset')
 export class AssetEntity extends StarNameEntity {
@@ -16,15 +15,14 @@ export class AssetEntity extends StarNameEntity {
     @Length(0, 255)
     public remark: string = ''
 
-    @Column({ default: '' })
-    @Length(0, 100)
-    public path: string = ''
-
     @Column({ default: false })
     public recycle: boolean = false
 
+    @Column('simple-array')
+    public filenames: string[] = []
+
     @Column('simple-enum')
-    public assetType: AssetType = AssetType.file
+    public assetType: AssetType = AssetType.files
 
     @Column({ default: '' })
     public tagIds: string = ''
@@ -35,8 +33,8 @@ export class AssetEntity extends StarNameEntity {
     @Column({ default: '' })
     public characterIds: string = ''
 
-    @ManyToOne((type) => ExtensionEntity, (extension) => extension.assets)
-    public extension: ExtensionEntity
+    @Column({ default: '' })
+    public extensionIds: string = ''
 
     @ManyToMany(
         (type) => CharacterAssetSetEntity,

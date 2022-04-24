@@ -1,5 +1,5 @@
-import { IStarName } from '../name.interface'
-import { ISearch } from '../search.interface'
+import { IStarName } from './name.interface'
+import { ISearch } from './search.interface'
 
 export interface ICharacterStaticCategory {
     [propname: number]: string

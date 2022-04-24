@@ -1,7 +1,6 @@
 import { Length } from 'class-validator'
 import { NameEntity } from 'src/shared/name/name.entity'
-import { Column, Entity, OneToMany } from 'typeorm'
-import { AssetEntity } from 'src/asset/asset.entity'
+import { Column, Entity } from 'typeorm'
 
 @Entity('extension')
 export class ExtensionEntity extends NameEntity {
@@ -32,7 +31,4 @@ export class ExtensionEntity extends NameEntity {
     @Column({ default: '' })
     @Length(0, 1000)
     public description: string
-
-    @OneToMany((type) => AssetEntity, (asset) => asset.extension)
-    public assets: AssetEntity[]
 }
