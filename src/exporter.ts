@@ -146,10 +146,11 @@ export class Exporter {
         if (asset.filenames) {
             await forEachAsync(asset.filenames, async (filename, index) => {
                 const src = path.join(config.ASSETS_PATH, filename)
-                asset.filenames[index] = `${asset.id}_${index}_${path.extname(
+                const newFilename = `${asset.id}_${index}${path.extname(
                     filename
                 )}`
-                const dest = path.join(targetDir, filename)
+                asset.filenames[index] = newFilename
+                const dest = path.join(targetDir, newFilename)
                 await fs.copy(src, dest)
             })
         }
