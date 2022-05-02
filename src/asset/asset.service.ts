@@ -7,7 +7,7 @@ import {
     IAssetSearchCondition,
 } from 'src/interface/asset.interface'
 import { config } from 'src/shared/config'
-import { ImageMetadata, saveImage } from 'src/shared/image'
+import { FileMetadata, saveImage } from 'src/shared/image'
 import {
     createQueryIds,
     forEachAsync,
@@ -186,7 +186,7 @@ export class AssetService {
         }
     }
 
-    private async _saveAsset300(metadata: ImageMetadata) {
+    private async _saveAsset300(metadata: FileMetadata) {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
                 .resize(400, 400)

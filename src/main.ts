@@ -6,10 +6,12 @@ import { AllExceptionsFilter } from './shared/allExceptions.filter'
 import { config } from './shared/config'
 import { ResponseInterceptor } from './shared/response.interceptor'
 import { autoMkdirSync } from './shared/image'
+import compression from 'compression'
 
 async function bootstrap() {
     const appOptions = { cors: true }
     const app = await NestFactory.create(ApplicationModule, appOptions)
+    app.use(compression())
     app.setGlobalPrefix('api')
     app.useGlobalFilters(new AllExceptionsFilter())
     app.useGlobalInterceptors(new ResponseInterceptor())

@@ -12,7 +12,7 @@ import {
     ICharacterStaticCategory,
 } from 'src/interface/character.interface'
 import { config } from 'src/shared/config'
-import { ImageMetadata, saveImage } from 'src/shared/image'
+import { FileMetadata, saveImage } from 'src/shared/image'
 import {
     createQueryIds,
     mergeObjectToEntity,
@@ -260,7 +260,7 @@ export class CharacterService {
         }
     }
 
-    private async _saveAvatar200(metadata: ImageMetadata) {
+    private async _saveAvatar200(metadata: FileMetadata) {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
                 .resize(200, 200, '!')
@@ -284,7 +284,7 @@ export class CharacterService {
         return metadata.name
     }
 
-    private async _saveFullLengthPicture300(metadata: ImageMetadata) {
+    private async _saveFullLengthPicture300(metadata: FileMetadata) {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
                 .resize(300)

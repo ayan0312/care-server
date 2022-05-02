@@ -1,12 +1,57 @@
 import fs from 'fs'
 import gm from 'gm'
+import path from 'path'
+import got from 'got'
+import { URL } from 'url'
+import { pipeline } from 'stream'
+import { IncomingMessage } from 'http'
+import { fromFile, fromStream } from 'file-type'
 
-export interface ImageMetadata {
+export interface FileMetadata {
+    ext: string
     name: string
-    type: string
     path: string
-    size: string
+    size: number
+    mimetype?: string
     filename: string
+    originalname?: string
+}
+
+export function download(url: string, prefix: string, outputPath: string) {
+    autoMkdirSync(outputPath)
+    const readStream = got.stream(url)
+    return new Promise((resolve: (metadata: FileMetadata) => void, reject) => {
+        readStream.on('response', async (response: IncomingMessage) => {
+            let ext = path.extname(new URL(url).pathname)
+            const mimetype = response.headers['content-type']
+            if (!ext)
+                ext = mimetype
+                    ? mimetype.split('/')[1]
+                    : (await fromStream(readStream))?.ext || ''
+            const name = `${prefix}.${ext}`
+            const filename = `${outputPath}/${name}`
+
+            readStream.off('error', reject)
+            pipeline(readStream, fs.createWriteStream(filename), (err) => {
+                if (err) {
+                    reject(err.message)
+                    return
+                }
+
+                const size = fs.statSync(filename).size
+
+                resolve({
+                    name,
+                    size,
+                    ext,
+                    path: outputPath,
+                    filename,
+                    mimetype: mimetype || '',
+                    originalname: url,
+                })
+            })
+        })
+    })
 }
 
 function getImageType(filename: string): string | false {
@@ -57,16 +102,16 @@ export async function saveImage(
     originFilename: string,
     rename?: boolean
 ) {
-    let size = String(fs.statSync(originFilename))
+    let size = fs.statSync(originFilename).size
     autoMkdirSync(path)
 
-    const type = getImageType(originFilename) || ''
-    const metadata: ImageMetadata = {
-        type,
+    const ext = (await fromFile(originFilename))?.ext || ''
+    const metadata: FileMetadata = {
+        ext,
         path,
         size,
-        name: `${sign}.${type}`,
-        filename: `${path}/${sign}.${type}`,
+        name: `${sign}.${ext}`,
+        filename: `${path}/${sign}.${ext}`,
     }
 
     if (rename) await renameImage(originFilename, metadata.filename)
@@ -77,7 +122,7 @@ export async function saveImage(
 
 export async function getImageSize(filename: string) {
     return new Promise((resolve: (size: gm.Dimensions) => void, reject) => {
-        gm(filename).size(function (err, size) {
+        gm(filename).size((err, size) => {
             if (err) {
                 reject(err)
                 return

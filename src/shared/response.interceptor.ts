@@ -11,7 +11,7 @@ export class ResponseInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler) {
         return next.handle().pipe(
             map((result) => {
-                if (result.HTML) return result.HTML
+                if (result?.HTML) return result.HTML
 
                 return {
                     code: 0,
