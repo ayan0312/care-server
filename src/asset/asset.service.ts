@@ -148,15 +148,46 @@ export class AssetService {
             .take(size)
             .getManyAndCount()
 
+        const rows = data[0]
+        await this._patchAssetResults(rows)
         return {
             page: Number(page),
             size: Number(size),
-            rows: data[0].map((entity) => this._patchAssetResult(entity)),
+            rows,
             total: data[1],
         }
     }
 
-    private _patchAssetResult(entity: AssetEntity) {
+    private _createXSmall(avatar: string, fullLengthPicture: string) {
+        return {
+            avatar: avatar ? new URL(avatar, config.URL.AVATARS_PATH) : '',
+            fullLengthPicture: fullLengthPicture
+                ? new URL(
+                      fullLengthPicture,
+                      config.URL.FULL_LENGTH_PICTURES_PATH
+                  )
+                : '',
+            ['xsmall']: {
+                avatar: avatar
+                    ? new URL(avatar, config.URL.AVATARS_200_PATH)
+                    : '',
+                fullLengthPicture: fullLengthPicture
+                    ? new URL(
+                          fullLengthPicture,
+                          config.URL.FULL_LENGTH_PICTURES_300_PATH
+                      )
+                    : '',
+            },
+        }
+    }
+
+    private async _patchAssetResults(entities: AssetEntity[]) {
+        await forEachAsync(entities, async (entity) => {
+            await this._patchAssetResult(entity)
+        })
+    }
+
+    private async _patchAssetResult(entity: AssetEntity) {
         const paths: URL[] = []
         const smallPaths: URL[] = []
 
@@ -164,6 +195,15 @@ export class AssetService {
             paths.push(new URL(filename, config.URL.ASSETS_PATH))
             smallPaths.push(new URL(filename, config.URL.ASSETS_300_PATH))
         })
+
+        if (entity.groupIds) {
+            const groups = await this.groupService.findByIds(
+                parseIds(entity.groupIds)
+            )
+            Object.assign(entity, {
+                groups,
+            })
+        }
 
         return Object.assign(entity, {
             paths,
@@ -302,7 +342,7 @@ export class AssetService {
         await this._mergeBodyToEntity(asset, body)
         await throwValidatedErrors(asset)
         const newPic = await this.assetRepo.save(asset)
-        return await this.assetRepo.findOne(newPic.id)
+        return await this.findById(newPic.id, [], true)
     }
 
     public async delete(id: number) {

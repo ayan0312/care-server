@@ -17,7 +17,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const response = ctx.getResponse<Response>()
 
         let statusCode = HttpStatus.INTERNAL_SERVER_ERROR
-        let errorCode = ErrorCodes.UNKNOWN_ERROR
+        let errorCode = ErrorCodes.UNKNOWN
         let message: string | null = null
         let errors = []
 
@@ -40,7 +40,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             if (exception instanceof ErrorCodeException) errorCode = res.code
         } else if (exception instanceof Error) {
             if (exception.message) message = exception.message
-            if ((exception as any).status !== 404) console.error(exception)
+            console.error(exception)
         } else if (typeof exception === 'string') {
             message = exception
         }

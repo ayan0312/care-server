@@ -19,9 +19,11 @@ function getIP() {
             if (
                 info.family === 'IPv4' &&
                 info.address !== '127.0.0.1' &&
+                info.address.indexOf('192.168') > -1 &&
                 !info.internal
-            )
+            ) {
                 return info.address
+            }
         }
     }
 

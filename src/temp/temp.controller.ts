@@ -1,7 +1,10 @@
 import {
+    Body,
     Controller,
     DefaultValuePipe,
     Get,
+    Logger,
+    ParseBoolPipe,
     Post,
     PreconditionFailedException,
     Query,
@@ -14,10 +17,11 @@ import multer from 'multer'
 import path from 'path'
 import { config } from 'src/shared/config'
 import { ExpireMap } from 'src/shared/expire'
-import { clipImage, download } from 'src/shared/image'
+import { clipImage, download, FileMetadata } from 'src/shared/image'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs-extra'
+import { ErrorCodeException, ErrorCodes } from 'src/shared/errorCodes'
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -40,15 +44,41 @@ expireMap.on('delete', (filename: string) => {
 export class TempController {
     constructor() {}
 
+    private logger = new Logger('Temps')
+
+    @Get('download')
+    public async download(@Query('opts') base64: string) {
+        const {
+            url,
+            path = 'C:/Users/ayan0312/Desktop/Images',
+            name,
+            timeout = 30 * 1000,
+        } = JSON.parse(Buffer.from(base64, 'base64').toString())
+        if (!url || !path || !name) throw 'params'
+        try {
+            return await download(url, name, path, timeout)
+        } catch (err: any) {
+            if (err?.code === 'ETIMEDOUT')
+                throw new ErrorCodeException({
+                    code: ErrorCodes.TIME_OUT,
+                    message: err.message,
+                })
+            throw err
+        }
+    }
+
     @Get()
     public async downloadImage(
-        @Query('thumb', new DefaultValuePipe(false)) thumb: boolean,
+        @Query('thumb', new ParseBoolPipe(), new DefaultValuePipe(false))
+        thumb: boolean,
         @Query('width', new DefaultValuePipe(300)) width: number,
         @Query('url') base64?: string
     ) {
         if (!base64) throw new PreconditionFailedException()
         const url = Buffer.from(base64, 'base64').toString()
+        this.logger.log('Downloading the image:\n' + url)
         const metadata = await download(url, uuidv4(), config.TEMP_PATH)
+        this.logger.log('Successfully downloaded the image:\n' + url)
 
         let original_preview = new URL(metadata.name, config.URL.TEMP_PATH)
         let thumb_filename = `${width}_${metadata.name}`
@@ -57,15 +87,17 @@ export class TempController {
             const thumb_fi = path.resolve(config.TEMP_PATH, thumb_filename)
             let result = false
             try {
+                this.logger.log('Clipping the image:\n' + url)
                 result = await clipImage(
                     path.resolve(config.TEMP_PATH, metadata.name),
                     thumb_fi,
                     width
                 )
             } catch (err) {
-                throw err
+                this.logger.error(err)
+                throw 'Cannot clips the image:\n' + url
             }
-
+            this.logger.log('Successfully clipped image:\n' + url)
             if (result) expireMap.push(String(Date.now()), thumb_fi)
             else thumb_filename = metadata.name
         }

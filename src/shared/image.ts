@@ -17,27 +17,40 @@ export interface FileMetadata {
     originalname?: string
 }
 
-export function download(url: string, prefix: string, outputPath: string) {
+export function download(
+    url: string,
+    prefix: string,
+    outputPath: string,
+    timeout?: number
+) {
     autoMkdirSync(outputPath)
-    const readStream = got.stream(url)
+    const readStream = got.stream(url, timeout ? { timeout } : {})
     return new Promise((resolve: (metadata: FileMetadata) => void, reject) => {
-        readStream.on('response', async (response: IncomingMessage) => {
+        readStream.once('error', (err) => reject(err))
+        readStream.once('response', async (response: IncomingMessage) => {
             let ext = path.extname(new URL(url).pathname)
             const mimetype = response.headers['content-type']
             if (!ext)
                 ext = mimetype
                     ? mimetype.split('/')[1]
                     : (await fromStream(readStream))?.ext || ''
+            // '.any'
+            else ext = ext.split('.')[1]
             const name = `${prefix}.${ext}`
             const filename = `${outputPath}/${name}`
 
-            readStream.off('error', reject)
-            pipeline(readStream, fs.createWriteStream(filename), (err) => {
+            if (fs.existsSync(filename)) {
+                reject('Forbid to overwrite file: ' + filename)
+                return
+            }
+
+            const writeStream = fs.createWriteStream(filename)
+            pipeline(readStream, writeStream, (err) => {
                 if (err) {
-                    reject(err.message)
+                    fs.rmSync(filename)
+                    reject(err)
                     return
                 }
-
                 const size = fs.statSync(filename).size
 
                 resolve({
@@ -52,15 +65,6 @@ export function download(url: string, prefix: string, outputPath: string) {
             })
         })
     })
-}
-
-function getImageType(filename: string): string | false {
-    if (filename.indexOf('.') <= -1) return false
-    const types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']
-    const arr = filename.split('.')
-    const type = arr[arr.length - 1]
-    if (!types.includes(type)) return false
-    return type
 }
 
 function copyImage(oldPath: string, newPath: string): Promise<void> {
@@ -132,21 +136,17 @@ export async function getImageSize(filename: string) {
     })
 }
 
-const limit = 1024 * 1024 * 200
-
 export async function clipImage(
     origin: string,
     target: string,
     maxWidth: number
 ) {
     const size = await getImageSize(origin)
-    let width = maxWidth
-
-    if (size.width < width) return false
+    if (size.width < maxWidth) return false
 
     return new Promise((resolve: (d: true) => void, reject) => {
         gm(origin)
-            .resize(width)
+            .resize(maxWidth)
             .write(target, (err) => {
                 if (err) {
                     reject(err)

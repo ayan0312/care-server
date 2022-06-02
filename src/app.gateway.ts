@@ -42,7 +42,8 @@ export class AppGateway {
         private readonly staticCategoryService: StaticCategoryService,
         private readonly characterGroupService: CharacterGroupService
     ) {}
-    private logger: Logger = new Logger('AppGateway')
+
+    private logger = new Logger('AppGateway')
 
     public afterInit() {
         this.logger.log('websocket init...')

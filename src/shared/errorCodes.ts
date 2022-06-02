@@ -1,13 +1,15 @@
 import { HttpException, HttpStatus } from '@nestjs/common'
 
 export const enum ErrorCodes {
-    UNKNOWN_ERROR = 1,
+    UNKNOWN = 1,
     SAME_NAME,
+    TIME_OUT,
 }
 
 const errorCodeMessages: Record<ErrorCodes, string> = {
-    [ErrorCodes.UNKNOWN_ERROR]: 'unknown error',
+    [ErrorCodes.UNKNOWN]: 'unknown error',
     [ErrorCodes.SAME_NAME]: 'has the same name',
+    [ErrorCodes.TIME_OUT]: 'time out',
 }
 
 export function getErrorMessage(code: ErrorCodes) {
@@ -16,19 +18,21 @@ export function getErrorMessage(code: ErrorCodes) {
 
 export class ErrorCodeException extends HttpException {
     constructor(res?: { code: ErrorCodes; message?: string } | string) {
-        super(
-            typeof res === 'string'
-                ? {
-                      code: ErrorCodes.UNKNOWN_ERROR,
-                      message: res,
-                  }
-                : Object.assign(
-                      {
-                          code: ErrorCodes.UNKNOWN_ERROR,
-                      },
-                      res
-                  ),
-            HttpStatus.INTERNAL_SERVER_ERROR
-        )
+        const result = {
+            code: ErrorCodes.UNKNOWN,
+            message: getErrorMessage(ErrorCodes.UNKNOWN),
+        }
+        if (res) {
+            if (typeof res === 'string') {
+                result.message = res
+            } else {
+                result.code = res.code
+                result.message = res.message
+                    ? res.message
+                    : getErrorMessage(res.code)
+            }
+        }
+
+        super(result, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 }
