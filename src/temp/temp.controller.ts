@@ -47,16 +47,17 @@ export class TempController {
     private logger = new Logger('Temps')
 
     @Get('download')
-    public async download(@Query('opts') base64: string) {
+    public async download(@Query('opts') opts: string) {
         const {
             url,
             path = 'C:/Users/ayan0312/Desktop/Images',
             name,
+            folder = '',
             timeout = 30 * 1000,
-        } = JSON.parse(Buffer.from(base64, 'base64').toString())
+        } = JSON.parse(decodeURI(opts))
         if (!url || !path || !name) throw 'params'
         try {
-            return await download(url, name, path, timeout)
+            return await download(url, name, `${path}/${folder}`, timeout)
         } catch (err: any) {
             if (err?.code === 'ETIMEDOUT')
                 throw new ErrorCodeException({
@@ -106,6 +107,7 @@ export class TempController {
             size: metadata.size,
             thumb: thumb ? new URL(thumb_filename, config.URL.TEMP_PATH) : '',
             suffix: metadata.ext,
+            prefix: metadata.prefix,
             mimetype: metadata.mimetype || '',
             filename: metadata.name,
             original_name: metadata.originalname || '',
@@ -127,8 +129,9 @@ export class TempController {
     ) {
         let original_preview = new URL(file.filename, config.URL.TEMP_PATH)
         let thumb_filename = `${width}_${file.filename}`
-
-        if (thumb) {
+        if (file.mimetype === 'image/gif') {
+            thumb_filename = file.filename
+        } else if (thumb) {
             const thumb_fi = path.resolve(config.TEMP_PATH, thumb_filename)
             let result = false
             try {
@@ -144,11 +147,13 @@ export class TempController {
             if (result) expireMap.push(String(Date.now()), thumb_fi)
             else thumb_filename = file.filename
         }
-
+        let prefixs = file.originalname.split('.')
+        prefixs.pop()
         return {
             size: file.size,
             thumb: thumb ? new URL(thumb_filename, config.URL.TEMP_PATH) : '',
             suffix: file.mimetype.split('/')[1],
+            prefix: prefixs.join('.'),
             mimetype: file.mimetype,
             filename: file.filename,
             original_name: file.originalname,

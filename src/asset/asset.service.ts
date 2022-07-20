@@ -237,6 +237,20 @@ export class AssetService {
         })
     }
 
+    private async _copyOrigin300(metadata: FileMetadata) {
+        try {
+            const a = await saveImage(
+                metadata.prefix,
+                config.ASSETS_300_PATH,
+                metadata.filename
+            )
+            console.log(a)
+        } catch (err) {
+            console.log(err)
+            return null
+        }
+    }
+
     private async _saveAsset(filename: string) {
         const metadata = await this._saveImage(
             config.STORAGE_PATH + 'assets',
@@ -244,9 +258,8 @@ export class AssetService {
         )
 
         if (metadata === null) return '/assets/package.png'
-
-        await this._saveAsset300(metadata)
-
+        if (metadata.ext !== 'gif') await this._saveAsset300(metadata)
+        else await this._copyOrigin300(metadata)
         return metadata.name
     }
 

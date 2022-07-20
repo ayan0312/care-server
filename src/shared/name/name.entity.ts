@@ -6,6 +6,6 @@ import { CommonEntity } from 'src/shared/common/common.entity'
 @Entity()
 export abstract class NameEntity extends CommonEntity {
     @Column()
-    @Length(1, 25)
+    @Length(1, 200)
     public name: string
 }

@@ -12,6 +12,7 @@ export interface FileMetadata {
     name: string
     path: string
     size: number
+    prefix: string
     mimetype?: string
     filename: string
     originalname?: string
@@ -58,6 +59,7 @@ export function download(
                     size,
                     ext,
                     path: outputPath,
+                    prefix,
                     filename,
                     mimetype: mimetype || '',
                     originalname: url,
@@ -114,6 +116,7 @@ export async function saveImage(
         ext,
         path,
         size,
+        prefix: sign,
         name: `${sign}.${ext}`,
         filename: `${path}/${sign}.${ext}`,
     }
