@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm'
+import { Column, Entity, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'

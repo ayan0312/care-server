@@ -60,6 +60,8 @@ export class AssetController {
         @Query('relations', new DefaultValuePipe(''))
         relations: string
     ) {
+        if (relations.includes('category'))
+            return await this.assetService.findCategoryRelationsById(id)
         return await this.assetService.findById(
             id,
             relations ? relations.split(',') : undefined,

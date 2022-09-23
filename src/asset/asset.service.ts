@@ -326,6 +326,13 @@ export class AssetService {
         return await this.assetRepo.save(asset)
     }
 
+    public async findCategoryRelationsById(id: number) {
+        const asset = await this.findById(id)
+        return await this.tagService.tranformCategoryRelationByIds(
+            parseIds(asset.tagIds)
+        )
+    }
+
     public async updateByIds(ids: number[], body: IAsset) {
         const errors = []
         for (let i = 0; i < ids.length; i++) {
