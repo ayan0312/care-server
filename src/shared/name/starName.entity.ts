@@ -11,6 +11,6 @@ export abstract class StarNameEntity extends NameEntity {
     @Column({ default: 0 })
     @IsInt()
     @Min(0)
-    @Max(10)
+    @Max(5)
     public rating: number = 0
 }

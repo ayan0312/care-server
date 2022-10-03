@@ -18,6 +18,7 @@ import { ExtensionModule } from './extension/extension.module'
 import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { AppGateway } from './app.gateway'
+import { CharactershipModule } from './charactership/charactership.module'
 
 @Module({
     imports: [
@@ -45,6 +46,7 @@ import { AppGateway } from './app.gateway'
         ExtensionModule,
         AssetGroupModule,
         RelationshipModule,
+        CharactershipModule,
         CharacterGroupModule,
         StaticCategoryModule,
     ],

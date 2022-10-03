@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { RelationshipEntity } from './relationship.entity'
 import { RelationshipService } from './relationship.service'
 import { RelationshipController } from './relationship.controller'
+
 @Module({
     imports: [TypeOrmModule.forFeature([RelationshipEntity])],
     providers: [RelationshipService],

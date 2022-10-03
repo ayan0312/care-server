@@ -10,11 +10,5 @@ export class CharactershipEntity extends CommonEntity {
     public selfId: number
 
     @Column()
-    public selfName: string
-
-    @Column()
     public targetId: number
-
-    @Column()
-    public targetName: string
 }
