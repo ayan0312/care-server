@@ -1,20 +1,20 @@
 import { Column, Entity } from 'typeorm'
-import { NameEntity } from 'src/shared/name/name.entity'
+import { StarNameEntity } from 'src/shared/name/starName.entity'
 
 @Entity('story')
-export class StoryEntity extends NameEntity {
+export class StoryEntity extends StarNameEntity {
     @Column()
     public chapter: number
 
     @Column()
-    public content: string = ''
+    public worldId: number = -1
 
     @Column()
-    public characterIds: string // don't set directly, characters is got in content.
+    public content: string = '' // don't use IO of file system, because content size will not too big.
 
     @Column()
-    public assetIds: string // be the same as characterIds
+    public assetIds: string = '' // setting assets directly, it maybe unused
 
     @Column()
-    public worldId: number
+    public characterIds: string = '' // setting characters from the characters of world, it maybe unused
 }

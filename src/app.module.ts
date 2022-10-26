@@ -18,6 +18,8 @@ import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { AppGateway } from './app.gateway'
 import { CharactershipModule } from './charactership/charactership.module'
+import { WorldModule } from './world/world.module'
+import { StoryModule } from './story/story.module'
 
 @Module({
     imports: [
@@ -39,6 +41,8 @@ import { CharactershipModule } from './charactership/charactership.module'
         TagModule,
         TempModule,
         AssetModule,
+        WorldModule,
+        StoryModule,
         AssetSetModule,
         CategoryModule,
         CharacterModule,
