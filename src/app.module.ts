@@ -14,7 +14,6 @@ import { AssetSetModule } from './assetSet/assetSet.module'
 import { TagModule } from './tag/tag.module'
 import { AssetGroupModule } from './assetGroup/assetGroup.module'
 import { CharacterGroupModule } from './characterGroup/characterGroup.module'
-import { ExtensionModule } from './extension/extension.module'
 import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { AppGateway } from './app.gateway'
@@ -43,7 +42,6 @@ import { CharactershipModule } from './charactership/charactership.module'
         AssetSetModule,
         CategoryModule,
         CharacterModule,
-        ExtensionModule,
         AssetGroupModule,
         RelationshipModule,
         CharactershipModule,

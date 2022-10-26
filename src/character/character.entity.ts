@@ -26,6 +26,9 @@ export class CharacterEntity extends StarNameEntity {
     @Column({ default: false })
     public recycle: boolean = false
 
+    @Column({ default: false })
+    public template: boolean = false
+
     @Column('simple-json')
     public staticCategories: ICharacterStaticCategory = {}
 

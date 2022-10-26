@@ -139,6 +139,10 @@ export class CharacterService {
                 rating: condition.rating,
             })
 
+        qb = qb.andWhere('character.template = :template', {
+            template: !!condition.template,
+        })
+
         qb = qb.andWhere('character.recycle = :recycle', {
             recycle: !!condition.recycle,
         })

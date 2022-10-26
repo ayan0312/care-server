@@ -11,6 +11,7 @@ export interface ICharacter extends IStarName {
     remark?: string
     tagIds?: string
     recycle?: boolean
+    template?: boolean
     groupIds?: string
     assetSetIds?: string
     relationships?: string[]
@@ -23,6 +24,7 @@ export interface ICharacterSearchCondition extends IStarName {
     remark?: string
     tagIds?: string
     recycle?: boolean
+    template?: boolean
     groupIds?: string
     assetSetIds?: string
     staticCategoryIds?: string
