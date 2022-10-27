@@ -1,12 +1,11 @@
 import { Column, Entity } from 'typeorm'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
+import { Length } from 'class-validator'
 
 @Entity('chapter')
 export class ChapterEntity extends StarNameEntity {
-    @Column()
-    public order: number // number of order * 10000. using the last four digits when the repeated orders existing
-
     @Column({ default: '' })
+    @Length(0, 1024)
     public remark: string = ''
 
     @Column()
@@ -22,7 +21,7 @@ export class ChapterEntity extends StarNameEntity {
     public content: string = '' // don't use IO of file system because the content size will not too big.
 
     @Column()
-    public historyId: number // selfId
+    public historyId: number // max 50
 
     @Column({ default: '' })
     public assetIds: string = '' // setting assets directly, it maybe unused
