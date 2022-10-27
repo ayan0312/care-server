@@ -5,7 +5,8 @@ import { ISearch } from './search.interface'
 export interface IStorySetting extends IName {
     level?: SettingLevel
     content?: string
-    storyId: number
+    storyId?: number
+    recycle?: boolean
     parentId?: number
     assetIds?: string
     characterIds?: string

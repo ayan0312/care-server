@@ -25,13 +25,13 @@ export class StorySettingController {
         @Query('options') options?: string,
         @Query('ids') ids?: string
     ) {
-        let opts = {}
-        if (options != null) opts = JSON.parse(options)
+        if (options != null)
+            return await this.storySettingService.search(JSON.parse(options))
         if (ids != null)
             return await this.storySettingService.findByIds(
                 ids.split(',').map((n) => Number(n))
             )
-        return await this.storySettingService.find(opts)
+        return this.storySettingService.find({})
     }
 
     @Post()

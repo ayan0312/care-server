@@ -9,7 +9,7 @@ export const enum SettingLevel {
 
 @Entity('story_setting')
 export class StorySettingEntity extends NameEntity {
-    @Column()
+    @Column({ default: SettingLevel.One })
     public level: SettingLevel = SettingLevel.One
 
     @Column({ default: '' })
@@ -17,6 +17,9 @@ export class StorySettingEntity extends NameEntity {
 
     @Column()
     public storyId: number
+
+    @Column({ default: false })
+    public recycle: boolean = false
 
     @Column()
     public parentId: number = -1 // don't update but delete

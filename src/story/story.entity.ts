@@ -13,11 +13,11 @@ export interface SimpleChapter {
 
 @Entity('story')
 export class StoryEntity extends StarNameEntity {
-    @Column()
+    @Column({ default: '' })
     @Length(0, 1024)
     public intro: string = ''
 
-    @Column()
+    @Column({ default: false })
     public recycle: boolean = false
 
     @Column('simple-json')
@@ -30,6 +30,6 @@ export class StoryEntity extends StarNameEntity {
         updated: Date.now(),
     }
 
-    @Column()
+    @Column({ default: '' })
     public characterIds: string = '' // being the same as the assetIds
 }
