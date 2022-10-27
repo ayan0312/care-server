@@ -1,5 +1,9 @@
 import { Repository } from 'typeorm'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import {
     mergeObjectToEntity,
@@ -44,7 +48,7 @@ export class StoryService {
 
         let qb = this._createConditionQB(condition)
         if (orderBy != null)
-            qb = qb.orderBy(`character.${orderBy.sort}`, orderBy.order)
+            qb = qb.orderBy(`story.${orderBy.sort}`, orderBy.order)
 
         const data = await qb
             .skip(size * (page - 1))
@@ -62,34 +66,30 @@ export class StoryService {
     }
 
     private _createConditionQB(condition: IStorySearchCondition) {
-        let qb = this.storyRepo.createQueryBuilder('world')
+        let qb = this.storyRepo.createQueryBuilder('story')
 
         if (condition.name != null)
-            qb = qb.where('world.name like :name', {
+            qb = qb.where('story.name like :name', {
                 name: `%${condition.name}%`,
             })
-        if (condition.content != null)
-            qb = qb.andWhere('world.content like :content', {
-                content: `%${condition.content}%`,
+        if (condition.intro != null)
+            qb = qb.andWhere('story.intro like :intro', {
+                intro: `%${condition.intro}%`,
             })
-
         if (condition.star != null)
-            qb = qb.andWhere('world.star = :star', {
+            qb = qb.andWhere('story.star = :star', {
                 star: !!condition.star,
             })
-        if (condition.worldId != null)
-            qb = qb.andWhere('world.worldId = :worldId', {
-                worldId: condition.worldId,
-            })
-
         if (condition.rating != null)
-            qb = qb.andWhere('world.rating = :rating', {
+            qb = qb.andWhere('story.rating = :rating', {
                 rating: condition.rating,
             })
-        if (condition.assetIds)
-            qb = queryQBIds(qb, condition.assetIds, 'world.assetIds')
+        if (condition.recycle != null)
+            qb = qb.andWhere('story.recycle = :recycle', {
+                recycle: !!condition.recycle,
+            })
         if (condition.characterIds)
-            qb = queryQBIds(qb, condition.characterIds, 'world.characterIds')
+            qb = queryQBIds(qb, condition.characterIds, 'story.characterIds')
 
         return qb
     }
@@ -100,19 +100,32 @@ export class StoryService {
     }
 
     public async create(body: IStory) {
-        const story = new StoryEntity()
-        await this._mergeObjectToEntity(story, body)
-        return this.storyRepo.save(story)
+        const world = new StoryEntity()
+        await this._mergeObjectToEntity(world, body)
+
+        if (await this.hasName(world.name))
+            throw new ConflictException('has the same name')
+
+        return this.storyRepo.save(world)
     }
 
     public async update(id: number, body: IStory) {
-        const story = await this.findById(id)
-        await this._mergeObjectToEntity(story, body)
-        return await this.storyRepo.save(story)
+        const world = await this.findById(id)
+
+        if (
+            body.name &&
+            world.name !== body.name &&
+            (await this.hasName(body.name))
+        )
+            throw new ConflictException('has the same name')
+
+        await this._mergeObjectToEntity(world, body)
+        return await this.storyRepo.save(world)
     }
 
     public async delete(id: number) {
-        await this.findById(id)
+        const story = await this.findById(id)
+        if (!story.recycle) return await this.update(id, { recycle: true })
         return await this.storyRepo.delete(id)
     }
 

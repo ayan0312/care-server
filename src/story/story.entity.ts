@@ -1,20 +1,35 @@
 import { Column, Entity } from 'typeorm'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
+import { Length } from 'class-validator'
+
+export interface SimpleChapter {
+    name: string
+    part: string
+    words: number
+    total: number
+    created: number
+    updated: number
+}
 
 @Entity('story')
 export class StoryEntity extends StarNameEntity {
     @Column()
-    public chapter: number
+    @Length(0, 1024)
+    public intro: string = ''
 
     @Column()
-    public worldId: number = -1
+    public recycle: boolean = false
+
+    @Column('simple-json')
+    public newest: SimpleChapter = {
+        name: '无',
+        part: '',
+        words: 0,
+        total: 0,
+        created: Date.now(),
+        updated: Date.now(),
+    }
 
     @Column()
-    public content: string = '' // don't use IO of file system, because content size will not too big.
-
-    @Column()
-    public assetIds: string = '' // setting assets directly, it maybe unused
-
-    @Column()
-    public characterIds: string = '' // setting characters from the characters of world, it maybe unused
+    public characterIds: string = '' // being the same as the assetIds
 }

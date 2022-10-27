@@ -18,8 +18,9 @@ import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { AppGateway } from './app.gateway'
 import { CharactershipModule } from './charactership/charactership.module'
-import { WorldModule } from './world/world.module'
 import { StoryModule } from './story/story.module'
+import { ChapterModule } from './chapter/chapter.module'
+import { StorySettingModule } from './storySetting/storySetting.module'
 
 @Module({
     imports: [
@@ -41,12 +42,13 @@ import { StoryModule } from './story/story.module'
         TagModule,
         TempModule,
         AssetModule,
-        WorldModule,
         StoryModule,
+        ChapterModule,
         AssetSetModule,
         CategoryModule,
         CharacterModule,
         AssetGroupModule,
+        StorySettingModule,
         RelationshipModule,
         CharactershipModule,
         CharacterGroupModule,

@@ -12,49 +12,49 @@ import {
     HttpCode,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { IStory } from 'src/interface/story.interface'
-import { StoryService } from './story.service'
+import { IStorySetting } from 'src/interface/storySetting.interface'
+import { StorySettingService } from './storySetting.service'
 
 @ApiTags('storys')
 @Controller('storys')
-export class StoryController {
-    constructor(private readonly storyService: StoryService) {}
+export class StorySettingController {
+    constructor(private readonly storySettingService: StorySettingService) {}
 
     @Get()
     public async find(
         @Query('options') options?: string,
         @Query('ids') ids?: string
     ) {
-        if (options != null)
-            return await this.storyService.search(JSON.parse(options))
+        let opts = {}
+        if (options != null) opts = JSON.parse(options)
         if (ids != null)
-            return await this.storyService.findByIds(
+            return await this.storySettingService.findByIds(
                 ids.split(',').map((n) => Number(n))
             )
-        return await this.storyService.findAll()
+        return await this.storySettingService.find(opts)
     }
 
     @Post()
     @HttpCode(HttpStatus.CREATED)
-    public async create(@Body() body: IStory) {
-        return await this.storyService.create(body)
+    public async create(@Body() body: IStorySetting) {
+        return await this.storySettingService.create(body)
     }
 
     @Get(':id')
     public async findById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.storyService.findById(id)
+        return await this.storySettingService.findById(id)
     }
 
     @Patch(':id')
     public async updateById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body() body: IStory
+        @Body() body: IStorySetting
     ) {
-        return await this.storyService.update(id, body)
+        return await this.storySettingService.update(id, body)
     }
 
     @Delete(':id')
     public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.storyService.delete(id)
+        return await this.storySettingService.delete(id)
     }
 }

@@ -12,7 +12,7 @@ export class CharacterEntity extends StarNameEntity {
     public wiki: string = ''
 
     @Column({ default: '' })
-    @Length(0, 1000)
+    @Length(0, 1024)
     public intro: string = ''
 
     @Column({ default: '' })
