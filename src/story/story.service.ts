@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import {
     createQueryIds,
+    forEachAsync,
     mergeObjectToEntity,
     parseIds,
     queryQBIds,
@@ -42,16 +43,27 @@ export class StoryService {
     public async updateStoryNewest(id: number) {
         const story = await this.findById(id)
         const chapters = await this.storyChapterService.findByStoryId(id)
-        const last = chapters[chapters.length - 1]
-        Object.assign(story.newest, {
-            name: last.name,
-            part: last.content.substring(0, 200),
-            words: chapters.reduce((prev, cur) => {
-                return prev + cur.content.length
-            }, 0),
-            total: chapters.length,
-            updated: Date.now(),
-        })
+        if (chapters.length == 0) {
+            Object.assign(story.newest, {
+                name: '无',
+                part: '',
+                words: 0,
+                total: 0,
+                updated: Date.now(),
+            })
+        } else {
+            const last = chapters[chapters.length - 1]
+            Object.assign(story.newest, {
+                name: last.name,
+                part: last.content.substring(0, 200),
+                words: chapters.reduce((prev, cur) => {
+                    return prev + cur.content.length
+                }, 0),
+                total: chapters.length,
+                updated: last.updated,
+            })
+        }
+
         return await this.storyRepo.save(story)
     }
 
@@ -158,6 +170,10 @@ export class StoryService {
     public async delete(id: number) {
         const story = await this.findById(id)
         if (!story.recycle) return await this.update(id, { recycle: true })
+        const volumes = await this.storyVolumeService.findByStoryId(story.id)
+        await forEachAsync(volumes, async (volume) => {
+            await this.storyVolumeService.delete(volume.id, true)
+        })
         return await this.storyRepo.delete(id)
     }
 

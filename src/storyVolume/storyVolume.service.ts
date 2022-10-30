@@ -71,9 +71,9 @@ export class StoryVolumeService {
         return await this.storyVolumeRepo.save(storyVolume)
     }
 
-    public async delete(id: number) {
+    public async delete(id: number, force = false) {
         const result = await this.findById(id)
-        if (!result.deletable)
+        if (!force && !result.deletable)
             throw new BadRequestException(`${result.name} isn't deletable.`)
         const chapters = await this.storyChapterService.findByVolumeId(id)
         if (chapters.length > 0)

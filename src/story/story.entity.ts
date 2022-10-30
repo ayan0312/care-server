@@ -7,7 +7,6 @@ export interface SimpleChapter {
     part: string
     words: number
     total: number
-    created: number
     updated: number
 }
 
@@ -26,7 +25,6 @@ export class StoryEntity extends StarNameEntity {
         part: '',
         words: 0,
         total: 0,
-        created: Date.now(),
         updated: Date.now(),
     }
 
