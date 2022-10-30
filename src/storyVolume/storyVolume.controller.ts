@@ -22,16 +22,16 @@ export class StoryVolumeController {
 
     @Get()
     public async find(
-        @Query('options') options?: string,
+        @Query('storyId', new ParseIntPipe()) storyId?: number,
         @Query('ids') ids?: string
     ) {
-        let opts = {}
-        if (options != null) opts = JSON.parse(options)
+        if (storyId != null)
+            return await this.storyVolumeService.findByStoryId(storyId)
         if (ids != null)
             return await this.storyVolumeService.findByIds(
                 ids.split(',').map((n) => Number(n))
             )
-        return await this.storyVolumeService.find(opts)
+        return await this.storyVolumeService.findAll()
     }
 
     @Post()

@@ -11,6 +11,6 @@ export class StoryVolumeEntity extends NameEntity {
     @Column()
     public storyId: number
 
-    @Column('simple-array')
-    public chapters: number[] = []
+    @Column({ default: true })
+    public deletable: boolean = true
 }

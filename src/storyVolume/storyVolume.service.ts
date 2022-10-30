@@ -1,19 +1,40 @@
 import { Repository } from 'typeorm'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
+import {
+    forEachAsync,
+    mergeObjectToEntity,
+    throwValidatedErrors,
+} from 'src/shared/utilities'
 import { StoryVolumeEntity } from './storyVolume.entity'
 import { IStoryVolume } from 'src/interface/storyVolume.interface'
+import { StoryChapterService } from 'src/storyChapter/storyChapter.service'
+import { StoryChapterEntity } from 'src/storyChapter/storyChapter.entity'
 
 @Injectable()
 export class StoryVolumeService {
     constructor(
         @InjectRepository(StoryVolumeEntity)
-        private readonly storyVolumeRepo: Repository<StoryVolumeEntity>
+        private readonly storyVolumeRepo: Repository<StoryVolumeEntity>,
+        private readonly storyChapterService: StoryChapterService
     ) {}
 
-    public async find(opts: IStoryVolume) {
-        return await this.storyVolumeRepo.find(opts)
+    public async findByStoryId(storyId: number) {
+        const volumes = await this.storyVolumeRepo.find({ storyId })
+        const items: (StoryVolumeEntity & {
+            chapters: StoryChapterEntity[]
+        })[] = []
+        await forEachAsync(volumes, async (volume) => {
+            const chapters = await this.storyChapterService.findByVolumeId(
+                volume.id
+            )
+            items.push(Object.assign({}, volume, { chapters }))
+        })
+        return items
     }
 
     public async findAll() {
@@ -31,11 +52,11 @@ export class StoryVolumeService {
     }
 
     private async _mergeObjectToEntity(
-        storyVolume: StoryVolumeEntity,
+        target: StoryVolumeEntity,
         body: IStoryVolume
     ) {
-        mergeObjectToEntity(storyVolume, body)
-        await throwValidatedErrors(storyVolume)
+        mergeObjectToEntity(target, body)
+        await throwValidatedErrors(target)
     }
 
     public async create(body: IStoryVolume) {
@@ -51,12 +72,14 @@ export class StoryVolumeService {
     }
 
     public async delete(id: number) {
-        await this.findById(id)
-        return await this.storyVolumeRepo.delete(id)
-    }
-
-    public async hasName(name: string) {
-        const storyVolume = await this.storyVolumeRepo.findOne({ name })
-        return !!storyVolume
+        const result = await this.findById(id)
+        if (!result.deletable)
+            throw new BadRequestException(`${result.name} isn't deletable.`)
+        const chapters = await this.storyChapterService.findByVolumeId(id)
+        if (chapters.length > 0)
+            throw new BadRequestException(
+                'Please remove all chapters of the volume before deleting the volume.'
+            )
+        return await this.storyVolumeRepo.remove(result)
     }
 }

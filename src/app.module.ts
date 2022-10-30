@@ -19,8 +19,9 @@ import { RelationshipModule } from './relationship/relationship.module'
 import { AppGateway } from './app.gateway'
 import { CharactershipModule } from './charactership/charactership.module'
 import { StoryModule } from './story/story.module'
-import { ChapterModule } from './chapter/chapter.module'
+import { StoryChapterModule } from './storyChapter/storyChapter.module'
 import { StorySettingModule } from './storySetting/storySetting.module'
+import { StoryVolumeModule } from './storyVolume/storyVolume.module'
 
 @Module({
     imports: [
@@ -43,12 +44,13 @@ import { StorySettingModule } from './storySetting/storySetting.module'
         TempModule,
         AssetModule,
         StoryModule,
-        ChapterModule,
         AssetSetModule,
         CategoryModule,
         CharacterModule,
         AssetGroupModule,
+        StoryVolumeModule,
         StorySettingModule,
+        StoryChapterModule,
         RelationshipModule,
         CharactershipModule,
         CharacterGroupModule,

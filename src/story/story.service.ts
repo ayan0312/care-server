@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import {
+    createQueryIds,
     mergeObjectToEntity,
+    parseIds,
     queryQBIds,
     throwValidatedErrors,
 } from 'src/shared/utilities'
@@ -16,14 +18,17 @@ import {
     IStorySearch,
     IStorySearchCondition,
 } from 'src/interface/story.interface'
+import { StoryVolumeService } from 'src/storyVolume/storyVolume.service'
+import { StoryChapterService } from 'src/storyChapter/storyChapter.service'
 
 @Injectable()
 export class StoryService {
     constructor(
         @InjectRepository(StoryEntity)
-        private readonly storyRepo: Repository<StoryEntity>
+        private readonly storyRepo: Repository<StoryEntity>,
+        private readonly storyVolumeService: StoryVolumeService,
+        private readonly storyChapterService: StoryChapterService
     ) {}
-
     public async findAll() {
         return await this.storyRepo.find()
     }
@@ -32,6 +37,22 @@ export class StoryService {
         const result = await this.storyRepo.findOne(id)
         if (!result) throw new NotFoundException()
         return result
+    }
+
+    public async updateStoryNewest(id: number) {
+        const story = await this.findById(id)
+        const chapters = await this.storyChapterService.findByStoryId(id)
+        const last = chapters[chapters.length - 1]
+        Object.assign(story.newest, {
+            name: last.name,
+            part: last.content.substring(0, 200),
+            words: chapters.reduce((prev, cur) => {
+                return prev + cur.content.length
+            }, 0),
+            total: chapters.length,
+            updated: Date.now(),
+        })
+        return await this.storyRepo.save(story)
     }
 
     public async findByIds(ids: number[]) {
@@ -94,33 +115,44 @@ export class StoryService {
         return qb
     }
 
-    private async _mergeObjectToEntity(world: StoryEntity, body: IStory) {
-        mergeObjectToEntity(world, body)
-        await throwValidatedErrors(world)
+    private async _mergeObjectToEntity(target: StoryEntity, body: IStory) {
+        mergeObjectToEntity(target, body, ['characterIds'])
+        if (body.characterIds != null)
+            target.characterIds = createQueryIds(parseIds(body.characterIds))
+        await throwValidatedErrors(target)
     }
 
     public async create(body: IStory) {
-        const world = new StoryEntity()
-        await this._mergeObjectToEntity(world, body)
+        const story = new StoryEntity()
+        await this._mergeObjectToEntity(story, body)
 
-        if (await this.hasName(world.name))
+        if (await this.hasName(story.name))
             throw new ConflictException('has the same name')
 
-        return this.storyRepo.save(world)
+        const result = await this.storyRepo.save(story)
+
+        await this.storyVolumeService.create({
+            name: '作品相关',
+            intro: '',
+            storyId: result.id,
+            deletable: false,
+        })
+
+        return result
     }
 
     public async update(id: number, body: IStory) {
-        const world = await this.findById(id)
+        const story = await this.findById(id)
 
         if (
             body.name &&
-            world.name !== body.name &&
+            story.name !== body.name &&
             (await this.hasName(body.name))
         )
             throw new ConflictException('has the same name')
 
-        await this._mergeObjectToEntity(world, body)
-        return await this.storyRepo.save(world)
+        await this._mergeObjectToEntity(story, body)
+        return await this.storyRepo.save(story)
     }
 
     public async delete(id: number) {
@@ -130,7 +162,7 @@ export class StoryService {
     }
 
     public async hasName(name: string) {
-        const world = await this.storyRepo.findOne({ name })
-        return !!world
+        const story = await this.storyRepo.findOne({ name })
+        return !!story
     }
 }

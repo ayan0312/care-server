@@ -1,5 +1,4 @@
 import {
-    Body,
     Controller,
     DefaultValuePipe,
     Get,
@@ -17,7 +16,7 @@ import multer from 'multer'
 import path from 'path'
 import { config } from 'src/shared/config'
 import { ExpireMap } from 'src/shared/expire'
-import { clipImage, download, FileMetadata } from 'src/shared/image'
+import { clipImage, download } from 'src/shared/image'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs-extra'

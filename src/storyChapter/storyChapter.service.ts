@@ -1,27 +1,52 @@
 import { Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { v4 as uuidv4 } from 'uuid'
+
 import {
+    createQueryIds,
+    forEachAsync,
     mergeObjectToEntity,
+    parseIds,
     queryQBIds,
     throwValidatedErrors,
 } from 'src/shared/utilities'
-import { ChapterEntity } from './chapter.entity'
+import { StoryChapterEntity } from './storyChapter.entity'
 import {
-    IChapter,
-    IChapterSearch,
-    IChapterSearchCondition,
-} from 'src/interface/chapter.interface'
+    IStoryChapter,
+    IStoryChapterSearch,
+    IStoryChapterSearchCondition,
+} from 'src/interface/storyChapter.interface'
 
 @Injectable()
-export class ChapterService {
+export class StoryChapterService {
     constructor(
-        @InjectRepository(ChapterEntity)
-        private readonly chapterRepo: Repository<ChapterEntity>
+        @InjectRepository(StoryChapterEntity)
+        private readonly chapterRepo: Repository<StoryChapterEntity>
     ) {}
 
     public async findAll() {
         return await this.chapterRepo.find()
+    }
+
+    public async findByVolumeId(
+        volumeId: number,
+        history = false,
+        recycle = false
+    ) {
+        return await this.chapterRepo.find({ volumeId, history, recycle })
+    }
+
+    public async findByStoryId(
+        storyId: number,
+        history = false,
+        recycle = false
+    ) {
+        return await this.chapterRepo.find({ storyId, history, recycle })
+    }
+
+    public async findHistorys(historyUUID: string) {
+        return await this.chapterRepo.find({ historyUUID })
     }
 
     public async findById(id: number) {
@@ -34,7 +59,7 @@ export class ChapterService {
         return await this.chapterRepo.findByIds(ids)
     }
 
-    public async search(body: IChapterSearch) {
+    public async search(body: IStoryChapterSearch) {
         const {
             condition = {},
             orderBy = { sort: 'created', order: 'DESC' },
@@ -61,7 +86,7 @@ export class ChapterService {
         }
     }
 
-    private _createConditionQB(condition: IChapterSearchCondition) {
+    private _createConditionQB(condition: IStoryChapterSearchCondition) {
         let qb = this.chapterRepo.createQueryBuilder('chapter')
 
         if (condition.name != null)
@@ -96,9 +121,13 @@ export class ChapterService {
             qb = qb.andWhere('chapter.recycle = :recycle', {
                 recycle: !!condition.recycle,
             })
-        if (condition.historyId != null)
-            qb = qb.andWhere('chapter.historyId = :historyId', {
-                historyId: condition.historyId,
+        if (condition.history != null)
+            qb = qb.andWhere('chapter.history = :history', {
+                history: !!condition.history,
+            })
+        if (condition.historyUUID != null)
+            qb = qb.andWhere('chapter.historyUUID = :historyUUID', {
+                historyUUID: condition.historyUUID,
             })
         if (condition.assetIds)
             qb = queryQBIds(qb, condition.assetIds, 'chapter.assetIds')
@@ -108,18 +137,41 @@ export class ChapterService {
         return qb
     }
 
-    private async _mergeObjectToEntity(chapter: ChapterEntity, body: IChapter) {
-        mergeObjectToEntity(chapter, body)
-        await throwValidatedErrors(chapter)
+    private async _mergeObjectToEntity(
+        target: StoryChapterEntity,
+        body: IStoryChapter
+    ) {
+        mergeObjectToEntity(target, body, [
+            'historyUUID',
+            'assetIds',
+            'characterIds',
+        ])
+        if (body.assetIds != null)
+            target.assetIds = createQueryIds(parseIds(body.assetIds))
+        if (body.characterIds != null)
+            target.characterIds = createQueryIds(parseIds(body.characterIds))
+        await throwValidatedErrors(target)
     }
 
-    public async create(body: IChapter) {
-        const chapter = new ChapterEntity()
+    public async create(body: IStoryChapter) {
+        const chapter = new StoryChapterEntity()
+
+        if (body.historyUUID != null) {
+            const historys = await this.findHistorys(body.historyUUID)
+            await forEachAsync(historys, async (history) => {
+                if (!history.history)
+                    await this.update(history.id, { history: true })
+            })
+            chapter.historyUUID = body.historyUUID
+        } else {
+            chapter.historyUUID = uuidv4()
+        }
+
         await this._mergeObjectToEntity(chapter, body)
         return this.chapterRepo.save(chapter)
     }
 
-    public async update(id: number, body: IChapter) {
+    public async update(id: number, body: Omit<IStoryChapter, 'historyUUID'>) {
         const chapter = await this.findById(id)
         await this._mergeObjectToEntity(chapter, body)
         return await this.chapterRepo.save(chapter)
@@ -128,7 +180,10 @@ export class ChapterService {
     public async delete(id: number) {
         const chapter = await this.findById(id)
         if (!chapter.recycle) return await this.update(id, { recycle: true })
-        return await this.chapterRepo.delete(id)
+        const historys = await this.findHistorys(chapter.historyUUID)
+        return await this.chapterRepo.delete(
+            historys.map((history) => history.id)
+        )
     }
 
     public async hasName(name: string) {

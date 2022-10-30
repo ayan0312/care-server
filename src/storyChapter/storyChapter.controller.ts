@@ -12,13 +12,13 @@ import {
     HttpCode,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { IChapter } from 'src/interface/chapter.interface'
-import { ChapterService } from './chapter.service'
+import { IStoryChapter } from 'src/interface/storyChapter.interface'
+import { StoryChapterService } from './storyChapter.service'
 
-@ApiTags('chapters')
-@Controller('chapters')
-export class ChapterController {
-    constructor(private readonly chapterService: ChapterService) {}
+@ApiTags('storyChapters')
+@Controller('storyChapters')
+export class StoryChapterController {
+    constructor(private readonly chapterService: StoryChapterService) {}
 
     @Get()
     public async find(
@@ -36,7 +36,7 @@ export class ChapterController {
 
     @Post()
     @HttpCode(HttpStatus.CREATED)
-    public async create(@Body() body: IChapter) {
+    public async create(@Body() body: IStoryChapter) {
         return await this.chapterService.create(body)
     }
 
@@ -48,7 +48,7 @@ export class ChapterController {
     @Patch(':id')
     public async updateById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body() body: IChapter
+        @Body() body: Omit<IStoryChapter, 'historyUUID'>
     ) {
         return await this.chapterService.update(id, body)
     }

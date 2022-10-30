@@ -15,8 +15,8 @@ import { ApiTags } from '@nestjs/swagger'
 import { IStorySetting } from 'src/interface/storySetting.interface'
 import { StorySettingService } from './storySetting.service'
 
-@ApiTags('storys')
-@Controller('storys')
+@ApiTags('storySettings')
+@Controller('storySettings')
 export class StorySettingController {
     constructor(private readonly storySettingService: StorySettingService) {}
 

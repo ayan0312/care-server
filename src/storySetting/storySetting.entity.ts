@@ -7,7 +7,7 @@ export const enum SettingLevel {
     Three,
 }
 
-@Entity('story_setting')
+@Entity('storySetting')
 export class StorySettingEntity extends NameEntity {
     @Column({ default: SettingLevel.One })
     public level: SettingLevel = SettingLevel.One

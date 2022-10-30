@@ -10,6 +10,8 @@ import {
     Patch,
     Query,
     HttpCode,
+    ParseBoolPipe,
+    DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { IStory } from 'src/interface/story.interface'
@@ -41,7 +43,12 @@ export class StoryController {
     }
 
     @Get(':id')
-    public async findById(@Param('id', new ParseIntPipe()) id: number) {
+    public async findById(
+        @Param('id', new ParseIntPipe()) id: number,
+        @Query('update', new DefaultValuePipe(false), new ParseBoolPipe())
+        update: boolean
+    ) {
+        if (update) return this.storyService.updateStoryNewest(id)
         return await this.storyService.findById(id)
     }
 
