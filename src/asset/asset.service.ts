@@ -88,6 +88,52 @@ export class AssetService {
         }
     }
 
+    public async findNearAssetsById(id: number, left: number, right: number) {
+        const asset = await this.findById(id)
+
+        let qb = this.assetRepo.createQueryBuilder('asset')
+        let leftAssets: AssetEntity[] = []
+        let rightAssets: AssetEntity[] = []
+
+        if (left > 0) {
+            leftAssets = (
+                await qb
+                    .where('asset.recycle = :recycle', {
+                        recycle: !!asset.recycle,
+                    })
+                    .andWhere('asset.id < :id', {
+                        id: id,
+                    })
+                    .orderBy(`asset.id`, 'DESC')
+                    .take(left)
+                    .getManyAndCount()
+            )[0]
+        }
+
+        if (right > 0) {
+            rightAssets = (
+                await qb
+                    .where('asset.recycle = :recycle', {
+                        recycle: !!asset.recycle,
+                    })
+                    .andWhere('asset.id > :id', {
+                        id: id,
+                    })
+                    .orderBy(`asset.id`, 'ASC')
+                    .take(right)
+                    .getManyAndCount()
+            )[0]
+        }
+
+        await this._patchAssetResults(leftAssets)
+        await this._patchAssetResults(rightAssets)
+
+        return {
+            left: leftAssets,
+            right: rightAssets,
+        }
+    }
+
     private async _createConditionQB(condition: IAssetSearchCondition) {
         let qb = this.assetRepo
             .createQueryBuilder('asset')
@@ -155,29 +201,6 @@ export class AssetService {
             size: Number(size),
             rows,
             total: data[1],
-        }
-    }
-
-    private _createXSmall(avatar: string, fullLengthPicture: string) {
-        return {
-            avatar: avatar ? new URL(avatar, config.URL.AVATARS_PATH) : '',
-            fullLengthPicture: fullLengthPicture
-                ? new URL(
-                      fullLengthPicture,
-                      config.URL.FULL_LENGTH_PICTURES_PATH
-                  )
-                : '',
-            ['xsmall']: {
-                avatar: avatar
-                    ? new URL(avatar, config.URL.AVATARS_200_PATH)
-                    : '',
-                fullLengthPicture: fullLengthPicture
-                    ? new URL(
-                          fullLengthPicture,
-                          config.URL.FULL_LENGTH_PICTURES_300_PATH
-                      )
-                    : '',
-            },
         }
     }
 

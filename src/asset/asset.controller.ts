@@ -23,7 +23,18 @@ export class AssetController {
     constructor(private readonly assetService: AssetService) {}
 
     @Get()
-    public async find(@Query('options') options: string) {
+    public async find(
+        @Query('options') options: string,
+        @Query('near') nearOpts?: string
+    ) {
+        if (nearOpts) {
+            const result = JSON.parse(nearOpts)
+            return await this.assetService.findNearAssetsById(
+                result.id,
+                result.left,
+                result.right
+            )
+        }
         return await this.assetService.search(JSON.parse(options))
     }
 
