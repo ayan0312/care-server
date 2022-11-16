@@ -20,7 +20,6 @@ import { AppGateway } from './app.gateway'
 import { CharactershipModule } from './charactership/charactership.module'
 import { StoryModule } from './story/story.module'
 import { StoryChapterModule } from './storyChapter/storyChapter.module'
-import { StorySettingModule } from './storySetting/storySetting.module'
 import { StoryVolumeModule } from './storyVolume/storyVolume.module'
 
 @Module({
@@ -49,7 +48,6 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
         CharacterModule,
         AssetGroupModule,
         StoryVolumeModule,
-        StorySettingModule,
         StoryChapterModule,
         RelationshipModule,
         CharactershipModule,

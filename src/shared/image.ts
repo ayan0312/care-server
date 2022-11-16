@@ -127,6 +127,14 @@ export async function saveImage(
     return metadata
 }
 
+export function removeFileSync(filename: string) {
+    if (fs.statSync(filename).isFile()) fs.rmSync(filename)
+}
+
+export function readDirSync(dir: string) {
+    return fs.readdirSync(dir)
+}
+
 export async function getImageSize(filename: string) {
     return new Promise((resolve: (size: gm.Dimensions) => void, reject) => {
         gm(filename).size((err, size) => {

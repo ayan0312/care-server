@@ -37,6 +37,7 @@ function autoMkdir() {
     autoMkdirSync(config.AVATARS_200_PATH)
     autoMkdirSync(config.ASSETS_PATH)
     autoMkdirSync(config.ASSETS_300_PATH)
+    autoMkdirSync(config.ASSETS_BIN_PATH)
     autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH)
     autoMkdirSync(config.FULL_LENGTH_PICTURES_300_PATH)
 }

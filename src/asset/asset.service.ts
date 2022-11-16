@@ -7,7 +7,12 @@ import {
     IAssetSearchCondition,
 } from 'src/interface/asset.interface'
 import { config } from 'src/shared/config'
-import { FileMetadata, saveImage } from 'src/shared/image'
+import {
+    FileMetadata,
+    readDirSync,
+    removeFileSync,
+    saveImage,
+} from 'src/shared/image'
 import {
     createQueryIds,
     forEachAsync,
@@ -85,6 +90,26 @@ export class AssetService {
                 data: result[0][0],
                 count: result[1],
             }
+        }
+    }
+
+    public async removeAllUnstarAssets(recycle = false) {
+        if (recycle) {
+            const results = await this.assetRepo.find({
+                recycle,
+                star: false,
+            })
+            await forEachAsync(results, async (asset) => {
+                await this.delete(asset)
+            })
+        } else {
+            await this.assetRepo.update(
+                {
+                    recycle,
+                    star: false,
+                },
+                { recycle: true }
+            )
         }
     }
 
@@ -275,10 +300,7 @@ export class AssetService {
     }
 
     private async _saveAsset(filename: string) {
-        const metadata = await this._saveImage(
-            config.STORAGE_PATH + 'assets',
-            filename
-        )
+        const metadata = await this._saveImage(config.ASSETS_PATH, filename)
 
         if (metadata === null) return '/assets/package.png'
         if (metadata.ext !== 'gif') await this._saveAsset300(metadata)
@@ -388,11 +410,55 @@ export class AssetService {
         return await this.findById(newPic.id, [], true)
     }
 
-    public async delete(id: number) {
-        const asset = await this.findById(id)
+    public async deleteExtraAssets() {
+        const allAssetPaths = readDirSync(config.ASSETS_PATH)
+        const allAsset300Paths = readDirSync(config.ASSETS_300_PATH)
+        const allAssets = await this.assetRepo.find()
+        const bucket: Record<string, boolean> = {}
+        let total = 0
+
+        allAssets.forEach((asset) => {
+            asset.filenames.forEach((filename) => {
+                bucket[filename] = true
+            })
+        })
+        allAssetPaths.forEach((filename) => {
+            if (!bucket[filename] && filename != '300') {
+                console.log('remove: ', filename)
+                removeFileSync(config.ASSETS_PATH + filename)
+                total++
+            }
+        })
+        allAsset300Paths.forEach((filename) => {
+            if (!bucket[filename]) {
+                console.log('remove 300: ', filename)
+                removeFileSync(config.ASSETS_300_PATH + filename)
+                total++
+            }
+        })
+
+        return `remove ${total} extra assets`
+    }
+
+    public async delete(target: number | AssetEntity) {
+        const asset =
+            target instanceof AssetEntity ? target : await this.findById(target)
+        const id = asset.id
 
         if (!asset.recycle) return await this.update(id, { recycle: true })
 
-        return await this.assetRepo.remove(asset)
+        const result = await this.assetRepo.remove(asset)
+
+        await forEachAsync(result.filenames, async (filename) => {
+            await saveImage(
+                `${id}-${Date.now()}`,
+                config.ASSETS_BIN_PATH,
+                config.ASSETS_PATH + filename,
+                true
+            )
+            removeFileSync(config.ASSETS_300_PATH + filename)
+        })
+
+        return result
     }
 }

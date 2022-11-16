@@ -16,11 +16,12 @@ import multer from 'multer'
 import path from 'path'
 import { config } from 'src/shared/config'
 import { ExpireMap } from 'src/shared/expire'
-import { clipImage, download } from 'src/shared/image'
+import { autoMkdirSync, clipImage, download } from 'src/shared/image'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs-extra'
 import { ErrorCodeException, ErrorCodes } from 'src/shared/errorCodes'
+import { AssetService } from 'src/asset/asset.service'
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -41,7 +42,7 @@ expireMap.on('delete', (filename: string) => {
 @ApiTags('temps')
 @Controller('temps')
 export class TempController {
-    constructor() {}
+    constructor(private readonly assetService: AssetService) {}
 
     private logger = new Logger('Temps')
 
@@ -112,6 +113,32 @@ export class TempController {
             original_name: metadata.originalname || '',
             original_preview,
         }
+    }
+
+    @Post('/blob')
+    @UseInterceptors(
+        FileInterceptor('image', {
+            storage,
+            preservePath: true,
+        })
+    )
+    public async uploadBlobImage(
+        @UploadedFile() file: Express.Multer.File,
+        @Query('asset', new DefaultValuePipe(false), new ParseBoolPipe())
+        asset: boolean
+    ) {
+        if (asset) {
+            let name = 'NovelAI'
+            if (file.originalname.includes('[EXPERIMENT]'))
+                name = `${name} [EXPERIMENT]`
+            return await this.assetService.create({
+                name,
+                intro: file.originalname,
+                tagIds: '1067',
+                filenames: [file.filename],
+            })
+        }
+        return file.filename
     }
 
     @Post()

@@ -12,6 +12,7 @@ import {
     Query,
     ParseArrayPipe,
     DefaultValuePipe,
+    ParseBoolPipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IAsset } from 'src/interface/asset.interface'
@@ -59,10 +60,35 @@ export class AssetController {
 
     @Delete()
     public async deleteByIds(
-        @Query('ids', new ParseArrayPipe({ items: Number, separator: ',' }))
-        ids: number[]
+        @Query(
+            'ids',
+            new DefaultValuePipe(''),
+            new ParseArrayPipe({ items: Number, separator: ',' })
+        )
+        ids: number[],
+        @Query('unstar', new DefaultValuePipe(false), new ParseBoolPipe())
+        unstar: boolean,
+        @Query('recycle', new DefaultValuePipe(false), new ParseBoolPipe())
+        recycle: boolean
     ) {
+        if (unstar) {
+            await this.assetService.removeAllUnstarAssets(recycle)
+            return ''
+        }
         return await this.assetService.deleteByIds(ids)
+    }
+
+    @Delete('/unstar')
+    public async deleteAllUnstars(
+        @Query('recycle', new DefaultValuePipe(false), new ParseBoolPipe())
+        recycle: boolean
+    ) {
+        return await this.assetService.removeAllUnstarAssets(recycle)
+    }
+
+    @Delete('/extra')
+    public async deleteAllExtraAssets() {
+        return await this.assetService.deleteExtraAssets()
     }
 
     @Get(':id')

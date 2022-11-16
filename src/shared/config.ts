@@ -51,6 +51,7 @@ function createPaths(root: string) {
         AVATARS_200_PATH: root + 'avatars/200/',
         ASSETS_PATH: root + 'assets/',
         ASSETS_300_PATH: root + 'assets/300/',
+        ASSETS_BIN_PATH: root + 'bin/',
         DATABASE_FILENAME: root + 't.db',
         FULL_LENGTH_PICTURES_PATH: root + 'fullLengthPictures/',
         FULL_LENGTH_PICTURES_300_PATH: root + 'fullLengthPictures/300/',
