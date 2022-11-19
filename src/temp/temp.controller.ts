@@ -125,12 +125,13 @@ export class TempController {
     public async uploadBlobImage(
         @UploadedFile() file: Express.Multer.File,
         @Query('asset', new DefaultValuePipe(false), new ParseBoolPipe())
-        asset: boolean
+        asset: boolean,
+        @Query('version') version: string
     ) {
         if (asset) {
-            let name = 'NovelAI'
-            if (file.originalname.includes('[EXPERIMENT]'))
-                name = `${name} [EXPERIMENT]`
+            let name = `NovelAI ${version}`
+            if (file.originalname.includes('EXPERIMENT'))
+                name = `${name} EXPERIMENT`
             return await this.assetService.create({
                 name,
                 intro: file.originalname,

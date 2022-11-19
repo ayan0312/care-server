@@ -119,35 +119,37 @@ export class AssetService {
         let qb = this.assetRepo.createQueryBuilder('asset')
         let leftAssets: AssetEntity[] = []
         let rightAssets: AssetEntity[] = []
+        let leftTotal = 0
+        let rightTotal = 0
 
         if (left > 0) {
-            leftAssets = (
-                await qb
-                    .where('asset.recycle = :recycle', {
-                        recycle: !!asset.recycle,
-                    })
-                    .andWhere('asset.id < :id', {
-                        id: id,
-                    })
-                    .orderBy(`asset.id`, 'DESC')
-                    .take(left)
-                    .getManyAndCount()
-            )[0]
+            const [assets, total] = await qb
+                .where('asset.recycle = :recycle', {
+                    recycle: !!asset.recycle,
+                })
+                .andWhere('asset.id < :id', {
+                    id: id,
+                })
+                .orderBy(`asset.id`, 'DESC')
+                .take(left)
+                .getManyAndCount()
+            leftAssets = assets
+            leftTotal = total
         }
 
         if (right > 0) {
-            rightAssets = (
-                await qb
-                    .where('asset.recycle = :recycle', {
-                        recycle: !!asset.recycle,
-                    })
-                    .andWhere('asset.id > :id', {
-                        id: id,
-                    })
-                    .orderBy(`asset.id`, 'ASC')
-                    .take(right)
-                    .getManyAndCount()
-            )[0]
+            const [assets, total] = await qb
+                .where('asset.recycle = :recycle', {
+                    recycle: !!asset.recycle,
+                })
+                .andWhere('asset.id > :id', {
+                    id: id,
+                })
+                .orderBy(`asset.id`, 'ASC')
+                .take(right)
+                .getManyAndCount()
+            rightAssets = assets
+            rightTotal = total
         }
 
         await this._patchAssetResults(leftAssets)
@@ -155,7 +157,9 @@ export class AssetService {
 
         return {
             left: leftAssets,
+            leftTotal,
             right: rightAssets,
+            rightTotal,
         }
     }
 
