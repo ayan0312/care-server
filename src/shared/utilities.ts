@@ -70,18 +70,22 @@ export function patchQBIds<Entity>(
 export function queryQBIds<Entity>(
     qb: SelectQueryBuilder<Entity>,
     ids: string,
-    property: string
+    property: string,
+    reverse = false
 ) {
     if (ids === 'false') qb = qb.andWhere(`${property} IS NULL`)
+    else if (ids === 'empty') qb = qb.andWhere(`${property} LIKE ''`)
     else if (ids !== '') {
         let query = ''
         ids.split(',').forEach((id, i, arr) => {
             if (arr.length !== i + 1)
-                query += `'%,${id},%' AND ${property} LIKE`
+                query += `'%,${id},%' AND ${property}${
+                    reverse ? ' NOT' : ''
+                } LIKE`
             else query += `'%,${id},%'`
         })
 
-        qb = qb.andWhere(`${property} like ${query}`)
+        qb = qb.andWhere(`${property}${reverse ? ' NOT' : ''} LIKE ${query}`)
     }
     return qb
 }
@@ -100,7 +104,7 @@ export function queryQBIdsForIdMap<Entity>(
             else query += `'%"${id}":%'`
         })
 
-        qb = qb.andWhere(`${property} like ${query}`)
+        qb = qb.andWhere(`${property} LIKE ${query}`)
     }
     return qb
 }

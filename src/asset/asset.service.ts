@@ -169,9 +169,13 @@ export class AssetService {
             .where('asset.name like :name', {
                 name: `%${condition.name ? condition.name : ''}%`,
             })
-
         if (condition.tagIds)
-            qb = queryQBIds(qb, condition.tagIds, 'asset.tagIds')
+            qb = queryQBIds(
+                qb,
+                condition.tagIds,
+                'asset.tagIds',
+                condition?.reverse?.tagIds
+            )
         if (condition.groupIds)
             qb = queryQBIds(qb, condition.groupIds, 'asset.groupIds')
         if (condition.characterIds)

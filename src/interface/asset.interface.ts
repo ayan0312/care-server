@@ -28,6 +28,7 @@ export interface IAssetSearchCondition extends IStarName {
     assetType?: AssetType
     assetSetIds?: string
     characterIds?: string
+    reverse?: Record<string, boolean>
 }
 
 export interface IAssetSearch extends ISearch<IAssetSearchCondition> {}
