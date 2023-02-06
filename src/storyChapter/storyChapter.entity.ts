@@ -30,5 +30,5 @@ export class StoryChapterEntity extends StarNameEntity {
     public assetIds: string = '' // setting assets directly, it maybe unused
 
     @Column({ default: '' })
-    public characterIds: string = '' // setting characters from the characters of story, it maybe unused
+    public characterIds: string = '' // setting characters directly, it maybe unused
 }

@@ -64,6 +64,17 @@ export class StoryService {
             })
         }
 
+        story.characterIds = createQueryIds([
+            ...new Set(
+                chapters
+                    .map((chapter) => parseIds(chapter.characterIds))
+                    .filter((ids) => ids)
+                    .flat()
+            ),
+        ])
+
+        console.log(story.characterIds)
+
         return await this.storyRepo.save(story)
     }
 

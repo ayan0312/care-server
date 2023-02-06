@@ -29,5 +29,5 @@ export class StoryEntity extends StarNameEntity {
     }
 
     @Column({ default: '' })
-    public characterIds: string = '' // being the same as the assetIds
+    public characterIds: string = ''
 }

@@ -2,7 +2,7 @@ import os from 'os'
 import fs from 'fs-extra'
 import path from 'path'
 
-const STORAGE_PATH = 'F:/storage/'
+const STORAGE_PATH = 'D:/storage/'
 const DEFAULT_CONFIG = (() => ({
     PORT: 3000,
     IMPORT_DIR: os.homedir(),
