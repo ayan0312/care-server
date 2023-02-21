@@ -73,8 +73,6 @@ export class StoryService {
             ),
         ])
 
-        console.log(story.characterIds)
-
         return await this.storyRepo.save(story)
     }
 

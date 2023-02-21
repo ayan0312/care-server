@@ -14,6 +14,7 @@ import { CategoryType } from 'src/interface/category.interface'
 import { ITag } from 'src/interface/tag.interface'
 import { CharacterService } from 'src/character/character.service'
 import { ModuleRef } from '@nestjs/core'
+import { AssetService } from 'src/asset/asset.service'
 
 @Injectable()
 export class TagService {
@@ -25,9 +26,14 @@ export class TagService {
     ) {}
 
     private charService: CharacterService
+    private asssetService: AssetService
 
     public onModuleInit() {
         this.charService = this.moduleRef.get(CharacterService, {
+            strict: false,
+        })
+
+        this.asssetService = this.moduleRef.get(AssetService, {
             strict: false,
         })
     }
@@ -111,7 +117,7 @@ export class TagService {
 
     public async delete(id: number) {
         const tag = await this.findById(id)
-        const result = await this.charService.search({
+        const char = await this.charService.search({
             page: 1,
             size: 1,
             condition: {
@@ -119,10 +125,24 @@ export class TagService {
             },
         })
 
-        if (result.total !== 0)
+        if (char.total !== 0)
             throw new UnprocessableEntityException({
-                message: `The ID "${result.rows[0].id}" has this tag.`,
+                message: `The character "${char.rows[0].name}(${char.rows[0].id})" has this tag.`,
             })
+
+        const asset = await this.asssetService.search({
+            page: 1,
+            size: 1,
+            condition: {
+                tagIds: String(tag.id),
+            },
+        })
+
+        if (asset.total !== 0)
+            throw new UnprocessableEntityException({
+                message: `The asset "${asset.rows[0].name}(${asset.rows[0].id})" has this tag.`,
+            })
+
         return await this.tagRepo.remove(tag)
     }
 
