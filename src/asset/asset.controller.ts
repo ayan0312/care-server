@@ -49,6 +49,11 @@ export class AssetController {
         return await this.assetService.create(body)
     }
 
+    @Post('merger')
+    public async mergeTo(@Body() body: { self: number; target: number }) {
+        return await this.assetService.mergeTo(body.self, body.target)
+    }
+
     @Patch()
     public async updateByIds(
         @Query('ids', new ParseArrayPipe({ items: Number, separator: ',' }))

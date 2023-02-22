@@ -237,6 +237,14 @@ export class AssetService {
         }
     }
 
+    public async mergeTo(selfId: number, targetId: number) {
+        const self = await this.findById(selfId)
+        const target = await this.findById(targetId)
+        if (self.filenames.length > 0) target.filenames.push(...self.filenames)
+        await this.assetRepo.save(target)
+        await this.assetRepo.remove(self)
+    }
+
     private async _patchAssetResults(entities: AssetEntity[]) {
         await forEachAsync(entities, async (entity) => {
             await this._patchAssetResult(entity)
