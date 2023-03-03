@@ -269,6 +269,15 @@ export class AssetService {
             })
         }
 
+        if (entity.tagIds) {
+            const tags = await this.tagService.findRelationsByIds(
+                parseIds(entity.tagIds)
+            )
+            Object.assign(entity, {
+                tags,
+            })
+        }
+
         return Object.assign(entity, {
             paths,
             smallPaths,
@@ -319,7 +328,8 @@ export class AssetService {
         const metadata = await this._saveImage(config.ASSETS_PATH, filename)
 
         if (metadata === null) return '/assets/package.png'
-        if (metadata.ext !== 'gif') await this._saveAsset300(metadata)
+        // gif & gifv
+        if (!metadata.ext.includes('gif')) await this._saveAsset300(metadata)
         else await this._copyOrigin300(metadata)
         return metadata.name
     }

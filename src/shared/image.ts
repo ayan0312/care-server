@@ -111,7 +111,10 @@ export async function saveImage(
     let size = fs.statSync(originFilename).size
     autoMkdirSync(path)
 
-    const ext = (await fromFile(originFilename))?.ext || ''
+    const ext = originFilename.split('.').pop() || ''
+    // fromFile don't know the gifv
+    // const ext = (await fromFile(originFilename))?.ext || ''
+
     const metadata: FileMetadata = {
         ext,
         path,

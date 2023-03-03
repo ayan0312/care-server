@@ -16,21 +16,26 @@ import multer from 'multer'
 import path from 'path'
 import { config } from 'src/shared/config'
 import { ExpireMap } from 'src/shared/expire'
-import { autoMkdirSync, clipImage, download } from 'src/shared/image'
+import { clipImage, download } from 'src/shared/image'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs-extra'
 import { ErrorCodeException, ErrorCodes } from 'src/shared/errorCodes'
 import { AssetService } from 'src/asset/asset.service'
 
+function getExt(file: Express.Multer.File) {
+    let exts = file.mimetype.split('/')
+    if (file.mimetype === 'application/octet-stream')
+        exts = file.originalname.split('.')
+    return exts[exts.length - 1]
+}
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, config.TEMP_PATH)
     },
     filename: function (req, file, cb) {
-        let exts = file.mimetype.split('/')
-        let ext = exts[exts.length - 1]
-        cb(null, `${uuidv4()}.${ext}`)
+        cb(null, `${uuidv4()}.${getExt(file)}`)
     },
 })
 
@@ -156,7 +161,11 @@ export class TempController {
     ) {
         let original_preview = new URL(file.filename, config.URL.TEMP_PATH)
         let thumb_filename = `${width}_${file.filename}`
-        if (file.mimetype === 'image/gif') {
+
+        if (
+            file.mimetype === 'image/gif' ||
+            file.mimetype === 'application/octet-stream'
+        ) {
             thumb_filename = file.filename
         } else if (thumb) {
             const thumb_fi = path.resolve(config.TEMP_PATH, thumb_filename)
@@ -179,7 +188,7 @@ export class TempController {
         return {
             size: file.size,
             thumb: thumb ? new URL(thumb_filename, config.URL.TEMP_PATH) : '',
-            suffix: file.mimetype.split('/')[1],
+            suffix: getExt(file),
             prefix: prefixs.join('.'),
             mimetype: file.mimetype,
             filename: file.filename,
