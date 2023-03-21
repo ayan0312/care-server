@@ -51,7 +51,7 @@ export class TempController {
 
     private logger = new Logger('Temps')
 
-    @Get('download')
+    @Get('download/file')
     public async download(@Query('opts') opts: string) {
         const {
             url,
@@ -73,7 +73,7 @@ export class TempController {
         }
     }
 
-    @Get()
+    @Get('download/image')
     public async downloadImage(
         @Query('thumb', new ParseBoolPipe(), new DefaultValuePipe(false))
         thumb: boolean,
@@ -120,7 +120,7 @@ export class TempController {
         }
     }
 
-    @Post('/blob')
+    @Post('blob')
     @UseInterceptors(
         FileInterceptor('image', {
             storage,
@@ -147,6 +147,9 @@ export class TempController {
         return file.filename
     }
 
+    @Get('upload/folder')
+    public async uploadFolder(@Query('folder') folder: string) {}
+
     @Post()
     @UseInterceptors(
         FileInterceptor('image', {
@@ -162,27 +165,36 @@ export class TempController {
         let original_preview = new URL(file.filename, config.URL.TEMP_PATH)
         let thumb_filename = `${width}_${file.filename}`
 
-        if (
-            file.mimetype === 'image/gif' ||
-            file.mimetype === 'application/octet-stream'
-        ) {
-            thumb_filename = file.filename
-        } else if (thumb) {
-            const thumb_fi = path.resolve(config.TEMP_PATH, thumb_filename)
-            let result = false
-            try {
-                result = await clipImage(
-                    path.resolve(config.TEMP_PATH, file.filename),
-                    thumb_fi,
-                    width
-                )
-            } catch (err) {
-                throw err
-            }
+        switch (file.mimetype) {
+            case 'image/png':
+            case 'image/bmp':
+            case 'image/jpeg':
+                if (thumb) {
+                    const thumb_fi = path.resolve(
+                        config.TEMP_PATH,
+                        thumb_filename
+                    )
+                    let result = false
+                    try {
+                        result = await clipImage(
+                            path.resolve(config.TEMP_PATH, file.filename),
+                            thumb_fi,
+                            width
+                        )
+                    } catch (err) {
+                        throw err
+                    }
 
-            if (result) expireMap.push(String(Date.now()), thumb_fi)
-            else thumb_filename = file.filename
+                    if (result) expireMap.push(String(Date.now()), thumb_fi)
+                    else thumb_filename = file.filename
+                }
+                break
+            // other mimetypes doesn't clip it.
+            default:
+                thumb_filename = file.filename
+                break
         }
+
         let prefixs = file.originalname.split('.')
         prefixs.pop()
         return {

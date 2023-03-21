@@ -5,7 +5,7 @@ import got from 'got'
 import { URL } from 'url'
 import { pipeline } from 'stream'
 import { IncomingMessage } from 'http'
-import { fromFile, fromStream } from 'file-type'
+import { fromStream } from 'file-type'
 
 export interface FileMetadata {
     ext: string
@@ -102,6 +102,10 @@ export function autoMkdirSync(path: string) {
     if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
 }
 
+export function getExt(filename: string) {
+    return filename.split('.').pop() || ''
+}
+
 export async function saveImage(
     sign: string,
     path: string,
@@ -111,10 +115,7 @@ export async function saveImage(
     let size = fs.statSync(originFilename).size
     autoMkdirSync(path)
 
-    const ext = originFilename.split('.').pop() || ''
-    // fromFile don't know the gifv
-    // const ext = (await fromFile(originFilename))?.ext || ''
-
+    const ext = getExt(originFilename)
     const metadata: FileMetadata = {
         ext,
         path,
@@ -131,7 +132,14 @@ export async function saveImage(
 }
 
 export function removeFileSync(filename: string) {
-    if (fs.statSync(filename).isFile()) fs.rmSync(filename)
+    if (isFileSync(filename)) fs.rmSync(filename)
+}
+
+export function isFileSync(filename: string) {
+    try {
+        if (fs.statSync(filename).isFile()) return true
+    } catch (err) {}
+    return false
 }
 
 export function readDirSync(dir: string) {

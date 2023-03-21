@@ -9,6 +9,8 @@ import {
 import { config } from 'src/shared/config'
 import {
     FileMetadata,
+    getExt,
+    isFileSync,
     readDirSync,
     removeFileSync,
     saveImage,
@@ -30,7 +32,6 @@ import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { URL } from 'url'
-import { v4 as uuidv4 } from 'uuid'
 import { AssetSetService } from 'src/assetSet/assetSet.service'
 
 @Injectable()
@@ -45,6 +46,7 @@ export class AssetService {
     ) {}
 
     private _nameId = 0
+    private _imageId = 0
 
     public async findById(
         id: number,
@@ -60,7 +62,7 @@ export class AssetService {
                 : {}
         )
         if (!result) throw new NotFoundException()
-        if (patch) return this._patchAssetResult(result)
+        if (patch) return this._patchAssetResult(result, true)
         return result
     }
 
@@ -251,43 +253,49 @@ export class AssetService {
         })
     }
 
-    private async _patchAssetResult(entity: AssetEntity) {
-        const paths: URL[] = []
-        const smallPaths: URL[] = []
-
-        entity.filenames.forEach((filename) => {
-            paths.push(new URL(filename, config.URL.ASSETS_PATH))
-            smallPaths.push(new URL(filename, config.URL.ASSETS_300_PATH))
+    public async accessSmallImages(filenames: string[]) {
+        forEachAsync(filenames, async (filename) => {
+            await this.accessSmallImage(filename)
         })
+    }
 
-        if (entity.groupIds) {
-            const groups = await this.groupService.findByIds(
-                parseIds(entity.groupIds)
+    public async accessSmallImage(filename: string) {
+        switch (getExt(filename)) {
+            case 'png':
+            case 'bmp':
+            case 'jpeg':
+                if (!isFileSync(filename)) await this._saveAsset300(filename)
+                break
+        }
+    }
+
+    private async _patchAssetResult(entity: AssetEntity, allFilenames = false) {
+        if (entity.groupIds)
+            Object.assign(
+                entity,
+                await this.groupService.findByIds(parseIds(entity.groupIds))
             )
-            Object.assign(entity, {
-                groups,
-            })
+
+        if (entity.tagIds)
+            Object.assign(
+                entity,
+                await this.tagService.findRelationsByIds(
+                    parseIds(entity.tagIds)
+                )
+            )
+
+        if (entity.filenames.length > 0 && !allFilenames) {
+            Object.assign(entity, { total: entity.filenames.length })
+            entity.filenames = entity.filenames.splice(0, 3)
         }
 
-        if (entity.tagIds) {
-            const tags = await this.tagService.findRelationsByIds(
-                parseIds(entity.tagIds)
-            )
-            Object.assign(entity, {
-                tags,
-            })
-        }
-
-        return Object.assign(entity, {
-            paths,
-            smallPaths,
-        })
+        return entity
     }
 
     private async _saveImage(targetPath: string, filename: string) {
         try {
             const metadata = await saveImage(
-                uuidv4(),
+                `${Date.now()}.${++this._imageId}`,
                 targetPath,
                 `${config.TEMP_PATH}/${filename}`,
                 true
@@ -299,45 +307,28 @@ export class AssetService {
         }
     }
 
-    private async _saveAsset300(metadata: FileMetadata) {
-        return new Promise((resolve, reject) => {
-            gm(metadata.filename)
+    private async _saveAsset300(filename: string) {
+        return new Promise((resolve, _) => {
+            gm(`${config.ASSETS_PATH}/${filename}`)
                 .resize(400, 400)
-                .write(`${metadata.path}/300/${metadata.name}`, (err) => {
+                .write(`${config.ASSETS_300_PATH}/${filename}`, (err) => {
                     if (err) console.error(err)
                     resolve(undefined)
                 })
         })
     }
 
-    private async _copyOrigin300(metadata: FileMetadata) {
-        try {
-            const a = await saveImage(
-                metadata.prefix,
-                config.ASSETS_300_PATH,
-                metadata.filename
-            )
-            console.log(a)
-        } catch (err) {
-            console.log(err)
-            return null
-        }
-    }
-
     private async _saveAsset(filename: string) {
         const metadata = await this._saveImage(config.ASSETS_PATH, filename)
-
-        if (metadata === null) return '/assets/package.png'
-        // gif & gifv
-        if (!metadata.ext.includes('gif')) await this._saveAsset300(metadata)
-        else await this._copyOrigin300(metadata)
+        if (metadata === null) throw 'cannot find the image'
         return metadata.name
     }
 
     private async _saveAssets(filenames: string[]) {
         const results: string[] = []
-        await forEachAsync(filenames, async (filename) => {
+        await forEachAsync(filenames, async (filename, index) => {
             const result = await this._saveAsset(filename)
+            if (index < 3) await this.accessSmallImage(result)
             results.push(result)
         })
         return results
@@ -389,8 +380,8 @@ export class AssetService {
 
     public async create(body: IAsset) {
         if (!body.name)
-            body.name = `${formatDate('y-M-d H:m:s', new Date())}-${this
-                ._nameId++}`
+            body.name = `${formatDate('y-M-d H:m:s', new Date())}-${++this
+                ._nameId}`
 
         const asset = await this._mergeBodyToEntity(new AssetEntity(), body)
         await throwValidatedErrors(asset)

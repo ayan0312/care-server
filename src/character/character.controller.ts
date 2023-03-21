@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ICharacter } from 'src/interface/character.interface'
+import { parseIds } from 'src/shared/utilities'
 import { CharacterService } from './character.service'
 
 @ApiTags('characters')
@@ -27,11 +28,7 @@ export class CharacterController {
         @Query('ids') ids?: string,
         @Query('patch') patch?: boolean
     ) {
-        if (ids)
-            return await this.charService.findByIds(
-                ids.split(',').map((id) => Number(id)),
-                patch
-            )
+        if (ids) return await this.charService.findByIds(parseIds(ids), patch)
         else if (options)
             return await this.charService.search(JSON.parse(options))
     }

@@ -1,8 +1,8 @@
-import { BadRequestException, Controller, Get, Post } from '@nestjs/common'
+import { Controller, Get } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { execSync } from 'child_process'
 import { AssetService } from './asset/asset.service'
 import { CharacterService } from './character/character.service'
+import { config } from './shared/config'
 
 @ApiTags('root')
 @Controller()
@@ -14,19 +14,9 @@ export class AppController {
     ) {}
 
     @Get()
-    public getApi() {
+    public getAPI() {
         return {
-            HTML: '<h1>Care Server</h1>',
-        }
-    }
-
-    @Post('/shutdown/windows')
-    public shutdownWindows() {
-        try {
-            execSync('shutdown -s -t 00')
-            return null
-        } catch (err) {
-            return new BadRequestException(err)
+            static: config.URL,
         }
     }
 }
