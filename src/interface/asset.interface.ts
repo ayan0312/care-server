@@ -16,6 +16,7 @@ export interface IAsset extends IStarName {
     filenames?: string[]
     assetSetIds?: string
     characterIds?: string
+    folder?: string
 }
 
 export interface IAssetSearchCondition extends IStarName {

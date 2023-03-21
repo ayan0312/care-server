@@ -12,7 +12,7 @@ import {
     ICharacterStaticCategory,
 } from 'src/interface/character.interface'
 import { config } from 'src/shared/config'
-import { FileMetadata, saveImage } from 'src/shared/image'
+import { FileMetadata, saveImage } from 'src/shared/file'
 import {
     createQueryIds,
     mergeObjectToEntity,

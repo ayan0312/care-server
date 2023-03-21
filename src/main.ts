@@ -5,7 +5,7 @@ import { ApplicationModule } from './app.module'
 import { AllExceptionsFilter } from './shared/allExceptions.filter'
 import { config } from './shared/config'
 import { ResponseInterceptor } from './shared/response.interceptor'
-import { autoMkdirSync } from './shared/image'
+import { autoMkdirSync } from './shared/file'
 import compression from 'compression'
 
 async function bootstrap() {

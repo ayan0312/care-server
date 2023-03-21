@@ -16,7 +16,7 @@ import multer from 'multer'
 import path from 'path'
 import { config } from 'src/shared/config'
 import { ExpireMap } from 'src/shared/expire'
-import { clipImage, download } from 'src/shared/image'
+import { clipImage, download } from 'src/shared/file'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs-extra'
@@ -146,9 +146,6 @@ export class TempController {
         }
         return file.filename
     }
-
-    @Get('upload/folder')
-    public async uploadFolder(@Query('folder') folder: string) {}
 
     @Post()
     @UseInterceptors(
