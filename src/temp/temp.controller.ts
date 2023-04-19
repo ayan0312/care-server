@@ -25,8 +25,7 @@ import { AssetService } from 'src/asset/asset.service'
 
 function getExt(file: Express.Multer.File) {
     let exts = file.mimetype.split('/')
-    if (file.mimetype === 'application/octet-stream')
-        exts = file.originalname.split('.')
+    if (exts[0] !== 'image') exts = file.originalname.split('.')
     return exts[exts.length - 1]
 }
 
