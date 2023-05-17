@@ -85,7 +85,7 @@
         "@nestjs/serve-static": "^2.1.4",
         "@nestjs/typeorm": "^7.1.5",
         "@nestjs/websockets": "^8.4.4",
-        "better-sqlite3": "^7.4.1",
+        "better-sqlite3": "^8.3.0",
         "class-transformer": "^0.4.0",
         "class-validator": "^0.13.1",
         "compression": "^1.7.4",

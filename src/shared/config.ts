@@ -58,7 +58,7 @@ function createPaths(root: string) {
     }
 }
 
-const IP = getIP()
+const IP = '192.168.3.6' // getIP()
 const originalConfig = createConfig()
 export const config = {
     IP,
