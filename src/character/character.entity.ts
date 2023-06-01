@@ -8,7 +8,7 @@ import { ICharacterStaticCategory } from 'src/interface/character.interface'
 @Entity('character')
 export class CharacterEntity extends StarNameEntity {
     @Column({ default: '' })
-    @Length(0, 25)
+    @Length(0, 1024)
     public wiki: string = ''
 
     @Column({ default: '' })

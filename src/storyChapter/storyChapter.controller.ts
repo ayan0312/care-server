@@ -10,6 +10,8 @@ import {
     Patch,
     Query,
     HttpCode,
+    DefaultValuePipe,
+    ParseBoolPipe,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { IStoryChapter } from 'src/interface/storyChapter.interface'
@@ -38,6 +40,17 @@ export class StoryChapterController {
     @HttpCode(HttpStatus.CREATED)
     public async create(@Body() body: IStoryChapter) {
         return await this.chapterService.create(body)
+    }
+
+    @Post(':id')
+    public async copy(
+        @Body() body: IStoryChapter,
+        @Query('copy', new DefaultValuePipe(false), new ParseBoolPipe())
+        copy: boolean,
+        @Param('id', new ParseIntPipe()) id: number
+    ) {
+        if (copy) return await this.chapterService.copy(id, body)
+        return 'no-ops'
     }
 
     @Get(':id')

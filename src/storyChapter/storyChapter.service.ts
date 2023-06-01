@@ -153,6 +153,19 @@ export class StoryChapterService {
         await throwValidatedErrors(target)
     }
 
+    public async copy(id: number, body: IStoryChapter) {
+        const chapter = await this.findById(id)
+        return await this.create({
+            name: chapter.name,
+            remark: chapter.remark,
+            storyId: body.storyId,
+            content: chapter.content,
+            assetIds: chapter.assetIds,
+            volumeId: body.volumeId,
+            characterIds: chapter.characterIds,
+        })
+    }
+
     public async create(body: IStoryChapter) {
         const chapter = new StoryChapterEntity()
 
