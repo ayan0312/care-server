@@ -21,7 +21,7 @@ import {
     FileMetadata,
     getPrefix,
     readDirSync,
-    removeFileSync,
+    rmSync,
     saveImage,
 } from 'src/shared/file'
 import {
@@ -254,7 +254,7 @@ export class CharacterService {
     private async _saveImage(targetPath: string, filename: string) {
         try {
             const metadata = await saveImage(
-                `${Date.now()}-${++this._imageId}`,
+                `${Date.now()}_${++this._imageId}`,
                 targetPath,
                 path.join(config.static.temps, filename),
                 true
@@ -270,10 +270,13 @@ export class CharacterService {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
                 .resize(200, 200, '!')
-                .write(`${metadata.path}/200/${metadata.name}`, (err) => {
-                    if (err) console.error(err)
-                    resolve(undefined)
-                })
+                .write(
+                    path.join(config.static.avatar_thumbs, metadata.name),
+                    (err) => {
+                        if (err) console.error(err)
+                        resolve(undefined)
+                    }
+                )
         })
     }
 
@@ -294,10 +297,13 @@ export class CharacterService {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
                 .resize(300, 600)
-                .write(`${metadata.path}/300/${metadata.name}`, (err) => {
-                    if (err) console.error(err)
-                    resolve(undefined)
-                })
+                .write(
+                    path.join(config.static.fullbody_thumbs, metadata.name),
+                    (err) => {
+                        if (err) console.error(err)
+                        resolve(undefined)
+                    }
+                )
         })
     }
 
@@ -406,8 +412,7 @@ export class CharacterService {
         })
 
         await forEachAsync(bigAvatarPaths, async (filename) => {
-            // 200 is foldername
-            if (!bucket[filename] && filename != '200') {
+            if (!bucket[filename]) {
                 console.log('remove to bin: ', filename)
                 await saveImage(
                     `${filename}-avatar`,
@@ -422,14 +427,13 @@ export class CharacterService {
         smallAvatarPaths.forEach((filename) => {
             if (!bucket[filename]) {
                 console.log('remove 200: ', filename)
-                removeFileSync(path.join(config.static.avatar_thumbs, filename))
+                rmSync(path.join(config.static.avatar_thumbs, filename))
                 total++
             }
         })
 
         await forEachAsync(bigFullbodyPaths, async (filename) => {
-            // 300 is foldername
-            if (!bucket[filename] && filename != '300') {
+            if (!bucket[filename]) {
                 console.log('remove to bin: ', filename)
                 await saveImage(
                     `${filename}-fullbody`,
@@ -444,9 +448,7 @@ export class CharacterService {
         smallFullbodyPaths.forEach((filename) => {
             if (!bucket[filename]) {
                 console.log('remove 300: ', filename)
-                removeFileSync(
-                    path.join(config.static.fullbody_thumbs, filename)
-                )
+                rmSync(path.join(config.static.fullbody_thumbs, filename))
                 total++
             }
         })
@@ -461,7 +463,7 @@ export class CharacterService {
             path.join(config.static.avatars, avatar),
             true
         )
-        removeFileSync(path.join(config.static.avatar_thumbs, avatar))
+        rmSync(path.join(config.static.avatar_thumbs, avatar))
     }
 
     private async removeFullbody(fullbody: string) {
@@ -471,7 +473,7 @@ export class CharacterService {
             path.join(config.static.fullbodys, fullbody),
             true
         )
-        removeFileSync(path.join(config.static.fullbody_thumbs, fullbody))
+        rmSync(path.join(config.static.fullbody_thumbs, fullbody))
     }
 
     public async delete(id: number) {

@@ -19,7 +19,7 @@ import { ExpireMap } from 'src/shared/expire'
 import { clipImage, download } from 'src/shared/file'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
-import fs from 'fs-extra'
+import fs, { createReadStream } from 'fs-extra'
 import { ErrorCodeException, ErrorCodes } from 'src/shared/errorCodes'
 import { AssetService } from 'src/asset/asset.service'
 
@@ -86,7 +86,7 @@ export class TempController {
         this.logger.log('Successfully downloaded the image:\n' + url)
 
         let original_preview = new URL(metadata.name, config.URL.temps)
-        let thumb_filename = `${width}_${metadata.name}`
+        let thumb_filename = `${metadata.name}_${width}`
 
         if (thumb) {
             const thumb_fi = path.resolve(config.static.temps, thumb_filename)
@@ -159,7 +159,7 @@ export class TempController {
         @Query('width', new DefaultValuePipe(300)) width: number
     ) {
         let original_preview = new URL(file.filename, config.URL.temps)
-        let thumb_filename = `${width}_${file.filename}`
+        let thumb_filename = `${file.filename}_${width}`
 
         switch (file.mimetype) {
             case 'image/png':

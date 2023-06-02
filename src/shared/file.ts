@@ -6,6 +6,8 @@ import { URL } from 'url'
 import { pipeline } from 'stream'
 import { IncomingMessage } from 'http'
 import { fromStream } from 'file-type'
+import { config } from './config'
+import { forEachAsync } from './utilities'
 
 export interface FileMetadata {
     ext: string
@@ -69,7 +71,7 @@ export function download(
     })
 }
 
-function copyImage(oldPath: string, newPath: string): Promise<void> {
+function copyFile(oldPath: string, newPath: string): Promise<void> {
     let readStream = fs.createReadStream(oldPath)
     let writeStream = fs.createWriteStream(newPath)
     readStream.pipe(writeStream)
@@ -86,7 +88,7 @@ function copyImage(oldPath: string, newPath: string): Promise<void> {
     })
 }
 
-function renameImage(oldPath: string, newPath: string): Promise<void> {
+export function renameFile(oldPath: string, newPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
         fs.rename(oldPath, newPath, (err) => {
             if (err) {
@@ -114,31 +116,35 @@ export function getPrefix(filename: string) {
 
 export async function saveImage(
     prefix: string,
-    path: string,
+    targetPath: string,
     originFilename: string,
     rename?: boolean
 ) {
     let size = fs.statSync(originFilename).size
-    autoMkdirSync(path)
+    autoMkdirSync(targetPath)
 
     const ext = getExt(originFilename)
     const metadata: FileMetadata = {
         ext,
-        path,
+        path: targetPath,
         size,
         prefix,
         name: `${prefix}.${ext}`,
-        filename: `${path}/${prefix}.${ext}`,
+        filename: `${targetPath}/${prefix}.${ext}`,
     }
 
-    if (rename) await renameImage(originFilename, metadata.filename)
-    else await copyImage(originFilename, metadata.filename)
+    if (rename) await renameFile(originFilename, metadata.filename)
+    else await copyFile(originFilename, metadata.filename)
 
     return metadata
 }
 
-export function removeFileSync(filename: string) {
+export function rmSync(filename: string) {
     if (isFileSync(filename)) fs.rmSync(filename)
+}
+
+export function rmDirSync(path: string) {
+    fs.rmdirSync(path)
 }
 
 export function isFileSync(filename: string) {
@@ -150,6 +156,31 @@ export function isFileSync(filename: string) {
 
 export function readDirSync(dir: string) {
     return fs.readdirSync(dir)
+}
+
+export function sortFilenames(filenames: string[]) {
+    return filenames
+        .map((filename) => ({
+            base: filename
+                .split('.')[0]
+                .split('_')
+                .map((num) => Number(num)),
+            filename,
+        }))
+        .sort((a, b) => {
+            const fn = (index: number): number => {
+                if (a.base[index] == null && b.base[index] == null) return 0
+                if (a.base[index] == null && b.base[index] != null)
+                    return b.base[index]
+                if (a.base[index] != null && b.base[index] == null)
+                    return a.base[index]
+                const result = a.base[index] - b.base[index]
+                if (result === 0) return fn((index += 1))
+                return result
+            }
+            return fn(0)
+        })
+        .map((result) => result.filename)
 }
 
 export async function getImageSize(filename: string) {
@@ -167,14 +198,15 @@ export async function getImageSize(filename: string) {
 export async function clipImage(
     origin: string,
     target: string,
-    maxWidth: number
+    maxWidth: number,
+    maxHeight?: number
 ) {
     const size = await getImageSize(origin)
     if (size.width < maxWidth) return false
-
+    if (maxHeight && size.height < maxHeight) return false
     return new Promise((resolve: (d: true) => void, reject) => {
         gm(origin)
-            .resize(maxWidth)
+            .resize(maxWidth, maxHeight)
             .write(target, (err) => {
                 if (err) {
                     reject(err)
@@ -183,4 +215,63 @@ export async function clipImage(
                 resolve(true)
             })
     })
+}
+
+export async function createAssetThumb(
+    filename: string,
+    maxWidth = 500,
+    maxHeight?: number
+) {
+    switch (getExt(filename)) {
+        case 'png':
+        case 'bmp':
+        case 'jpeg':
+            if (!isFileSync(filename))
+                await clipImage(
+                    path.join(config.static.assets, filename),
+                    path.join(config.static.asset_thumbs, filename),
+                    maxWidth,
+                    maxHeight
+                )
+            break
+    }
+}
+
+export async function saveFiles(
+    name: string,
+    filenames: string[],
+    root = config.static.temps,
+    rename = true
+) {
+    const originalFilename = path.join(root, filenames[0])
+    if (filenames.length === 1) {
+        const metadata = await saveImage(
+            name,
+            config.static.assets,
+            originalFilename,
+            rename
+        )
+        await createAssetThumb(metadata.name, 500)
+        return metadata.name
+    }
+
+    const targetPath = path.join(config.static.assets, name)
+    const metadata = await saveImage('1', targetPath, originalFilename, rename)
+    autoMkdirSync(path.join(config.static.asset_thumbs, name))
+    await createAssetThumb(path.join(name, metadata.name), 600)
+    await forEachAsync(filenames.splice(1), async (filename, index) => {
+        await saveImage(
+            `${index + 2}`,
+            targetPath,
+            path.join(root, filename),
+            rename
+        )
+    })
+
+    return name
+}
+
+// TODO
+export async function saveFolder(foldername: string) {
+    return foldername
 }

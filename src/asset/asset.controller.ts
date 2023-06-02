@@ -96,6 +96,15 @@ export class AssetController {
         return await this.assetService.deleteExtraAssets()
     }
 
+    @Get('thumb/:id')
+    getAssetThumb(
+        @Param('id', new ParseIntPipe()) id: number,
+        @Query('index', new DefaultValuePipe('')) index = 0
+    ) {
+        // const file = createReadStream()
+        // return new StreamableFile(file)
+    }
+
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,

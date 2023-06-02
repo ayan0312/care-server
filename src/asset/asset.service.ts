@@ -1,4 +1,3 @@
-import gm from 'gm'
 import path from 'path'
 import { Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
@@ -12,11 +11,14 @@ import {
 } from 'src/interface/asset.interface'
 import { config } from 'src/shared/config'
 import {
-    getExt,
-    isFileSync,
+    autoMkdirSync,
     readDirSync,
-    removeFileSync,
+    rmDirSync,
+    rmSync,
+    saveFiles,
+    saveFolder,
     saveImage,
+    sortFilenames,
 } from 'src/shared/file'
 import {
     createQueryIds,
@@ -278,125 +280,27 @@ export class AssetService {
         return entity
     }
 
-    public async createSmallImage(filename: string) {
-        switch (getExt(filename)) {
-            case 'png':
-            case 'bmp':
-            case 'jpeg':
-                if (!isFileSync(filename)) await this._saveAsset300(filename)
-                break
-        }
-    }
-
-    private async _saveAsset300(filename: string) {
-        return new Promise((resolve, _) => {
-            gm(path.join(config.static.assets, filename))
-                .resize(400, 400)
-                .write(
-                    path.join(config.static.asset_thumbs, filename),
-                    (err) => {
-                        if (err) console.error(err)
-                        resolve(undefined)
-                    }
-                )
-        })
-    }
-
-    private async _saveImage(
-        name: string,
-        targetPath: string,
-        originalPath: string,
-        rename: boolean
-    ) {
-        try {
-            const metadata = await saveImage(
-                name,
-                targetPath,
-                originalPath,
-                rename
-            )
-            return metadata
-        } catch (err) {
-            console.log(err)
-            return null
-        }
-    }
-
-    private async _saveFiles(
-        filenames: string[],
-        root = config.static.temps,
-        rename = true
-    ) {
-        const name = `${Date.now()}-${++this._imageId}`
-        const metadata = await this._saveImage(
-            name,
-            config.static.assets,
-            path.join(root, filenames[0]),
-            rename
-        )
-        if (metadata === null) throw 'cannot find the image'
-        await this.createSmallImage(metadata.name)
-        if (filenames.length > 1)
-            await forEachAsync(filenames.splice(1), async (filename, index) => {
-                await this._saveImage(
-                    `${index + 1}`,
-                    path.join(config.static.assets, name),
-                    path.join(root, filename),
-                    rename
-                )
-            })
-
-        return metadata.name
-    }
-
-    private _sortFilenames(filenames: string[]) {
-        return filenames
-            .map((filename) => ({
-                base: filename
-                    .split('.')[0]
-                    .split('_')
-                    .map((num) => Number(num)),
-                filename,
-            }))
-            .sort((a, b) => {
-                const fn = (index: number): number => {
-                    if (a.base[index] == null && b.base[index] == null) return 0
-                    if (a.base[index] == null && b.base[index] != null)
-                        return b.base[index]
-                    if (a.base[index] != null && b.base[index] == null)
-                        return a.base[index]
-                    const result = a.base[index] - b.base[index]
-                    if (result === 0) return fn((index += 1))
-                    return result
-                }
-                return fn(0)
-            })
-            .map((result) => result.filename)
-    }
-
-    // TODO
-    private async _saveFolder(foldername: string) {
-        return foldername
-    }
-
     private async _initAssets(target: AssetEntity, body: IAsset) {
         if (body.folder && body.assetType === AssetType.folder) {
-            target.filename = await this._saveFolder(body.folder)
+            target.filename = await saveFolder(body.folder)
             return
         }
         let filenames = body.filenames
-        if (body.folder)
-            filenames = this._sortFilenames(readDirSync(body.folder))
+        if (body.folder) filenames = sortFilenames(readDirSync(body.folder))
         if (!filenames || filenames.length < 0) return
         if (filenames.length === 1) target.assetType = AssetType.file
         else target.assetType = AssetType.files
+        const name = `${Date.now()}_${++this._imageId}`
         if (body.folder)
-            target.filename = await this._saveFiles(
+            target.filename = await saveFiles(
+                name,
                 filenames,
                 body.folder,
                 false
             )
-        else target.filename = await this._saveFiles(filenames)
+        else target.filename = await saveFiles(name, filenames)
+        // deprecated
+        target.filenames = [target.filename]
     }
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
@@ -504,16 +408,16 @@ export class AssetService {
             })
         })
         allAssetPaths.forEach((filename) => {
-            if (!bucket[filename] && filename != '300') {
+            if (!bucket[filename]) {
                 console.log('remove: ', filename)
-                removeFileSync(path.join(config.static.assets, filename))
+                rmSync(path.join(config.static.assets, filename))
                 total++
             }
         })
         allAsset300Paths.forEach((filename) => {
             if (!bucket[filename]) {
                 console.log('remove 300: ', filename)
-                removeFileSync(path.join(config.static.asset_thumbs, filename))
+                rmSync(path.join(config.static.asset_thumbs, filename))
                 total++
             }
         })
@@ -521,24 +425,55 @@ export class AssetService {
         return `remove ${total} extra assets`
     }
 
+    private async _removeFiles(id: number, asset: AssetEntity) {
+        const targetPath = path.join(
+            config.static.bin,
+            `${id}_${asset.filename}`
+        )
+        const originalPath = path.join(config.static.assets, asset.filename)
+        const thumbPath = path.join(config.static.asset_thumbs, asset.filename)
+
+        autoMkdirSync(targetPath)
+        await forEachAsync(
+            sortFilenames(readDirSync(originalPath)),
+            async (filename, index) => {
+                await saveImage(
+                    `${index + 1}`,
+                    targetPath,
+                    path.join(originalPath, filename),
+                    true
+                )
+            }
+        )
+        rmDirSync(originalPath)
+
+        await forEachAsync(
+            sortFilenames(readDirSync(thumbPath)),
+            async (filename) => {
+                rmSync(path.join(thumbPath, filename))
+            }
+        )
+        rmDirSync(thumbPath)
+    }
+
     public async delete(target: number | AssetEntity) {
         const asset =
             target instanceof AssetEntity ? target : await this.findById(target)
         const id = asset.id
-
         if (!asset.recycle) return await this.update(id, { recycle: true })
-
         const result = await this.assetRepo.remove(asset)
 
-        await forEachAsync(result.filenames, async (filename, index) => {
-            await saveImage(
-                `${id}-${index}`,
-                config.static.bin,
-                path.join(config.static.assets, filename),
-                true
-            )
-            removeFileSync(path.join(config.static.asset_thumbs, filename))
-        })
+        if (result.filename) await this._removeFiles(id, result)
+        else
+            await forEachAsync(result.filenames, async (filename, index) => {
+                await saveImage(
+                    `${id}_${index}`,
+                    config.static.bin,
+                    path.join(config.static.assets, filename),
+                    true
+                )
+                rmSync(path.join(config.static.asset_thumbs, filename))
+            })
 
         return result
     }
