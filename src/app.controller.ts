@@ -15,8 +15,6 @@ export class AppController {
 
     @Get()
     public getAPI() {
-        return {
-            static: config.URL,
-        }
+        return config.URL
     }
 }

@@ -1,10 +1,15 @@
 import gm from 'gm'
+import path from 'path'
 import {
     BadRequestException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common'
+import { ModuleRef } from '@nestjs/core'
 import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { URL } from 'url'
+
 import {
     ICharacter,
     ICharacterSearch,
@@ -14,6 +19,7 @@ import {
 import { config } from 'src/shared/config'
 import {
     FileMetadata,
+    getPrefix,
     readDirSync,
     removeFileSync,
     saveImage,
@@ -27,15 +33,11 @@ import {
     queryQBIdsForIdMap,
     throwValidatedErrors,
 } from 'src/shared/utilities'
-import { Repository } from 'typeorm'
 import { CharacterEntity } from 'src/character/character.entity'
 import { CharacterGroupService } from 'src/characterGroup/characterGroup.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
-import { URL } from 'url'
-import { v4 as uuidv4 } from 'uuid'
 import { AssetService } from 'src/asset/asset.service'
-import { ModuleRef } from '@nestjs/core'
 import { StaticCategoryService } from 'src/staticCategory/staticCategory.service'
 
 @Injectable()
@@ -201,22 +203,14 @@ export class CharacterService {
 
     private _createXSmall(avatar: string, fullLengthPicture: string) {
         return {
-            avatar: avatar ? new URL(avatar, config.URL.AVATARS_PATH) : '',
+            avatar: avatar ? new URL(avatar, config.URL.avatars) : '',
             fullLengthPicture: fullLengthPicture
-                ? new URL(
-                      fullLengthPicture,
-                      config.URL.FULL_LENGTH_PICTURES_PATH
-                  )
+                ? new URL(fullLengthPicture, config.URL.fullbodys)
                 : '',
             ['xsmall']: {
-                avatar: avatar
-                    ? new URL(avatar, config.URL.AVATARS_200_PATH)
-                    : '',
+                avatar: avatar ? new URL(avatar, config.URL.avatar_thumbs) : '',
                 fullLengthPicture: fullLengthPicture
-                    ? new URL(
-                          fullLengthPicture,
-                          config.URL.FULL_LENGTH_PICTURES_300_PATH
-                      )
+                    ? new URL(fullLengthPicture, config.URL.fullbody_thumbs)
                     : '',
             },
         }
@@ -260,9 +254,9 @@ export class CharacterService {
     private async _saveImage(targetPath: string, filename: string) {
         try {
             const metadata = await saveImage(
-                `${Date.now()}.${++this._imageId}`,
+                `${Date.now()}-${++this._imageId}`,
                 targetPath,
-                `${config.TEMP_PATH}/${filename}`,
+                path.join(config.static.temps, filename),
                 true
             )
             return metadata
@@ -285,11 +279,11 @@ export class CharacterService {
 
     private async _saveAvatar(tempFilename: string) {
         const metadata = await this._saveImage(
-            config.STORAGE_PATH + 'avatars',
+            config.static.avatars,
             tempFilename
         )
 
-        if (metadata === null) return '/avatars/package.png'
+        if (metadata === null) return path.join('/avatars/package.png')
 
         await this._saveAvatar200(metadata)
 
@@ -309,11 +303,12 @@ export class CharacterService {
 
     private async _saveFullLengthPicture(tempFilename: string) {
         const metadata = await this._saveImage(
-            config.STORAGE_PATH + 'fullLengthPictures',
+            config.static.fullbodys,
             tempFilename
         )
 
-        if (metadata === null) return '/fullLengthPictures/package.png'
+        if (metadata === null)
+            return path.join('/fullLengthPictures/package.png')
 
         await this._saveFullLengthPicture300(metadata)
 
@@ -397,12 +392,10 @@ export class CharacterService {
     }
 
     public async deleteExtraAssets() {
-        const bigAvatarPaths = readDirSync(config.AVATARS_PATH)
-        const bigFullbodyPaths = readDirSync(config.FULL_LENGTH_PICTURES_PATH)
-        const smallAvatarPaths = readDirSync(config.AVATARS_200_PATH)
-        const smallFullbodyPaths = readDirSync(
-            config.FULL_LENGTH_PICTURES_300_PATH
-        )
+        const bigAvatarPaths = readDirSync(config.static.avatars)
+        const bigFullbodyPaths = readDirSync(config.static.fullbodys)
+        const smallAvatarPaths = readDirSync(config.static.avatar_thumbs)
+        const smallFullbodyPaths = readDirSync(config.static.fullbody_thumbs)
         const allChars = await this.charRepo.find()
         const bucket: Record<string, boolean> = {}
         let total = 0
@@ -418,8 +411,8 @@ export class CharacterService {
                 console.log('remove to bin: ', filename)
                 await saveImage(
                     `${filename}-avatar`,
-                    config.ASSETS_BIN_PATH,
-                    config.AVATARS_PATH + filename,
+                    config.static.bin,
+                    path.join(config.static.avatars, filename),
                     true
                 )
                 total++
@@ -429,7 +422,7 @@ export class CharacterService {
         smallAvatarPaths.forEach((filename) => {
             if (!bucket[filename]) {
                 console.log('remove 200: ', filename)
-                removeFileSync(config.AVATARS_200_PATH + filename)
+                removeFileSync(path.join(config.static.avatar_thumbs, filename))
                 total++
             }
         })
@@ -440,8 +433,8 @@ export class CharacterService {
                 console.log('remove to bin: ', filename)
                 await saveImage(
                     `${filename}-fullbody`,
-                    config.ASSETS_BIN_PATH,
-                    config.FULL_LENGTH_PICTURES_PATH + filename,
+                    config.static.bin,
+                    path.join(config.static.fullbodys, filename),
                     true
                 )
                 total++
@@ -451,7 +444,9 @@ export class CharacterService {
         smallFullbodyPaths.forEach((filename) => {
             if (!bucket[filename]) {
                 console.log('remove 300: ', filename)
-                removeFileSync(config.FULL_LENGTH_PICTURES_300_PATH + filename)
+                removeFileSync(
+                    path.join(config.static.fullbody_thumbs, filename)
+                )
                 total++
             }
         })
@@ -461,22 +456,22 @@ export class CharacterService {
 
     private async removeAvatar(avatar: string) {
         await saveImage(
-            `avatar-${avatar}`,
-            config.ASSETS_BIN_PATH,
-            config.AVATARS_PATH + avatar,
+            `avatar-${getPrefix(avatar)}`,
+            config.static.bin,
+            path.join(config.static.avatars, avatar),
             true
         )
-        removeFileSync(config.AVATARS_200_PATH + avatar)
+        removeFileSync(path.join(config.static.avatar_thumbs, avatar))
     }
 
     private async removeFullbody(fullbody: string) {
         await saveImage(
-            `fullbody-${fullbody}`,
-            config.ASSETS_BIN_PATH,
-            config.FULL_LENGTH_PICTURES_PATH + fullbody,
+            `fullbody-${getPrefix(fullbody)}`,
+            config.static.bin,
+            path.join(config.static.fullbodys, fullbody),
             true
         )
-        removeFileSync(config.FULL_LENGTH_PICTURES_300_PATH + fullbody)
+        removeFileSync(path.join(config.static.fullbody_thumbs, fullbody))
     }
 
     public async delete(id: number) {

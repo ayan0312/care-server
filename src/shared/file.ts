@@ -106,8 +106,14 @@ export function getExt(filename: string) {
     return filename.split('.').pop() || ''
 }
 
+export function getPrefix(filename: string) {
+    const arr = filename.split('.')
+    arr.pop()
+    return arr.join('.')
+}
+
 export async function saveImage(
-    sign: string,
+    prefix: string,
     path: string,
     originFilename: string,
     rename?: boolean
@@ -120,9 +126,9 @@ export async function saveImage(
         ext,
         path,
         size,
-        prefix: sign,
-        name: `${sign}.${ext}`,
-        filename: `${path}/${sign}.${ext}`,
+        prefix,
+        name: `${prefix}.${ext}`,
+        filename: `${path}/${prefix}.${ext}`,
     }
 
     if (rename) await renameImage(originFilename, metadata.filename)

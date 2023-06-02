@@ -26,20 +26,19 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, options)
     SwaggerModule.setup('docs', app, document)
 
-    await app.listen(config.PORT)
+    await app.listen(config.port)
 }
 
 function autoMkdir() {
-    autoMkdirSync(config.STORAGE_PATH)
-    autoMkdirSync(config.TEMP_PATH)
-    autoMkdirSync(config.BACKUPS_PATH)
-    autoMkdirSync(config.AVATARS_PATH)
-    autoMkdirSync(config.AVATARS_200_PATH)
-    autoMkdirSync(config.ASSETS_PATH)
-    autoMkdirSync(config.ASSETS_300_PATH)
-    autoMkdirSync(config.ASSETS_BIN_PATH)
-    autoMkdirSync(config.FULL_LENGTH_PICTURES_PATH)
-    autoMkdirSync(config.FULL_LENGTH_PICTURES_300_PATH)
+    autoMkdirSync(config.storage)
+    autoMkdirSync(config.static.bin)
+    autoMkdirSync(config.static.temps)
+    autoMkdirSync(config.static.assets)
+    autoMkdirSync(config.static.avatars)
+    autoMkdirSync(config.static.fullbodys)
+    autoMkdirSync(config.static.asset_thumbs)
+    autoMkdirSync(config.static.avatar_thumbs)
+    autoMkdirSync(config.static.fullbody_thumbs)
 }
 
 function main() {

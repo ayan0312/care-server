@@ -1,6 +1,9 @@
 import gm from 'gm'
+import path from 'path'
+import { Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+
 import {
     AssetType,
     IAsset,
@@ -25,13 +28,13 @@ import {
     queryQBIds,
     throwValidatedErrors,
 } from 'src/shared/utilities'
-import { Repository } from 'typeorm'
-import { AssetEntity } from './asset.entity'
-import { AssetGroupService } from '../assetGroup/assetGroup.service'
+import { AssetGroupService } from 'src/assetGroup/assetGroup.service'
 import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { AssetSetService } from 'src/assetSet/assetSet.service'
+
+import { AssetEntity } from './asset.entity'
 
 @Injectable()
 export class AssetService {
@@ -287,12 +290,15 @@ export class AssetService {
 
     private async _saveAsset300(filename: string) {
         return new Promise((resolve, _) => {
-            gm(`${config.ASSETS_PATH}/${filename}`)
+            gm(path.join(config.static.assets, filename))
                 .resize(400, 400)
-                .write(`${config.ASSETS_300_PATH}/${filename}`, (err) => {
-                    if (err) console.error(err)
-                    resolve(undefined)
-                })
+                .write(
+                    path.join(config.static.asset_thumbs, filename),
+                    (err) => {
+                        if (err) console.error(err)
+                        resolve(undefined)
+                    }
+                )
         })
     }
 
@@ -318,14 +324,14 @@ export class AssetService {
 
     private async _saveFiles(
         filenames: string[],
-        root = config.TEMP_PATH,
+        root = config.static.temps,
         rename = true
     ) {
-        const name = `${Date.now()}.${++this._imageId}`
+        const name = `${Date.now()}-${++this._imageId}`
         const metadata = await this._saveImage(
             name,
-            config.ASSETS_PATH,
-            `${root}/${filenames[0]}`,
+            config.static.assets,
+            path.join(root, filenames[0]),
             rename
         )
         if (metadata === null) throw 'cannot find the image'
@@ -334,8 +340,8 @@ export class AssetService {
             await forEachAsync(filenames.splice(1), async (filename, index) => {
                 await this._saveImage(
                     `${index + 1}`,
-                    config.ASSETS_PATH + name,
-                    `${root}/${filename}`,
+                    path.join(config.static.assets, name),
+                    path.join(root, filename),
                     rename
                 )
             })
@@ -486,8 +492,8 @@ export class AssetService {
     }
 
     public async deleteExtraAssets() {
-        const allAssetPaths = readDirSync(config.ASSETS_PATH)
-        const allAsset300Paths = readDirSync(config.ASSETS_300_PATH)
+        const allAssetPaths = readDirSync(config.static.assets)
+        const allAsset300Paths = readDirSync(config.static.asset_thumbs)
         const allAssets = await this.assetRepo.find()
         const bucket: Record<string, boolean> = {}
         let total = 0
@@ -500,14 +506,14 @@ export class AssetService {
         allAssetPaths.forEach((filename) => {
             if (!bucket[filename] && filename != '300') {
                 console.log('remove: ', filename)
-                removeFileSync(config.ASSETS_PATH + filename)
+                removeFileSync(path.join(config.static.assets, filename))
                 total++
             }
         })
         allAsset300Paths.forEach((filename) => {
             if (!bucket[filename]) {
                 console.log('remove 300: ', filename)
-                removeFileSync(config.ASSETS_300_PATH + filename)
+                removeFileSync(path.join(config.static.asset_thumbs, filename))
                 total++
             }
         })
@@ -527,11 +533,11 @@ export class AssetService {
         await forEachAsync(result.filenames, async (filename, index) => {
             await saveImage(
                 `${id}-${index}`,
-                config.ASSETS_BIN_PATH,
-                config.ASSETS_PATH + filename,
+                config.static.bin,
+                path.join(config.static.assets, filename),
                 true
             )
-            removeFileSync(config.ASSETS_300_PATH + filename)
+            removeFileSync(path.join(config.static.asset_thumbs, filename))
         })
 
         return result

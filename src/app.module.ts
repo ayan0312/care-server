@@ -16,7 +16,6 @@ import { AssetGroupModule } from './assetGroup/assetGroup.module'
 import { CharacterGroupModule } from './characterGroup/characterGroup.module'
 import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
-import { AppGateway } from './app.gateway'
 import { CharactershipModule } from './charactership/charactership.module'
 import { StoryModule } from './story/story.module'
 import { StoryChapterModule } from './storyChapter/storyChapter.module'
@@ -26,12 +25,12 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
     imports: [
         TypeOrmModule.forRoot({
             type: 'better-sqlite3',
-            database: config.DATABASE_FILENAME,
+            database: config.database,
             synchronize: true,
             autoLoadEntities: true,
         }),
         ServeStaticModule.forRoot({
-            rootPath: config.STORAGE_PATH,
+            rootPath: config.storage,
             exclude: ['/api*'],
             serveStaticOptions: {
                 cacheControl: true,
@@ -55,7 +54,7 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
         StaticCategoryModule,
     ],
     controllers: [AppController],
-    providers: [AppGateway],
+    providers: [],
 })
 export class ApplicationModule {
     constructor(private readonly connection: Connection) {}

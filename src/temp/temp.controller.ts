@@ -31,7 +31,7 @@ function getExt(file: Express.Multer.File) {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, config.TEMP_PATH)
+        cb(null, config.static.temps)
     },
     filename: function (req, file, cb) {
         cb(null, `${uuidv4()}.${getExt(file)}`)
@@ -82,19 +82,19 @@ export class TempController {
         if (!base64) throw new PreconditionFailedException()
         const url = Buffer.from(base64, 'base64').toString()
         this.logger.log('Downloading the image:\n' + url)
-        const metadata = await download(url, uuidv4(), config.TEMP_PATH)
+        const metadata = await download(url, uuidv4(), config.static.temps)
         this.logger.log('Successfully downloaded the image:\n' + url)
 
-        let original_preview = new URL(metadata.name, config.URL.TEMP_PATH)
+        let original_preview = new URL(metadata.name, config.URL.temps)
         let thumb_filename = `${width}_${metadata.name}`
 
         if (thumb) {
-            const thumb_fi = path.resolve(config.TEMP_PATH, thumb_filename)
+            const thumb_fi = path.resolve(config.static.temps, thumb_filename)
             let result = false
             try {
                 this.logger.log('Clipping the image:\n' + url)
                 result = await clipImage(
-                    path.resolve(config.TEMP_PATH, metadata.name),
+                    path.resolve(config.static.temps, metadata.name),
                     thumb_fi,
                     width
                 )
@@ -109,7 +109,7 @@ export class TempController {
 
         return {
             size: metadata.size,
-            thumb: thumb ? new URL(thumb_filename, config.URL.TEMP_PATH) : '',
+            thumb: thumb ? new URL(thumb_filename, config.URL.temps) : '',
             suffix: metadata.ext,
             prefix: metadata.prefix,
             mimetype: metadata.mimetype || '',
@@ -158,7 +158,7 @@ export class TempController {
         @Query('thumb', new DefaultValuePipe(false)) thumb: boolean,
         @Query('width', new DefaultValuePipe(300)) width: number
     ) {
-        let original_preview = new URL(file.filename, config.URL.TEMP_PATH)
+        let original_preview = new URL(file.filename, config.URL.temps)
         let thumb_filename = `${width}_${file.filename}`
 
         switch (file.mimetype) {
@@ -167,13 +167,13 @@ export class TempController {
             case 'image/jpeg':
                 if (thumb) {
                     const thumb_fi = path.resolve(
-                        config.TEMP_PATH,
+                        config.static.temps,
                         thumb_filename
                     )
                     let result = false
                     try {
                         result = await clipImage(
-                            path.resolve(config.TEMP_PATH, file.filename),
+                            path.resolve(config.static.temps, file.filename),
                             thumb_fi,
                             width
                         )
@@ -195,7 +195,7 @@ export class TempController {
         prefixs.pop()
         return {
             size: file.size,
-            thumb: thumb ? new URL(thumb_filename, config.URL.TEMP_PATH) : '',
+            thumb: thumb ? new URL(thumb_filename, config.URL.temps) : '',
             suffix: getExt(file),
             prefix: prefixs.join('.'),
             mimetype: file.mimetype,

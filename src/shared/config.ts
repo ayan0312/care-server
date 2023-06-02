@@ -1,13 +1,35 @@
 import os from 'os'
-import fs from 'fs-extra'
 import path from 'path'
 
-const STORAGE_PATH = 'D:/storage/'
-const DEFAULT_CONFIG = (() => ({
-    PORT: 3000,
-    IMPORT_DIR: os.homedir(),
-    EXPORT_DIR: os.homedir(),
-}))()
+const DEFAULT = {
+    ip: '192.168.3.6',
+    port: 3000,
+    storage: 'D:/storage',
+}
+
+function createPaths(root: string) {
+    return {
+        bin: root + 'bin/',
+        temps: root + 'temps/',
+        assets: root + 'assets/',
+        avatars: root + 'avatars/',
+        fullbodys: root + 'fullbodys/',
+        asset_thumbs: root + 'asset_thumbs/',
+        avatar_thumbs: root + 'avatar_thumbs/',
+        fullbody_thumbs: root + 'fullbody_thumbs/',
+    }
+}
+
+export const config = {
+    ...DEFAULT,
+    database: path.join(DEFAULT.storage, 'database', 't.db'),
+    URL: {
+        ...createPaths(`http://${DEFAULT.ip}:${DEFAULT.port}/static/`),
+    },
+    static: {
+        ...createPaths(path.join(DEFAULT.storage, 'static/')),
+    },
+}
 
 function getIP() {
     const interfaces = os.networkInterfaces()
@@ -26,46 +48,5 @@ function getIP() {
             }
         }
     }
-
     return 'localhost'
-}
-
-function createConfig() {
-    const configPath = STORAGE_PATH + 'config.json'
-    let config: Partial<typeof DEFAULT_CONFIG> = {}
-    if (fs.pathExistsSync(configPath)) config = fs.readJSONSync(configPath)
-    else
-        fs.outputJSONSync(
-            path.join(STORAGE_PATH, 'config.json'),
-            DEFAULT_CONFIG
-        )
-
-    return Object.assign(DEFAULT_CONFIG, config)
-}
-
-function createPaths(root: string) {
-    return {
-        TEMP_PATH: root + 'temps/',
-        BACKUPS_PATH: root + 'backups/',
-        AVATARS_PATH: root + 'avatars/',
-        AVATARS_200_PATH: root + 'avatars/200/',
-        ASSETS_PATH: root + 'assets/',
-        ASSETS_300_PATH: root + 'assets/300/',
-        ASSETS_BIN_PATH: root + 'bin/',
-        DATABASE_FILENAME: root + 't.db',
-        FULL_LENGTH_PICTURES_PATH: root + 'fullLengthPictures/',
-        FULL_LENGTH_PICTURES_300_PATH: root + 'fullLengthPictures/300/',
-    }
-}
-
-const IP = '192.168.3.6' // getIP()
-const originalConfig = createConfig()
-export const config = {
-    IP,
-    STORAGE_PATH,
-    ...originalConfig,
-    ...createPaths(STORAGE_PATH),
-    URL: {
-        ...createPaths(`http://${IP}:${originalConfig.PORT}/`),
-    },
 }
