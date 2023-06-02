@@ -23,7 +23,7 @@ export class AssetEntity extends StarNameEntity {
     public filenames: string[] = []
 
     @Column({ default: '' })
-    public filename: string = ''
+    public path: string = ''
 
     @Column('simple-enum')
     public assetType: AssetType = AssetType.files

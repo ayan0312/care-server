@@ -282,7 +282,7 @@ export class AssetService {
 
     private async _initAssets(target: AssetEntity, body: IAsset) {
         if (body.folder && body.assetType === AssetType.folder) {
-            target.filename = await saveFolder(body.folder)
+            target.path = await saveFolder(body.folder)
             return
         }
         let filenames = body.filenames
@@ -292,15 +292,10 @@ export class AssetService {
         else target.assetType = AssetType.files
         const name = `${Date.now()}_${++this._imageId}`
         if (body.folder)
-            target.filename = await saveFiles(
-                name,
-                filenames,
-                body.folder,
-                false
-            )
-        else target.filename = await saveFiles(name, filenames)
+            target.path = await saveFiles(name, filenames, body.folder, false)
+        else target.path = await saveFiles(name, filenames)
         // deprecated
-        target.filenames = [target.filename]
+        target.filenames = [target.path]
     }
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
@@ -395,6 +390,7 @@ export class AssetService {
         return await this.findById(newPic.id, [], true)
     }
 
+    // deprecated
     public async deleteExtraAssets() {
         const allAssetPaths = readDirSync(config.static.assets)
         const allAsset300Paths = readDirSync(config.static.asset_thumbs)
@@ -426,12 +422,9 @@ export class AssetService {
     }
 
     private async _removeFiles(id: number, asset: AssetEntity) {
-        const targetPath = path.join(
-            config.static.bin,
-            `${id}_${asset.filename}`
-        )
-        const originalPath = path.join(config.static.assets, asset.filename)
-        const thumbPath = path.join(config.static.asset_thumbs, asset.filename)
+        const targetPath = path.join(config.static.bin, `${id}_${asset.path}`)
+        const originalPath = path.join(config.static.assets, asset.path)
+        const thumbPath = path.join(config.static.asset_thumbs, asset.path)
 
         autoMkdirSync(targetPath)
         await forEachAsync(
@@ -463,7 +456,7 @@ export class AssetService {
         if (!asset.recycle) return await this.update(id, { recycle: true })
         const result = await this.assetRepo.remove(asset)
 
-        if (result.filename) await this._removeFiles(id, result)
+        if (result.path) await this._removeFiles(id, result)
         else
             await forEachAsync(result.filenames, async (filename, index) => {
                 await saveImage(

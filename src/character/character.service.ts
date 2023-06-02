@@ -397,6 +397,7 @@ export class CharacterService {
         return this.findById(id, [], true)
     }
 
+    // deprecated
     public async deleteExtraAssets() {
         const bigAvatarPaths = readDirSync(config.static.avatars)
         const bigFullbodyPaths = readDirSync(config.static.fullbodys)
