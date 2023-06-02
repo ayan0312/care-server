@@ -17,6 +17,8 @@ import {
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IAsset } from 'src/interface/asset.interface'
 import { AssetService } from './asset.service'
+import { createReadStream } from 'fs'
+import { config } from 'src/shared/config'
 
 @ApiTags('assets')
 @Controller('assets')
@@ -91,17 +93,12 @@ export class AssetController {
         return await this.assetService.removeAllUnstarAssets(recycle)
     }
 
-    @Delete('/extra')
-    public async deleteAllExtraAssets() {
-        return await this.assetService.deleteExtraAssets()
-    }
-
     @Get('thumb/:id')
     getAssetThumb(
         @Param('id', new ParseIntPipe()) id: number,
         @Query('index', new DefaultValuePipe('')) index = 0
     ) {
-        // const file = createReadStream()
+        const file = createReadStream(config.static.assets)
         // return new StreamableFile(file)
     }
 

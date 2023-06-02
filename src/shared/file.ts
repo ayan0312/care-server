@@ -217,6 +217,14 @@ export async function clipImage(
     })
 }
 
+export async function createAssetThumbStream(
+    filename: string,
+    maxWidth = 500,
+    maxHeight?: number
+) {
+    const file = fs.createReadStream(filename)
+}
+
 export async function createAssetThumb(
     filename: string,
     maxWidth = 500,
@@ -240,7 +248,7 @@ export async function createAssetThumb(
 export async function saveFiles(
     name: string,
     filenames: string[],
-    root = config.static.temps,
+    root = config.static.assets,
     rename = true
 ) {
     const originalFilename = path.join(root, filenames[0])
@@ -267,7 +275,6 @@ export async function saveFiles(
             rename
         )
     })
-
     return name
 }
 

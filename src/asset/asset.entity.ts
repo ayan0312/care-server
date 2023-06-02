@@ -18,10 +18,6 @@ export class AssetEntity extends StarNameEntity {
     @Column({ default: false })
     public recycle: boolean = false
 
-    // deprecated
-    @Column('simple-array')
-    public filenames: string[] = []
-
     @Column({ default: '' })
     public path: string = ''
 

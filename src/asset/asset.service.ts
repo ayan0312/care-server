@@ -243,13 +243,8 @@ export class AssetService {
         }
     }
 
-    public async mergeTo(selfId: number, targetId: number) {
-        const self = await this.findById(selfId)
-        const target = await this.findById(targetId)
-        if (self.filenames.length > 0) target.filenames.push(...self.filenames)
-        await this.assetRepo.save(target)
-        await this.assetRepo.remove(self)
-    }
+    // TODO
+    public async mergeTo(selfId: number, targetId: number) {}
 
     private async _patchAssetResults(entities: AssetEntity[]) {
         await forEachAsync(entities, async (entity) => {
@@ -272,11 +267,6 @@ export class AssetService {
                 )
             )
 
-        if (entity.filenames.length > 0 && !allFilenames) {
-            Object.assign(entity, { total: entity.filenames.length })
-            entity.filenames = entity.filenames.splice(0, 3)
-        }
-
         return entity
     }
 
@@ -294,8 +284,6 @@ export class AssetService {
         if (body.folder)
             target.path = await saveFiles(name, filenames, body.folder, false)
         else target.path = await saveFiles(name, filenames)
-        // deprecated
-        target.filenames = [target.path]
     }
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
@@ -390,41 +378,10 @@ export class AssetService {
         return await this.findById(newPic.id, [], true)
     }
 
-    // deprecated
-    public async deleteExtraAssets() {
-        const allAssetPaths = readDirSync(config.static.assets)
-        const allAsset300Paths = readDirSync(config.static.asset_thumbs)
-        const allAssets = await this.assetRepo.find()
-        const bucket: Record<string, boolean> = {}
-        let total = 0
-
-        allAssets.forEach((asset) => {
-            asset.filenames.forEach((filename) => {
-                bucket[filename] = true
-            })
-        })
-        allAssetPaths.forEach((filename) => {
-            if (!bucket[filename]) {
-                console.log('remove: ', filename)
-                rmSync(path.join(config.static.assets, filename))
-                total++
-            }
-        })
-        allAsset300Paths.forEach((filename) => {
-            if (!bucket[filename]) {
-                console.log('remove 300: ', filename)
-                rmSync(path.join(config.static.asset_thumbs, filename))
-                total++
-            }
-        })
-
-        return `remove ${total} extra assets`
-    }
-
-    private async _removeFiles(id: number, asset: AssetEntity) {
-        const targetPath = path.join(config.static.bin, `${id}_${asset.path}`)
-        const originalPath = path.join(config.static.assets, asset.path)
-        const thumbPath = path.join(config.static.asset_thumbs, asset.path)
+    private async _removeFiles(id: number, assetPath: string) {
+        const targetPath = path.join(config.static.bin, `${id}_${assetPath}`)
+        const originalPath = path.join(config.static.assets, assetPath)
+        const thumbPath = path.join(config.static.asset_thumbs, assetPath)
 
         autoMkdirSync(targetPath)
         await forEachAsync(
@@ -455,19 +412,7 @@ export class AssetService {
         const id = asset.id
         if (!asset.recycle) return await this.update(id, { recycle: true })
         const result = await this.assetRepo.remove(asset)
-
-        if (result.path) await this._removeFiles(id, result)
-        else
-            await forEachAsync(result.filenames, async (filename, index) => {
-                await saveImage(
-                    `${id}_${index}`,
-                    config.static.bin,
-                    path.join(config.static.assets, filename),
-                    true
-                )
-                rmSync(path.join(config.static.asset_thumbs, filename))
-            })
-
+        if (result.path) await this._removeFiles(id, result.path)
         return result
     }
 }
