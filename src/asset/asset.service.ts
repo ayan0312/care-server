@@ -2,6 +2,7 @@ import gm from 'gm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import {
+    AssetType,
     IAsset,
     IAssetSearch,
     IAssetSearchCondition,
@@ -251,22 +252,6 @@ export class AssetService {
         })
     }
 
-    public async accessSmallImages(filenames: string[]) {
-        forEachAsync(filenames, async (filename) => {
-            await this.accessSmallImage(filename)
-        })
-    }
-
-    public async accessSmallImage(filename: string) {
-        switch (getExt(filename)) {
-            case 'png':
-            case 'bmp':
-            case 'jpeg':
-                if (!isFileSync(filename)) await this._saveAsset300(filename)
-                break
-        }
-    }
-
     private async _patchAssetResult(entity: AssetEntity, allFilenames = false) {
         if (entity.groupIds)
             Object.assign(
@@ -290,6 +275,16 @@ export class AssetService {
         return entity
     }
 
+    public async createSmallImage(filename: string) {
+        switch (getExt(filename)) {
+            case 'png':
+            case 'bmp':
+            case 'jpeg':
+                if (!isFileSync(filename)) await this._saveAsset300(filename)
+                break
+        }
+    }
+
     private async _saveAsset300(filename: string) {
         return new Promise((resolve, _) => {
             gm(`${config.ASSETS_PATH}/${filename}`)
@@ -302,13 +297,14 @@ export class AssetService {
     }
 
     private async _saveImage(
+        name: string,
         targetPath: string,
         originalPath: string,
         rename: boolean
     ) {
         try {
             const metadata = await saveImage(
-                `${Date.now()}.${++this._imageId}`,
+                name,
                 targetPath,
                 originalPath,
                 rename
@@ -320,23 +316,31 @@ export class AssetService {
         }
     }
 
-    private async _saveAssets(
+    private async _saveFiles(
         filenames: string[],
         root = config.TEMP_PATH,
         rename = true
     ) {
-        const results: string[] = []
-        await forEachAsync(filenames, async (filename, index) => {
-            const metadata = await this._saveImage(
-                config.ASSETS_PATH,
-                `${root}/${filename}`,
-                rename
-            )
-            if (metadata === null) throw 'cannot find the image'
-            if (index < 3) await this.accessSmallImage(metadata.name)
-            results.push(metadata.name)
-        })
-        return results
+        const name = `${Date.now()}.${++this._imageId}`
+        const metadata = await this._saveImage(
+            name,
+            config.ASSETS_PATH,
+            `${root}/${filenames[0]}`,
+            rename
+        )
+        if (metadata === null) throw 'cannot find the image'
+        await this.createSmallImage(metadata.name)
+        if (filenames.length > 1)
+            await forEachAsync(filenames.splice(1), async (filename, index) => {
+                await this._saveImage(
+                    `${index + 1}`,
+                    config.ASSETS_PATH + name,
+                    `${root}/${filename}`,
+                    rename
+                )
+            })
+
+        return metadata.name
     }
 
     private _sortFilenames(filenames: string[]) {
@@ -364,6 +368,31 @@ export class AssetService {
             .map((result) => result.filename)
     }
 
+    // TODO
+    private async _saveFolder(foldername: string) {
+        return foldername
+    }
+
+    private async _initAssets(target: AssetEntity, body: IAsset) {
+        if (body.folder && body.assetType === AssetType.folder) {
+            target.filename = await this._saveFolder(body.folder)
+            return
+        }
+        let filenames = body.filenames
+        if (body.folder)
+            filenames = this._sortFilenames(readDirSync(body.folder))
+        if (!filenames || filenames.length < 0) return
+        if (filenames.length === 1) target.assetType = AssetType.file
+        else target.assetType = AssetType.files
+        if (body.folder)
+            target.filename = await this._saveFiles(
+                filenames,
+                body.folder,
+                false
+            )
+        else target.filename = await this._saveFiles(filenames)
+    }
+
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
         mergeObjectToEntity(target, body, [
             'tagIds',
@@ -374,17 +403,7 @@ export class AssetService {
             'characterIds',
         ])
 
-        if (body.folder) {
-            const filenames = await this._saveAssets(
-                this._sortFilenames(readDirSync(body.folder)),
-                body.folder,
-                false
-            )
-            target.filenames = filenames
-        } else if (body.filenames && body.filenames.length > 0) {
-            const filenames = await this._saveAssets(body.filenames)
-            target.filenames = filenames
-        }
+        await this._initAssets(target, body)
 
         if (body.tagIds != null)
             target.tagIds = createQueryIds(

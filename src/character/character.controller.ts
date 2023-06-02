@@ -43,6 +43,11 @@ export class CharacterController {
         return await this.charService.create(body)
     }
 
+    @Delete('/extra')
+    public async deleteAllExtraAssets() {
+        return await this.charService.deleteExtraAssets()
+    }
+
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,

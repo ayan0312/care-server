@@ -12,9 +12,15 @@ import {
     ICharacterStaticCategory,
 } from 'src/interface/character.interface'
 import { config } from 'src/shared/config'
-import { FileMetadata, saveImage } from 'src/shared/file'
+import {
+    FileMetadata,
+    readDirSync,
+    removeFileSync,
+    saveImage,
+} from 'src/shared/file'
 import {
     createQueryIds,
+    forEachAsync,
     mergeObjectToEntity,
     parseIds,
     queryQBIds,
@@ -42,6 +48,8 @@ export class CharacterService {
         private readonly staticCategoryService: StaticCategoryService,
         private readonly moduleRef: ModuleRef
     ) {}
+
+    private _imageId = 0
 
     private assetService: AssetService
 
@@ -252,7 +260,7 @@ export class CharacterService {
     private async _saveImage(targetPath: string, filename: string) {
         try {
             const metadata = await saveImage(
-                uuidv4(),
+                `${Date.now()}.${++this._imageId}`,
                 targetPath,
                 `${config.TEMP_PATH}/${filename}`,
                 true
@@ -291,7 +299,7 @@ export class CharacterService {
     private async _saveFullLengthPicture300(metadata: FileMetadata) {
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
-                .resize(300)
+                .resize(300, 600)
                 .write(`${metadata.path}/300/${metadata.name}`, (err) => {
                     if (err) console.error(err)
                     resolve(undefined)
@@ -337,11 +345,17 @@ export class CharacterService {
                     await this.groupService.findByIds(parseIds(body.groupIds))
                 ).map((group) => group.id)
             )
-        if (body.avatar) target.avatar = await this._saveAvatar(body.avatar)
-        if (body.fullLengthPicture)
+        if (body.avatar) {
+            if (target.avatar) await this.removeAvatar(target.avatar)
+            target.avatar = await this._saveAvatar(body.avatar)
+        }
+        if (body.fullLengthPicture) {
+            if (target.fullLengthPicture)
+                await this.removeFullbody(target.fullLengthPicture)
             target.fullLengthPicture = await this._saveFullLengthPicture(
                 body.fullLengthPicture
             )
+        }
         return target
     }
 
@@ -382,6 +396,89 @@ export class CharacterService {
         return this.findById(id, [], true)
     }
 
+    public async deleteExtraAssets() {
+        const bigAvatarPaths = readDirSync(config.AVATARS_PATH)
+        const bigFullbodyPaths = readDirSync(config.FULL_LENGTH_PICTURES_PATH)
+        const smallAvatarPaths = readDirSync(config.AVATARS_200_PATH)
+        const smallFullbodyPaths = readDirSync(
+            config.FULL_LENGTH_PICTURES_300_PATH
+        )
+        const allChars = await this.charRepo.find()
+        const bucket: Record<string, boolean> = {}
+        let total = 0
+
+        allChars.forEach((char) => {
+            if (char.avatar) bucket[char.avatar] = true
+            if (char.fullLengthPicture) bucket[char.fullLengthPicture] = true
+        })
+
+        await forEachAsync(bigAvatarPaths, async (filename) => {
+            // 200 is foldername
+            if (!bucket[filename] && filename != '200') {
+                console.log('remove to bin: ', filename)
+                await saveImage(
+                    `${filename}-avatar`,
+                    config.ASSETS_BIN_PATH,
+                    config.AVATARS_PATH + filename,
+                    true
+                )
+                total++
+            }
+        })
+
+        smallAvatarPaths.forEach((filename) => {
+            if (!bucket[filename]) {
+                console.log('remove 200: ', filename)
+                removeFileSync(config.AVATARS_200_PATH + filename)
+                total++
+            }
+        })
+
+        await forEachAsync(bigFullbodyPaths, async (filename) => {
+            // 300 is foldername
+            if (!bucket[filename] && filename != '300') {
+                console.log('remove to bin: ', filename)
+                await saveImage(
+                    `${filename}-fullbody`,
+                    config.ASSETS_BIN_PATH,
+                    config.FULL_LENGTH_PICTURES_PATH + filename,
+                    true
+                )
+                total++
+            }
+        })
+
+        smallFullbodyPaths.forEach((filename) => {
+            if (!bucket[filename]) {
+                console.log('remove 300: ', filename)
+                removeFileSync(config.FULL_LENGTH_PICTURES_300_PATH + filename)
+                total++
+            }
+        })
+
+        return `remove ${total} extra assets`
+    }
+
+    private async removeAvatar(avatar: string) {
+        await saveImage(
+            `avatar-${avatar}`,
+            config.ASSETS_BIN_PATH,
+            config.AVATARS_PATH + avatar,
+            true
+        )
+        removeFileSync(config.AVATARS_200_PATH + avatar)
+    }
+
+    private async removeFullbody(fullbody: string) {
+        await saveImage(
+            `fullbody-${fullbody}`,
+            config.ASSETS_BIN_PATH,
+            config.FULL_LENGTH_PICTURES_PATH + fullbody,
+            true
+        )
+        removeFileSync(config.FULL_LENGTH_PICTURES_300_PATH + fullbody)
+    }
+
     public async delete(id: number) {
         const char = await this.findById(id)
 
@@ -399,6 +496,10 @@ export class CharacterService {
             throw new BadRequestException(
                 'please remove all assets in character before delete character'
             )
+
+        if (char.avatar) await this.removeAvatar(char.avatar)
+        if (char.fullLengthPicture)
+            await this.removeFullbody(char.fullLengthPicture)
 
         return await this.charRepo.remove(char)
     }

@@ -32,7 +32,7 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
         }),
         ServeStaticModule.forRoot({
             rootPath: config.STORAGE_PATH,
-            exclude: [config.DATABASE_FILENAME],
+            exclude: ['/api*'],
             serveStaticOptions: {
                 cacheControl: true,
                 maxAge: 60 * 60 * 24 * 365,

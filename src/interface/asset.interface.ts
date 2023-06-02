@@ -2,8 +2,9 @@ import { IStarName } from 'src/interface/name.interface'
 import { ISearch } from 'src/interface/search.interface'
 
 export const enum AssetType {
+    file = 0,
     files = 1,
-    folder,
+    folder = 2,
 }
 
 export interface IAsset extends IStarName {
