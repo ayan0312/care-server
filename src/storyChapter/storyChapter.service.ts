@@ -1,7 +1,7 @@
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
+import { v4 as uuidv4 } from 'uuid'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { v4 as uuidv4 } from 'uuid'
 
 import {
     createQueryIds,
@@ -34,7 +34,7 @@ export class StoryChapterService {
         history = false,
         recycle = false
     ) {
-        return await this.chapterRepo.find({ volumeId, history, recycle })
+        return await this.chapterRepo.findBy({ volumeId, history, recycle })
     }
 
     public async findByStoryId(
@@ -42,21 +42,21 @@ export class StoryChapterService {
         history = false,
         recycle = false
     ) {
-        return await this.chapterRepo.find({ storyId, history, recycle })
+        return await this.chapterRepo.findBy({ storyId, history, recycle })
     }
 
     public async findHistorys(historyUUID: string) {
-        return await this.chapterRepo.find({ historyUUID })
+        return await this.chapterRepo.findBy({ historyUUID })
     }
 
     public async findById(id: number) {
-        const result = await this.chapterRepo.findOne(id)
+        const result = await this.chapterRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return await this.chapterRepo.findByIds(ids)
+        return await this.chapterRepo.findBy({ id: In(ids) })
     }
 
     public async search(body: IStoryChapterSearch) {
@@ -200,7 +200,7 @@ export class StoryChapterService {
     }
 
     public async hasName(name: string) {
-        const chapter = await this.chapterRepo.findOne({ name })
+        const chapter = await this.chapterRepo.findOneBy({ name })
         return !!chapter
     }
 }

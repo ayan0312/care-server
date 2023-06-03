@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { URL } from 'url'
 
 import {
@@ -89,21 +89,17 @@ export class CharacterService {
         relations: string[] = [],
         patch?: boolean
     ) {
-        const result = await this.charRepo.findOne(
-            id,
-            relations.length > 0
-                ? {
-                      relations,
-                  }
-                : {}
-        )
+        const result = await this.charRepo.findOne({
+            where: { id },
+            relations,
+        })
         if (!result) throw new NotFoundException()
         if (patch) return await this._patchCharResult(result)
         return result
     }
 
     public async findByIds(ids: number[], patch?: boolean) {
-        const chars = await this.charRepo.findByIds(ids)
+        const chars = await this.charRepo.findBy({ id: In(ids) })
         if (patch) await this._patchCharResults(chars)
         return chars
     }

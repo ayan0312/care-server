@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { IRelationship } from 'src/interface/relationship.interface'
 import { throwValidatedErrors } from 'src/shared/utilities'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { RelationshipEntity } from './relationship.entity'
 @Injectable()
 export class RelationshipService {
@@ -16,7 +16,7 @@ export class RelationshipService {
     ) {}
 
     public async find(opts?: IRelationship) {
-        return await this.relationshipRepo.find(opts ? opts : {})
+        return await this.relationshipRepo.findBy(opts ? opts : {})
     }
 
     public async findAll() {
@@ -24,13 +24,13 @@ export class RelationshipService {
     }
 
     public async findById(id: number) {
-        const result = await this.relationshipRepo.findOne(id)
+        const result = await this.relationshipRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return await this.relationshipRepo.findByIds(ids)
+        return await this.relationshipRepo.findBy({ id: In(ids) })
     }
 
     private async _mergeBodyToEntity(

@@ -6,7 +6,7 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { StaticCategoryEntity } from './staticCategory.entity'
 import { IStaticCategory } from 'src/interface/staticCategory.interface'
 import { CharacterService } from 'src/character/character.service'
@@ -30,7 +30,7 @@ export class StaticCategoryService {
     }
 
     public async find(name: string) {
-        return await this.categoryRepo.find({ name })
+        return await this.categoryRepo.findBy({ name })
     }
 
     public async findAll() {
@@ -38,13 +38,13 @@ export class StaticCategoryService {
     }
 
     public async findById(id: number) {
-        const result = await this.categoryRepo.findOne(id)
+        const result = await this.categoryRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return await this.categoryRepo.findByIds(ids)
+        return await this.categoryRepo.findBy({ id: In(ids) })
     }
 
     public async create(body: IStaticCategory) {

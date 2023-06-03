@@ -35,7 +35,7 @@ export class StoryService {
     }
 
     public async findById(id: number) {
-        const result = await this.storyRepo.findOne(id)
+        const result = await this.storyRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
@@ -187,7 +187,7 @@ export class StoryService {
     }
 
     public async hasName(name: string) {
-        const story = await this.storyRepo.findOne({ name })
+        const story = await this.storyRepo.findOneBy({ name })
         return !!story
     }
 }

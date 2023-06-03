@@ -18,10 +18,10 @@ import { config } from 'src/shared/config'
 import { ExpireMap } from 'src/shared/expire'
 import { clipImage, download } from 'src/shared/file'
 import { URL } from 'url'
-import { v4 as uuidv4 } from 'uuid'
-import fs, { createReadStream } from 'fs-extra'
+import fs from 'fs-extra'
 import { ErrorCodeException, ErrorCodes } from 'src/shared/errorCodes'
 import { AssetService } from 'src/asset/asset.service'
+import { generateLocalId } from 'src/shared/utilities'
 
 function getExt(file: Express.Multer.File) {
     let exts = file.mimetype.split('/')
@@ -34,7 +34,7 @@ const storage = multer.diskStorage({
         cb(null, config.static.temps)
     },
     filename: function (req, file, cb) {
-        cb(null, `${uuidv4()}.${getExt(file)}`)
+        cb(null, `${generateLocalId()}.${getExt(file)}`)
     },
 })
 
@@ -82,7 +82,11 @@ export class TempController {
         if (!base64) throw new PreconditionFailedException()
         const url = Buffer.from(base64, 'base64').toString()
         this.logger.log('Downloading the image:\n' + url)
-        const metadata = await download(url, uuidv4(), config.static.temps)
+        const metadata = await download(
+            url,
+            generateLocalId(),
+            config.static.temps
+        )
         this.logger.log('Successfully downloaded the image:\n' + url)
 
         let original_preview = new URL(metadata.name, config.URL.temps)

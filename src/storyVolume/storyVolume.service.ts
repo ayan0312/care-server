@@ -24,7 +24,7 @@ export class StoryVolumeService {
     ) {}
 
     public async findByStoryId(storyId: number) {
-        const volumes = await this.storyVolumeRepo.find({ storyId })
+        const volumes = await this.storyVolumeRepo.findBy({ storyId })
         const items: (StoryVolumeEntity & {
             chapters: StoryChapterEntity[]
         })[] = []
@@ -42,7 +42,7 @@ export class StoryVolumeService {
     }
 
     public async findById(id: number) {
-        const result = await this.storyVolumeRepo.findOne(id)
+        const result = await this.storyVolumeRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }

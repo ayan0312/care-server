@@ -35,7 +35,7 @@ export class AssetSetService implements OnModuleInit {
     }
 
     public async find(name: string) {
-        return await this.assetSetRepo.find({ name })
+        return await this.assetSetRepo.findBy({ name })
     }
 
     public async search(body: IAssetSetSearch) {
@@ -110,7 +110,7 @@ export class AssetSetService implements OnModuleInit {
     }
 
     public async findById(id: number) {
-        const result = await this.assetSetRepo.findOne(id)
+        const result = await this.assetSetRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
@@ -183,9 +183,11 @@ export class AssetSetService implements OnModuleInit {
     }
 
     public async hasName(name: string, char: CharacterEntity) {
-        const assetSet = await this.assetSetRepo.findOne({
+        const assetSet = await this.assetSetRepo.findOneBy({
             name,
-            character: char,
+            character: {
+                id: char.id,
+            },
         })
         return !!assetSet
     }

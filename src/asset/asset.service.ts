@@ -1,5 +1,5 @@
 import path from 'path'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
@@ -57,21 +57,19 @@ export class AssetService {
         relations: string[] = [],
         patch: boolean = false
     ) {
-        const result = await this.assetRepo.findOne(
-            id,
-            relations
-                ? {
-                      relations,
-                  }
-                : {}
-        )
+        const result = await this.assetRepo.findOne({
+            where: {
+                id,
+            },
+            relations: relations,
+        })
         if (!result) throw new NotFoundException()
-        if (patch) return this._patchAssetResult(result, true)
+        if (patch) return this._patchAssetResult(result)
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return this.assetRepo.findByIds(ids)
+        return this.assetRepo.findBy({ id: In(ids) })
     }
 
     public async *generator(relations?: string[]) {
@@ -102,8 +100,10 @@ export class AssetService {
     public async removeAllUnstarAssets(recycle = false) {
         if (recycle) {
             const results = await this.assetRepo.find({
-                recycle,
-                star: false,
+                where: {
+                    recycle,
+                    star: false,
+                },
             })
             await forEachAsync(results, async (asset) => {
                 await this.delete(asset)
@@ -252,7 +252,7 @@ export class AssetService {
         })
     }
 
-    private async _patchAssetResult(entity: AssetEntity, allFilenames = false) {
+    private async _patchAssetResult(entity: AssetEntity) {
         if (entity.groupIds)
             Object.assign(
                 entity,
@@ -266,6 +266,15 @@ export class AssetService {
                     parseIds(entity.tagIds)
                 )
             )
+
+        switch (entity.assetType) {
+            case AssetType.file:
+                Object.assign(entity, {
+                    thumb: entity.path,
+                })
+            case AssetType.files:
+                break
+        }
 
         return entity
     }

@@ -5,7 +5,7 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { TagEntity } from './tag.entity'
 import { CategoryEntity } from 'src/category/category.entity'
 import { CategoryService } from 'src/category/category.service'
@@ -39,26 +39,27 @@ export class TagService {
     }
 
     public async find(query: ITag) {
-        const opts: { name?: string; category?: CategoryEntity } = {}
-
-        if (query.name) opts.name = query.name
-
-        if (query.categoryId)
-            opts.category = await this.categoryService.findById(
-                query.categoryId
-            )
-
-        return await this.tagRepo.find(opts)
+        return await this.tagRepo.find({
+            relations: {
+                category: true,
+            },
+            where: {
+                name: query.name,
+                category: { id: query.categoryId },
+            },
+        })
     }
 
     public async findById(id: number) {
-        const result = await this.tagRepo.findOne(id)
+        const result = await this.tagRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return await this.tagRepo.findByIds(ids)
+        return await this.tagRepo.findBy({
+            id: In(ids),
+        })
     }
 
     public async matchByIds(ids: number[], type: CategoryType) {
@@ -83,7 +84,8 @@ export class TagService {
     }
 
     public async findRelationsByIds(ids: number[]) {
-        return await this.tagRepo.findByIds(ids, {
+        return await this.tagRepo.find({
+            where: { id: In(ids) },
             relations: ['category'],
         })
     }
@@ -147,14 +149,19 @@ export class TagService {
     }
 
     public async hasName(category: CategoryEntity, name: string) {
-        const tag = await this.tagRepo.findOne({ category, name })
+        const tag = await this.tagRepo.findOne({
+            where: {
+                name,
+                category: {
+                    id: category.id,
+                },
+            },
+        })
         return !!tag
     }
 
     public async tranformCategoryRelationByIds(ids: number[]) {
-        let tags: TagEntity[] = await this.tagRepo.findByIds(ids, {
-            relations: ['category'],
-        })
+        let tags: TagEntity[] = await this.findRelationsByIds(ids)
 
         const map: Record<number, CategoryEntity & { tags: TagEntity[] }> = {}
 

@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import {
     ConflictException,
     Injectable,
@@ -17,7 +17,7 @@ export class CharacterGroupService {
     ) {}
 
     public async find(name: string) {
-        return await this.groupRepo.find({ name })
+        return await this.groupRepo.findBy({ name })
     }
 
     public async findAll() {
@@ -25,13 +25,13 @@ export class CharacterGroupService {
     }
 
     public async findById(id: number) {
-        const result = await this.groupRepo.findOne(id)
+        const result = await this.groupRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByIds(ids: number[]) {
-        return await this.groupRepo.findByIds(ids)
+        return await this.groupRepo.findBy({ id: In(ids) })
     }
 
     public async create(body: IStarName) {
@@ -61,7 +61,7 @@ export class CharacterGroupService {
     }
 
     public async hasName(name: string) {
-        const group = await this.groupRepo.findOne({ name })
+        const group = await this.groupRepo.findOneBy({ name })
         return !!group
     }
 }

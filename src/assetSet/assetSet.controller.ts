@@ -10,7 +10,6 @@ import {
     Patch,
     Query,
     HttpCode,
-    DefaultValuePipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IStarName } from 'src/interface/name.interface'

@@ -21,21 +21,21 @@ export class CharactershipService {
     ) {}
 
     public async findById(id: number) {
-        const result = await this.charshipRepo.findOne(id)
+        const result = await this.charshipRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
 
     public async findByRelatId(id: number) {
-        return await this.charshipRepo.find({ relationshipId: id })
+        return await this.charshipRepo.findBy({ relationshipId: id })
     }
 
     public async findByCharId(id: number) {
         const chars: CharactershipEntity[] = []
         return chars
             .concat(
-                await this.charshipRepo.find({ selfId: id }),
-                await this.charshipRepo.find({
+                await this.charshipRepo.findBy({ selfId: id }),
+                await this.charshipRepo.findBy({
                     targetId: id,
                 })
             )

@@ -10,8 +10,6 @@ import {
     Patch,
     Query,
     HttpCode,
-    DefaultValuePipe,
-    BadRequestException,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { CategoryType, ICategory } from 'src/interface/category.interface'

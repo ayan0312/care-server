@@ -11,6 +11,7 @@ export class AssetEntity extends StarNameEntity {
     @Length(0, 1000)
     public intro: string = ''
 
+    // deprecated
     @Column({ default: '' })
     @Length(0, 255)
     public remark: string = ''
@@ -27,6 +28,7 @@ export class AssetEntity extends StarNameEntity {
     @Column({ default: '' })
     public tagIds: string = ''
 
+    // deprecated
     @Column({ default: '' })
     public groupIds: string = ''
 
@@ -36,6 +38,7 @@ export class AssetEntity extends StarNameEntity {
     @Column({ default: '' })
     public extensionIds: string = ''
 
+    // deprecated
     @ManyToMany(
         (type) => CharacterAssetSetEntity,
         (assetSet) => assetSet.assets

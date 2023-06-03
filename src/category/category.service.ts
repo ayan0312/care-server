@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { CategoryType, ICategory } from 'src/interface/category.interface'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { TagEntity } from 'src/tag/tag.entity'
 import { CategoryEntity } from './category.entity'
 import { throwValidatedErrors } from 'src/shared/utilities'
@@ -20,7 +20,7 @@ export class CategoryService {
     ) {}
 
     public async find(opts: { name?: string; type: CategoryType }) {
-        return await this.categoryRepo.find(opts)
+        return await this.categoryRepo.findBy(opts)
     }
 
     public async findAll() {
@@ -28,7 +28,7 @@ export class CategoryService {
     }
 
     public async findById(id: number) {
-        const result = await this.categoryRepo.findOne(id)
+        const result = await this.categoryRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
         return result
     }
@@ -50,7 +50,8 @@ export class CategoryService {
     }
 
     public async findRelationsByIds(ids: number[]) {
-        return await this.categoryRepo.findByIds(ids, {
+        return await this.categoryRepo.find({
+            where: { id: In(ids) },
             relations: ['tags'],
         })
     }

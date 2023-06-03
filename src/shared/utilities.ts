@@ -1,6 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { validate, ValidatorOptions } from 'class-validator'
-import { SelectQueryBuilder } from 'typeorm'
+import { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
+
+let id = 0
+export function generateLocalId() {
+    return `${Date.now()}_${++id}`
+}
 
 export const delUndefKey = <T extends Record<string, any>>(obj: T): T => {
     for (let key in obj) if (obj[key] == null) delete obj[key]
@@ -49,7 +54,7 @@ export async function throwValidatedErrors(
         throw new HttpException({ errors }, HttpStatus.BAD_REQUEST)
 }
 
-export function patchQBIds<Entity>(
+export function patchQBIds<Entity extends ObjectLiteral>(
     qb: SelectQueryBuilder<Entity>,
     ids: string,
     property: string,
@@ -67,7 +72,7 @@ export function patchQBIds<Entity>(
     return qb
 }
 
-export function queryQBIds<Entity>(
+export function queryQBIds<Entity extends ObjectLiteral>(
     qb: SelectQueryBuilder<Entity>,
     ids: string,
     property: string,
@@ -90,7 +95,7 @@ export function queryQBIds<Entity>(
     return qb
 }
 
-export function queryQBIdsForIdMap<Entity>(
+export function queryQBIdsForIdMap<Entity extends ObjectLiteral>(
     qb: SelectQueryBuilder<Entity>,
     ids: string,
     property: string
