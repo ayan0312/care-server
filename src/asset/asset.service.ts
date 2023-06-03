@@ -32,11 +32,9 @@ import {
     queryQBIds,
     throwValidatedErrors,
 } from 'src/shared/utilities'
-import { AssetGroupService } from 'src/assetGroup/assetGroup.service'
 import { CharacterService } from 'src/character/character.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
-import { AssetSetService } from 'src/assetSet/assetSet.service'
 
 import { AssetEntity } from './asset.entity'
 
@@ -46,9 +44,7 @@ export class AssetService {
         @InjectRepository(AssetEntity)
         private readonly assetRepo: Repository<AssetEntity>,
         private readonly tagService: TagService,
-        private readonly charService: CharacterService,
-        private readonly groupService: AssetGroupService,
-        private readonly assetSetService: AssetSetService
+        private readonly charService: CharacterService
     ) {}
 
     private _nameId = 0
@@ -184,26 +180,13 @@ export class AssetService {
                 'asset.tagIds',
                 condition?.reverse?.tagIds
             )
-        if (condition.groupIds)
-            qb = queryQBIds(qb, condition.groupIds, 'asset.groupIds')
         if (condition.characterIds)
             qb = queryQBIds(qb, condition.characterIds, 'asset.characterIds')
-        if (condition.assetSetIds)
-            qb = patchQBIds(
-                qb,
-                condition.assetSetIds,
-                'asset.assetSets',
-                'assetSet'
-            )
         if (condition.star != null)
             qb = qb.andWhere('asset.star = :star', { star: !!condition.star })
         if (condition.intro != null)
             qb = qb.andWhere('asset.intro like :intro', {
                 intro: `%${condition.intro}%`,
-            })
-        if (condition.remark != null)
-            qb = qb.andWhere('asset.remark like :remark', {
-                remark: `%${condition.remark}%`,
             })
         if (condition.rating != null)
             qb = qb.andWhere('asset.rating = :rating', {
@@ -255,12 +238,6 @@ export class AssetService {
     }
 
     private async _patchAssetResult(entity: AssetEntity, thumb = false) {
-        if (entity.groupIds)
-            Object.assign(
-                entity,
-                await this.groupService.findByIds(parseIds(entity.groupIds))
-            )
-
         if (entity.tagIds)
             Object.assign(
                 entity,
@@ -307,9 +284,7 @@ export class AssetService {
         mergeObjectToEntity(target, body, [
             'tagIds',
             'folder',
-            'groupIds',
             'filenames',
-            'assetSetIds',
             'characterIds',
         ])
 
@@ -324,12 +299,6 @@ export class AssetService {
                     )
                 ).map((tag) => tag.id)
             )
-        if (body.groupIds != null)
-            target.groupIds = createQueryIds(
-                (
-                    await this.groupService.findByIds(parseIds(body.groupIds))
-                ).map((group) => group.id)
-            )
         if (body.characterIds != null)
             target.characterIds = createQueryIds(
                 (
@@ -337,10 +306,6 @@ export class AssetService {
                         parseIds(body.characterIds)
                     )
                 ).map((char) => char.id)
-            )
-        if (body.assetSetIds != null)
-            target.assetSets = await this.assetSetService.findByIds(
-                parseIds(body.assetSetIds)
             )
 
         return target

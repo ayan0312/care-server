@@ -93,10 +93,6 @@ export class StoryChapterService {
             qb = qb.where('chapter.name like :name', {
                 name: `%${condition.name}%`,
             })
-        if (condition.remark != null)
-            qb = qb.where('chapter.remark like :remark', {
-                remark: `%${condition.remark}%`,
-            })
         if (condition.content != null)
             qb = qb.andWhere('chapter.content like :content', {
                 content: `%${condition.content}%`,
@@ -157,7 +153,6 @@ export class StoryChapterService {
         const chapter = await this.findById(id)
         return await this.create({
             name: chapter.name,
-            remark: chapter.remark,
             storyId: body.storyId,
             content: chapter.content,
             assetIds: chapter.assetIds,

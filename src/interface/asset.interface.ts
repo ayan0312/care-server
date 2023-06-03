@@ -9,13 +9,10 @@ export const enum AssetType {
 
 export interface IAsset extends IStarName {
     intro?: string
-    remark?: string
     tagIds?: string
     recycle?: boolean
-    groupIds?: string
     assetType?: AssetType
     filenames?: string[]
-    assetSetIds?: string
     characterIds?: string
     folder?: string
 }
@@ -23,12 +20,9 @@ export interface IAsset extends IStarName {
 export interface IAssetSearchCondition extends IStarName {
     name?: string
     intro?: string
-    remark?: string
     tagIds?: string
     recycle?: boolean
-    groupIds?: string
     assetType?: AssetType
-    assetSetIds?: string
     characterIds?: string
     reverse?: Record<string, boolean>
 }

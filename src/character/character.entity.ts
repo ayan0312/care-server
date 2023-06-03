@@ -2,7 +2,6 @@ import { Column, Entity, OneToMany } from 'typeorm'
 import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
-import { CharacterAssetSetEntity } from '../assetSet/assetSet.entity'
 import { ICharacterStaticCategory } from 'src/interface/character.interface'
 
 @Entity('character')
@@ -19,10 +18,6 @@ export class CharacterEntity extends StarNameEntity {
     @Length(0, 100)
     public avatar: string = ''
 
-    @Column({ default: '' })
-    @Length(0, 255)
-    public remark: string = ''
-
     @Column({ default: false })
     public recycle: boolean = false
 
@@ -38,15 +33,6 @@ export class CharacterEntity extends StarNameEntity {
 
     @Column({ default: '' })
     public tagIds: string = ''
-
-    @Column({ default: '' })
-    public groupIds: string = ''
-
-    @OneToMany(
-        (type) => CharacterAssetSetEntity,
-        (assetSet) => assetSet.character
-    )
-    public assetSets: CharacterAssetSetEntity[]
 }
 
 @Entity('character_relationship')

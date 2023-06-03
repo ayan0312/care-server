@@ -1,13 +1,8 @@
 import { Column, Entity } from 'typeorm'
 import { StarNameEntity } from 'src/shared/name/starName.entity'
-import { Length } from 'class-validator'
 
 @Entity('storyChapter')
 export class StoryChapterEntity extends StarNameEntity {
-    @Column({ default: '' })
-    @Length(0, 1024)
-    public remark: string = ''
-
     @Column()
     public storyId: number
 

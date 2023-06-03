@@ -2,7 +2,6 @@ import { IStarName } from './name.interface'
 import { ISearch } from './search.interface'
 
 export interface IStoryChapter extends IStarName {
-    remark?: string
     storyId?: number
     content?: string
     recycle?: boolean

@@ -10,10 +10,7 @@ import { TempModule } from './temp/temp.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { AssetModule } from './asset/asset.module'
 import { CategoryModule } from './category/category.module'
-import { AssetSetModule } from './assetSet/assetSet.module'
 import { TagModule } from './tag/tag.module'
-import { AssetGroupModule } from './assetGroup/assetGroup.module'
-import { CharacterGroupModule } from './characterGroup/characterGroup.module'
 import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { CharactershipModule } from './charactership/charactership.module'
@@ -42,15 +39,12 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
         TempModule,
         AssetModule,
         StoryModule,
-        AssetSetModule,
         CategoryModule,
         CharacterModule,
-        AssetGroupModule,
         StoryVolumeModule,
         StoryChapterModule,
         RelationshipModule,
         CharactershipModule,
-        CharacterGroupModule,
         StaticCategoryModule,
     ],
     controllers: [AppController],

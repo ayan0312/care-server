@@ -34,7 +34,6 @@ import {
     throwValidatedErrors,
 } from 'src/shared/utilities'
 import { CharacterEntity } from 'src/character/character.entity'
-import { CharacterGroupService } from 'src/characterGroup/characterGroup.service'
 import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { AssetService } from 'src/asset/asset.service'
@@ -46,7 +45,6 @@ export class CharacterService {
         @InjectRepository(CharacterEntity)
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
-        private readonly groupService: CharacterGroupService,
         private readonly staticCategoryService: StaticCategoryService,
         private readonly moduleRef: ModuleRef
     ) {}
@@ -120,8 +118,6 @@ export class CharacterService {
             })
         if (condition.tagIds)
             qb = queryQBIds(qb, condition.tagIds, 'character.tagIds')
-        if (condition.groupIds)
-            qb = queryQBIds(qb, condition.groupIds, 'character.groupIds')
         if (condition.staticCategoryIds != null)
             qb = queryQBIdsForIdMap(
                 qb,
@@ -135,10 +131,6 @@ export class CharacterService {
         if (condition.intro != null)
             qb = qb.andWhere('character.intro like :intro', {
                 intro: `%${condition.intro}%`,
-            })
-        if (condition.remark != null)
-            qb = qb.andWhere('character.remark like :remark', {
-                remark: `%${condition.remark}%`,
             })
         if (condition.rating != null)
             qb = qb.andWhere('character.rating = :rating', {
@@ -224,19 +216,9 @@ export class CharacterService {
             this._createXSmall(entity.avatar, entity.fullLengthPicture),
             {
                 patchedStaticCategories,
-                groups: [],
                 relationships: [],
             }
         )
-
-        if (entity.groupIds) {
-            const groups = await this.groupService.findByIds(
-                parseIds(entity.groupIds)
-            )
-            Object.assign(result, {
-                groups,
-            })
-        }
 
         return result
     }
@@ -324,7 +306,6 @@ export class CharacterService {
         mergeObjectToEntity(target, body, [
             'tagIds',
             'avatar',
-            'groupIds',
             'fullLengthPicture',
         ])
         if (body.tagIds != null)
@@ -335,12 +316,6 @@ export class CharacterService {
                         CategoryType.character
                     )
                 ).map((tag) => tag.id)
-            )
-        if (body.groupIds != null)
-            target.groupIds = createQueryIds(
-                (
-                    await this.groupService.findByIds(parseIds(body.groupIds))
-                ).map((group) => group.id)
             )
         if (body.avatar) {
             if (target.avatar) await this.removeAvatar(target.avatar)
@@ -358,7 +333,7 @@ export class CharacterService {
 
     public async save(body: ICharacter) {
         const char = new CharacterEntity()
-        mergeObjectToEntity(char, body, ['tagIds', 'groupIds'])
+        mergeObjectToEntity(char, body, ['tagIds'])
         if (body.tagIds != null)
             char.tagIds = createQueryIds(
                 (
@@ -367,12 +342,6 @@ export class CharacterService {
                         CategoryType.character
                     )
                 ).map((tag) => tag.id)
-            )
-        if (body.groupIds != null)
-            char.groupIds = createQueryIds(
-                (
-                    await this.groupService.findByIds(parseIds(body.groupIds))
-                ).map((group) => group.id)
             )
 
         await throwValidatedErrors(char)

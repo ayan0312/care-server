@@ -8,12 +8,9 @@ export interface ICharacterStaticCategory {
 export interface ICharacter extends IStarName {
     intro?: string
     avatar?: string
-    remark?: string
     tagIds?: string
     recycle?: boolean
     template?: boolean
-    groupIds?: string
-    assetSetIds?: string
     relationships?: string[]
     staticCategories?: ICharacterStaticCategory
     fullLengthPicture?: string
@@ -21,12 +18,9 @@ export interface ICharacter extends IStarName {
 
 export interface ICharacterSearchCondition extends IStarName {
     intro?: string
-    remark?: string
     tagIds?: string
     recycle?: boolean
     template?: boolean
-    groupIds?: string
-    assetSetIds?: string
     staticCategoryIds?: string
 }
 
