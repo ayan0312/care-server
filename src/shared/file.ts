@@ -315,6 +315,17 @@ function isClippableAsset(filename: string) {
     return false
 }
 
+export function onWriteStreamFinish(writeStream: fs.WriteStream) {
+    return new Promise((resolve: (value: void) => void, reject) => {
+        writeStream.on('finish', () => {
+            resolve()
+        })
+        writeStream.on('error', (err) => {
+            reject(err)
+        })
+    })
+}
+
 export async function createAssetThumbStream(
     filename: string,
     maxWidth = config.thumb.maxWidth,

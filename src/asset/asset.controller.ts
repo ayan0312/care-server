@@ -22,6 +22,7 @@ import { AssetService } from './asset.service'
 import {
     createAssetThumbStream,
     getClippableContentType,
+    onWriteStreamFinish,
 } from 'src/shared/file'
 import { createReadStream } from 'fs'
 import { Response } from 'express'
@@ -58,9 +59,14 @@ export class AssetController {
             res.set({
                 'Content-Type': getClippableContentType(filename),
             })
+
+            await onWriteStreamFinish(stream.writeStream)
+
             return {
                 origin: true,
-                result: new StreamableFile(stream.readStream),
+                result: new StreamableFile(
+                    createReadStream(stream.writeStream.path)
+                ),
             }
         }
         throw 'Failed to create file stream.'
