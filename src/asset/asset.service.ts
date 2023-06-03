@@ -12,6 +12,7 @@ import {
 import { config } from 'src/shared/config'
 import {
     autoMkdirSync,
+    getAssetThumbs,
     readDirSync,
     rmDirSync,
     rmSync,
@@ -64,7 +65,7 @@ export class AssetService {
             relations: relations,
         })
         if (!result) throw new NotFoundException()
-        if (patch) return this._patchAssetResult(result)
+        if (patch) return this._patchAssetResult(result, true)
         return result
     }
 
@@ -252,7 +253,7 @@ export class AssetService {
         })
     }
 
-    private async _patchAssetResult(entity: AssetEntity) {
+    private async _patchAssetResult(entity: AssetEntity, thumb = false) {
         if (entity.groupIds)
             Object.assign(
                 entity,
@@ -267,16 +268,22 @@ export class AssetService {
                 )
             )
 
-        switch (entity.assetType) {
-            case AssetType.file:
-                Object.assign(entity, {
-                    thumb: entity.path,
-                })
-            case AssetType.files:
-                break
+        if (entity.path) {
+            const thumbs = await this.getAssetThumbs(entity.id)
+            Object.assign(entity, {
+                total: thumbs.length,
+                thumbs: thumb ? thumbs : thumbs.splice(0, 3),
+            })
         }
 
         return entity
+    }
+
+    public async getAssetThumbs(id: number) {
+        const asset = await this.findById(id)
+        return getAssetThumbs(asset.path, (origin) => {
+            return `/api/assets/thumb?filename=${origin}`
+        })
     }
 
     private async _initAssets(target: AssetEntity, body: IAsset) {

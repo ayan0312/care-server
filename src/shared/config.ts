@@ -5,9 +5,12 @@ const DEFAULT = {
     ip: '192.168.3.6',
     port: 3000,
     storage: 'D:/storage',
+    thumb: {
+        maxWidth: 600,
+    },
 }
 
-function createPaths(root: string) {
+export function createStaticPaths(root: string) {
     return {
         bin: root + 'bin/',
         temps: root + 'temps/',
@@ -23,11 +26,12 @@ function createPaths(root: string) {
 export const config = {
     ...DEFAULT,
     database: path.join(DEFAULT.storage, 'database', 't.db'),
+    api: `http://${DEFAULT.ip}:${DEFAULT.port}/api/`,
     URL: {
-        ...createPaths(`http://${DEFAULT.ip}:${DEFAULT.port}/static/`),
+        ...createStaticPaths(`http://${DEFAULT.ip}:${DEFAULT.port}/static/`),
     },
     static: {
-        ...createPaths(path.join(DEFAULT.storage, 'static/')),
+        ...createStaticPaths(DEFAULT.storage + '/static/'),
     },
 }
 

@@ -13,6 +13,8 @@ export class ResponseInterceptor implements NestInterceptor {
             map((result) => {
                 if (result?.HTML) return result.HTML
 
+                if (result?.origin) return result.result
+
                 return {
                     code: 0,
                     result: Array.isArray(result)

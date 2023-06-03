@@ -6,7 +6,7 @@ import { URL } from 'url'
 import { pipeline } from 'stream'
 import { IncomingMessage } from 'http'
 import { fromStream } from 'file-type'
-import { config } from './config'
+import { config, createStaticPaths } from './config'
 import { forEachAsync } from './utilities'
 
 export interface FileMetadata {
@@ -71,11 +71,15 @@ export function download(
     })
 }
 
-function copyFile(oldPath: string, newPath: string): Promise<void> {
+function copyFileStream(oldPath: string, newPath: string) {
     let readStream = fs.createReadStream(oldPath)
     let writeStream = fs.createWriteStream(newPath)
     readStream.pipe(writeStream)
+    return { readStream, writeStream }
+}
 
+function copyFile(oldPath: string, newPath: string): Promise<void> {
+    const { readStream, writeStream } = copyFileStream(oldPath, newPath)
     return new Promise((resolve, reject) => {
         readStream.on('error', (err) => {
             reject(err)
@@ -155,7 +159,9 @@ export function isFileSync(filename: string) {
 }
 
 export function readDirSync(dir: string) {
-    return fs.readdirSync(dir)
+    return fs
+        .readdirSync(dir)
+        .filter((filename) => isFileSync(path.join(dir, filename)))
 }
 
 export function sortFilenames(filenames: string[]) {
@@ -195,16 +201,25 @@ export async function getImageSize(filename: string) {
     })
 }
 
+async function checkMaxSize(
+    filename: string,
+    maxWidth: number,
+    maxHeight?: number
+) {
+    const size = await getImageSize(filename)
+    if (size.width < maxWidth) return false
+    if (maxHeight && size.height < maxHeight) return false
+    return true
+}
+
 export async function clipImage(
     origin: string,
     target: string,
     maxWidth: number,
     maxHeight?: number
 ) {
-    const size = await getImageSize(origin)
-    if (size.width < maxWidth) return false
-    if (maxHeight && size.height < maxHeight) return false
-    return new Promise((resolve: (d: true) => void, reject) => {
+    if (!(await checkMaxSize(origin, maxWidth, maxHeight))) return false
+    return new Promise((resolve: (value: boolean) => void, reject) => {
         gm(origin)
             .resize(maxWidth, maxHeight)
             .write(target, (err) => {
@@ -217,32 +232,111 @@ export async function clipImage(
     })
 }
 
-export async function createAssetThumbStream(
-    filename: string,
-    maxWidth = 500,
-    maxHeight?: number
-) {
-    const file = fs.createReadStream(filename)
+function getAssetPath(filename: string) {
+    return {
+        origin: path.join(config.static.assets, filename),
+        target: path.join(config.static.asset_thumbs, filename),
+    }
 }
 
-export async function createAssetThumb(
-    filename: string,
-    maxWidth = 500,
+export async function clipImageStream(
+    origin: string,
+    target: string,
+    maxWidth: number,
     maxHeight?: number
 ) {
+    if (!(await checkMaxSize(origin, maxWidth, maxHeight))) return null
+    const readStream = fs.createReadStream(origin)
+    const writeStream = fs.createWriteStream(target)
+    gm(readStream).resize(maxWidth, maxHeight).stream().pipe(writeStream)
+    return { readStream, writeStream }
+}
+
+export function getAssetThumbs(
+    filename: string,
+    createThumbStreamURL: (origin: string) => string
+) {
+    const { origin, target } = getAssetPath(filename)
+    const relativePaths = createStaticPaths('/static/')
+
+    if (isFileSync(origin)) {
+        if (isFileSync(target)) return [relativePaths.asset_thumbs + filename]
+        return [relativePaths.assets + filename]
+    }
+
+    // 1.jpg 2.gif 3.jpg
+    const assetFilenames = sortFilenames(readDirSync(origin))
+    // 1.jpg
+    const thumbFilenames = sortFilenames(readDirSync(target))
+
+    const arr: {
+        asset: string
+        thumb?: string
+    }[] = []
+
+    assetFilenames.forEach((assetFilename, index) => {
+        arr[index] = {
+            asset: `${filename}/${assetFilename}`,
+        }
+    })
+
+    thumbFilenames.forEach((thumbFilename) => {
+        const index = Number(getPrefix(thumbFilename)) - 1
+        arr[index].thumb = `${filename}/${thumbFilename}`
+    })
+
+    return arr.map((item) => {
+        if (item.thumb) return relativePaths.asset_thumbs + item.thumb
+        if (!isClippableAsset(item.asset) || !createThumbStreamURL)
+            return relativePaths.assets + item.asset
+        return createThumbStreamURL(item.asset)
+    })
+}
+
+export function getClippableContentType(filename: string) {
+    switch (getExt(filename)) {
+        case 'png':
+            return 'image/png'
+        case 'bmp':
+            return 'image/bmp'
+        case 'jpeg':
+            return 'image/jpeg'
+    }
+    return ''
+}
+
+function isClippableAsset(filename: string) {
     switch (getExt(filename)) {
         case 'png':
         case 'bmp':
         case 'jpeg':
-            if (!isFileSync(filename))
-                await clipImage(
-                    path.join(config.static.assets, filename),
-                    path.join(config.static.asset_thumbs, filename),
-                    maxWidth,
-                    maxHeight
-                )
-            break
+            return true
     }
+    return false
+}
+
+export async function createAssetThumbStream(
+    filename: string,
+    maxWidth = config.thumb.maxWidth,
+    maxHeight?: number
+) {
+    const { origin, target } = getAssetPath(filename)
+    if (!isFileSync(origin) || !isClippableAsset(filename)) return
+    const stream = await clipImageStream(origin, target, maxWidth, maxHeight)
+    if (stream) return stream
+    return copyFileStream(origin, target)
+}
+
+export async function createAssetThumb(
+    filename: string,
+    maxWidth = config.thumb.maxWidth,
+    maxHeight?: number
+) {
+    const { origin, target } = getAssetPath(filename)
+    if (!isFileSync(origin) || !isClippableAsset(filename)) return
+    const clipped = await clipImage(origin, target, maxWidth, maxHeight)
+    if (clipped) return
+    await copyFile(origin, target)
 }
 
 export async function saveFiles(
@@ -259,7 +353,7 @@ export async function saveFiles(
             originalFilename,
             rename
         )
-        await createAssetThumb(metadata.name, 500)
+        await createAssetThumb(metadata.name)
         return metadata.name
     }
 

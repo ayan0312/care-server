@@ -13,12 +13,18 @@ import {
     ParseArrayPipe,
     DefaultValuePipe,
     ParseBoolPipe,
+    StreamableFile,
+    Res,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IAsset } from 'src/interface/asset.interface'
 import { AssetService } from './asset.service'
+import {
+    createAssetThumbStream,
+    getClippableContentType,
+} from 'src/shared/file'
 import { createReadStream } from 'fs'
-import { config } from 'src/shared/config'
+import { Response } from 'express'
 
 @ApiTags('assets')
 @Controller('assets')
@@ -39,6 +45,25 @@ export class AssetController {
             )
         }
         return await this.assetService.search(JSON.parse(options))
+    }
+
+    @Get('thumb')
+    public async getAssetThumb(
+        @Res({ passthrough: true }) res: Response,
+        @Query('filename') filename?: string
+    ) {
+        if (!filename) throw 'Please provide the filename.'
+        const stream = await createAssetThumbStream(filename)
+        if (stream) {
+            res.set({
+                'Content-Type': getClippableContentType(filename),
+            })
+            return {
+                origin: true,
+                result: new StreamableFile(stream.readStream),
+            }
+        }
+        throw 'Failed to create file stream.'
     }
 
     @Post()
@@ -91,15 +116,6 @@ export class AssetController {
         recycle: boolean
     ) {
         return await this.assetService.removeAllUnstarAssets(recycle)
-    }
-
-    @Get('thumb/:id')
-    getAssetThumb(
-        @Param('id', new ParseIntPipe()) id: number,
-        @Query('index', new DefaultValuePipe('')) index = 0
-    ) {
-        const file = createReadStream(config.static.assets)
-        // return new StreamableFile(file)
     }
 
     @Get(':id')
