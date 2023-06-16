@@ -19,6 +19,7 @@ import {
 import { config } from 'src/shared/config'
 import {
     FileMetadata,
+    getImageSize,
     getPrefix,
     readDirSync,
     rmSync,
@@ -272,9 +273,16 @@ export class CharacterService {
     }
 
     private async _saveFullLengthPicture300(metadata: FileMetadata) {
+        const size = await getImageSize(metadata.filename)
+        let maxWidth = 400,
+            maxHeight = 700
+        if (size.width > size.height) {
+            maxWidth = 700
+            maxHeight = 400
+        }
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
-                .resize(300, 600)
+                .resize(maxWidth, maxHeight)
                 .write(
                     path.join(config.static.fullbody_thumbs, metadata.name),
                     (err) => {

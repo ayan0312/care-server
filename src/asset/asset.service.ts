@@ -1,5 +1,5 @@
 import path from 'path'
-import { In, Repository } from 'typeorm'
+import { In, Repository, SelectQueryBuilder } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
@@ -199,7 +199,6 @@ export class AssetService {
 
         return qb
     }
-
     public async search(body: IAssetSearch) {
         const {
             condition = { name: '' },
@@ -238,13 +237,14 @@ export class AssetService {
     }
 
     private async _patchAssetResult(entity: AssetEntity, thumb = false) {
-        if (entity.tagIds)
-            Object.assign(
-                entity,
-                await this.tagService.findRelationsByIds(
-                    parseIds(entity.tagIds)
-                )
+        Object.assign(entity, { tags: [] })
+        if (entity.tagIds) {
+            const tags = await this.tagService.findRelationsByIds(
+                parseIds(entity.tagIds)
             )
+
+            Object.assign(entity, { tags })
+        }
 
         if (entity.path) {
             const thumbs = await this.getAssetThumbs(entity.id)
@@ -252,6 +252,15 @@ export class AssetService {
                 total: thumbs.length,
                 thumbs: thumb ? thumbs : thumbs.splice(0, 3),
             })
+        }
+
+        Object.assign(entity, { chars: [] })
+        if (entity.characterIds) {
+            const chars = await this.charService.findByIds(
+                parseIds(entity.characterIds),
+                true
+            )
+            Object.assign(entity, { chars })
         }
 
         return entity

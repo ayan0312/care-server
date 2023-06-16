@@ -24,6 +24,7 @@ export interface IAssetSearchCondition extends IStarName {
     recycle?: boolean
     assetType?: AssetType
     characterIds?: string
+    relation?: boolean
     reverse?: Record<string, boolean>
 }
 
