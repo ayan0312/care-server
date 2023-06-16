@@ -48,6 +48,13 @@ export class CharacterController {
         return await this.charService.deleteExtraAssets()
     }
 
+    @Patch()
+    public async updateByIds(
+        @Body() body: { ids: number[]; char: ICharacter }
+    ) {
+        return 'Not Implemented'
+    }
+
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,

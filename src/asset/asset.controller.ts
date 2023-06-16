@@ -26,6 +26,7 @@ import {
 } from 'src/shared/file'
 import { createReadStream } from 'fs'
 import { Response } from 'express'
+import { parseIds } from 'src/shared/utilities'
 
 @ApiTags('assets')
 @Controller('assets')
@@ -88,12 +89,8 @@ export class AssetController {
     }
 
     @Patch()
-    public async updateByIds(
-        @Query('ids', new ParseArrayPipe({ items: Number, separator: ',' }))
-        ids: number[],
-        @Body() body: IAsset
-    ) {
-        return await this.assetService.updateByIds(ids, body)
+    public async updateByIds(@Body() body: { ids: number[]; asset: IAsset }) {
+        return await this.assetService.updateByIds(body.ids, body.asset)
     }
 
     @Delete()
@@ -103,25 +100,17 @@ export class AssetController {
             new DefaultValuePipe(''),
             new ParseArrayPipe({ items: Number, separator: ',' })
         )
-        ids: number[],
-        @Query('unstar', new DefaultValuePipe(false), new ParseBoolPipe())
-        unstar: boolean,
-        @Query('recycle', new DefaultValuePipe(false), new ParseBoolPipe())
-        recycle: boolean
+        ids: number[]
     ) {
-        if (unstar) {
-            await this.assetService.removeAllUnstarAssets(recycle)
-            return ''
-        }
         return await this.assetService.deleteByIds(ids)
     }
 
     @Delete('/unstar')
-    public async deleteAllUnstars(
+    public async deleteUnstars(
         @Query('recycle', new DefaultValuePipe(false), new ParseBoolPipe())
         recycle: boolean
     ) {
-        return await this.assetService.removeAllUnstarAssets(recycle)
+        return await this.assetService.removeUnstarAssets(recycle)
     }
 
     @Get(':id')

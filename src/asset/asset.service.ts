@@ -1,5 +1,5 @@
 import path from 'path'
-import { In, Repository, SelectQueryBuilder } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
@@ -28,7 +28,6 @@ import {
     formatDate,
     mergeObjectToEntity,
     parseIds,
-    patchQBIds,
     queryQBIds,
     throwValidatedErrors,
 } from 'src/shared/utilities'
@@ -95,7 +94,7 @@ export class AssetService {
         }
     }
 
-    public async removeAllUnstarAssets(recycle = false) {
+    public async removeUnstarAssets(recycle = false) {
         if (recycle) {
             const results = await this.assetRepo.find({
                 where: {
@@ -353,12 +352,17 @@ export class AssetService {
     }
 
     public async deleteByIds(ids: number[]) {
-        const assets: AssetEntity[] = []
-        await forEachAsync(ids, async (id) => {
-            const result = await this.delete(id)
-            if (result) assets.push(result)
-        })
-        return assets
+        const errors = []
+        for (let i = 0; i < ids.length; i++) {
+            try {
+                await this.delete(ids[i])
+            } catch (err) {
+                errors.push(err)
+            }
+        }
+        return {
+            errors,
+        }
     }
 
     public async update(id: number, body: IAsset) {
