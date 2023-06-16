@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core'
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 
 import { ApplicationModule } from './app.module'
 import { AllExceptionsFilter } from './shared/allExceptions.filter'
@@ -7,25 +6,17 @@ import { config } from './shared/config'
 import { ResponseInterceptor } from './shared/response.interceptor'
 import { autoMkdirSync } from './shared/file'
 import compression from 'compression'
+import { json, urlencoded } from 'express'
 
 async function bootstrap() {
     const appOptions = { cors: true }
     const app = await NestFactory.create(ApplicationModule, appOptions)
     app.use(compression())
+    app.use(json({ limit: '50mb' }))
+    app.use(urlencoded({ extended: true, limit: '50mb' }))
     app.setGlobalPrefix('api')
     app.useGlobalFilters(new AllExceptionsFilter())
     app.useGlobalInterceptors(new ResponseInterceptor())
-
-    const options = new DocumentBuilder()
-        .setTitle('care-server')
-        .setDescription('care-server API description')
-        .setVersion('1.0')
-        .addTag('root')
-        .build()
-
-    const document = SwaggerModule.createDocument(app, options)
-    SwaggerModule.setup('docs', app, document)
-
     await app.listen(config.port)
 }
 

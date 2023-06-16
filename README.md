@@ -1,6 +1,9 @@
 # care-server
 
 ## TODO
+
+-   [ ] 删除 rating
+-   [ ] 继续缩减资源的tag数量，最好维持在100个以内，分类最好低于5个。
 -   [ ] refactor client by vue
 -   [ ] 统一 assets 文件（头像之类从 assets 取，添加一个属性判断是否显示）
 -   [ ] refactor server by go (改好数据库结构)
