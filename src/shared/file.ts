@@ -221,7 +221,7 @@ export async function clipImage(
     if (!(await checkMaxSize(origin, maxWidth, maxHeight))) return false
     return new Promise((resolve: (value: boolean) => void, reject) => {
         gm(origin)
-            .resize(maxWidth, maxHeight)
+            .resize(maxWidth, maxHeight, '>')
             .write(target, (err) => {
                 if (err) {
                     reject(err)
@@ -248,7 +248,7 @@ export async function clipImageStream(
     if (!(await checkMaxSize(origin, maxWidth, maxHeight))) return null
     const readStream = fs.createReadStream(origin)
     const writeStream = fs.createWriteStream(target)
-    gm(readStream).resize(maxWidth, maxHeight).stream().pipe(writeStream)
+    gm(readStream).resize(maxWidth, maxHeight, '>').stream().pipe(writeStream)
     return { readStream, writeStream }
 }
 
@@ -338,7 +338,7 @@ export async function createAssetThumbStream(
     return copyFileStream(origin, target)
 }
 
-export async function createAssetThumb(
+async function createAssetThumb(
     filename: string,
     maxWidth = config.thumb.maxWidth,
     maxHeight?: number
@@ -371,7 +371,7 @@ export async function saveFiles(
     const targetPath = path.join(config.static.assets, name)
     const metadata = await saveImage('1', targetPath, originalFilename, rename)
     autoMkdirSync(path.join(config.static.asset_thumbs, name))
-    await createAssetThumb(path.join(name, metadata.name), 600)
+    await createAssetThumb(path.join(name, metadata.name))
     await forEachAsync(filenames.splice(1), async (filename, index) => {
         await saveImage(
             `${index + 2}`,

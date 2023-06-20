@@ -6,7 +6,7 @@ const DEFAULT = {
     port: 3000,
     storage: 'D:/storage',
     thumb: {
-        maxWidth: 600,
+        maxWidth: 800,
     },
 }
 

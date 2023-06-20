@@ -282,7 +282,7 @@ export class CharacterService {
         }
         return new Promise((resolve, reject) => {
             gm(metadata.filename)
-                .resize(maxWidth, maxHeight)
+                .resize(maxWidth, maxHeight, '>')
                 .write(
                     path.join(config.static.fullbody_thumbs, metadata.name),
                     (err) => {
