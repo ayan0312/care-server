@@ -195,7 +195,10 @@ export class TempController {
                 break
         }
 
-        let prefixs = file.originalname.split('.')
+        const original_name = Buffer.from(file.originalname, 'latin1').toString(
+            'utf8'
+        )
+        let prefixs = original_name.split('.')
         prefixs.pop()
         return {
             size: file.size,
@@ -204,7 +207,7 @@ export class TempController {
             prefix: prefixs.join('.'),
             mimetype: file.mimetype,
             filename: file.filename,
-            original_name: file.originalname,
+            original_name,
             original_preview,
         }
     }
