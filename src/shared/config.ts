@@ -25,7 +25,7 @@ export function createStaticPaths(root: string) {
 
 export const config = {
     ...DEFAULT,
-    database: path.join(DEFAULT.storage, 'database', 't.db'),
+    database: 'C:/Care/database/t.db',
     api: `http://${DEFAULT.ip}:${DEFAULT.port}/api/`,
     URL: {
         ...createStaticPaths(`http://${DEFAULT.ip}:${DEFAULT.port}/static/`),
