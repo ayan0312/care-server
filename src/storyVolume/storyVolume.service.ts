@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import {
     BadRequestException,
     Injectable,
@@ -32,7 +32,15 @@ export class StoryVolumeService {
             const chapters = await this.storyChapterService.findByVolumeId(
                 volume.id
             )
-            items.push(Object.assign({}, volume, { chapters }))
+
+            items.push(
+                Object.assign({}, volume, {
+                    chapters: chapters.map((chapter) => {
+                        chapter.content = ''
+                        return chapter
+                    }),
+                })
+            )
         })
         return items
     }
@@ -48,7 +56,9 @@ export class StoryVolumeService {
     }
 
     public async findByIds(ids: number[]) {
-        return await this.storyVolumeRepo.findByIds(ids)
+        return await this.storyVolumeRepo.findBy({
+            id: In(ids),
+        })
     }
 
     private async _mergeObjectToEntity(

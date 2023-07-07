@@ -17,13 +17,22 @@ import {
     IStoryChapterSearch,
     IStoryChapterSearchCondition,
 } from 'src/interface/storyChapter.interface'
+import { StoryService } from 'src/story/story.service'
+import { ModuleRef } from '@nestjs/core'
 
 @Injectable()
 export class StoryChapterService {
     constructor(
         @InjectRepository(StoryChapterEntity)
-        private readonly chapterRepo: Repository<StoryChapterEntity>
+        private readonly chapterRepo: Repository<StoryChapterEntity>,
+        private readonly moduleRef: ModuleRef
     ) {}
+
+    private storyService: StoryService
+
+    public onModuleInit() {
+        this.storyService = this.moduleRef.get(StoryService, { strict: false })
+    }
 
     public async findAll() {
         return await this.chapterRepo.find()
@@ -52,11 +61,17 @@ export class StoryChapterService {
     public async findById(id: number) {
         const result = await this.chapterRepo.findOneBy({ id })
         if (!result) throw new NotFoundException()
+        await this._patchChapter(result)
         return result
     }
 
     public async findByIds(ids: number[]) {
         return await this.chapterRepo.findBy({ id: In(ids) })
+    }
+
+    private async _patchChapter(chapter: StoryChapterEntity) {
+        const story = await this.storyService.findById(chapter.storyId)
+        Object.assign(chapter, { story })
     }
 
     public async search(body: IStoryChapterSearch) {
