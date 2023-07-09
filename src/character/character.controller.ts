@@ -63,11 +63,7 @@ export class CharacterController {
     ) {
         if (relations.includes('category'))
             return await this.charService.findCategoryRelationsById(id)
-        return await this.charService.findById(
-            id,
-            relations ? relations.split(',') : undefined,
-            true
-        )
+        return await this.charService.findById(id, true)
     }
 
     @Patch(':id')

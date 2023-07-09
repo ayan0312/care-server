@@ -50,12 +50,18 @@ export class CharactershipService {
                 charship.relationshipId
             )
             if (charId === charship.selfId) {
-                const char = await this.charService.findById(charship.targetId)
+                const char = await this.charService.findById(
+                    charship.targetId,
+                    true
+                )
                 if (!previewMap[relationship.targetName])
                     previewMap[relationship.targetName] = []
                 previewMap[relationship.targetName].push(char)
             } else {
-                const char = await this.charService.findById(charship.selfId)
+                const char = await this.charService.findById(
+                    charship.selfId,
+                    true
+                )
                 if (!previewMap[relationship.selfName])
                     previewMap[relationship.selfName] = []
                 previewMap[relationship.selfName].push(char)

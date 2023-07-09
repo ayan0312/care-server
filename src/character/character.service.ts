@@ -83,14 +83,9 @@ export class CharacterService {
         }
     }
 
-    public async findById(
-        id: number,
-        relations: string[] = [],
-        patch?: boolean
-    ) {
+    public async findById(id: number, patch?: boolean) {
         const result = await this.charRepo.findOne({
             where: { id },
-            relations,
         })
         if (!result) throw new NotFoundException()
         if (patch) return await this._patchCharResult(result)
@@ -177,17 +172,17 @@ export class CharacterService {
         }
     }
 
-    private async _createPatchedStaticCategories(
-        staticCategories: ICharacterStaticCategory
-    ) {
+    private async _createFeatures(staticCategories: ICharacterStaticCategory) {
         const scIds = Object.keys(staticCategories).map((k) => Number(k))
         const categories = await this.staticCategoryService.findByIds(scIds)
-        const values: [string, string][] = []
+        const features: Record<string, object> = {}
         categories.forEach((category) => {
-            values.push([category.name, staticCategories[category.id]])
+            features[category.name] = {
+                id: category.id,
+                origin: staticCategories[category.id],
+            }
         })
-
-        return values
+        return features
     }
 
     private _createXSmall(avatar: string, fullLengthPicture: string) {
@@ -208,16 +203,14 @@ export class CharacterService {
     private async _patchCharResult(entity: CharacterEntity) {
         const result = Object.assign({}, entity)
 
-        const patchedStaticCategories = await this._createPatchedStaticCategories(
-            entity.staticCategories
-        )
+        const features = await this._createFeatures(entity.staticCategories)
 
         Object.assign(
             result,
             this._createXSmall(entity.avatar, entity.fullLengthPicture),
             {
-                patchedStaticCategories,
-                relationships: [],
+                features,
+                relations: [],
             }
         )
 
@@ -367,7 +360,7 @@ export class CharacterService {
         await this._mergeBodyToEntity(char, body)
         await throwValidatedErrors(char)
         await this.charRepo.save(char)
-        return this.findById(id, [], true)
+        return this.findById(id, true)
     }
 
     // deprecated
