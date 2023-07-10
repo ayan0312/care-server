@@ -55,24 +55,21 @@ export class AssetService {
     private _nameId = 0
     private _imageId = 0
 
-    public async findById(
-        id: number,
-        relations: string[] = [],
-        patch: boolean = false
-    ) {
+    public async findById(id: number, patch = false) {
         const result = await this.assetRepo.findOne({
             where: {
                 id,
             },
-            relations: relations,
         })
         if (!result) throw new NotFoundException()
         if (patch) return this._patchAssetResult(result, true)
         return result
     }
 
-    public async findByIds(ids: number[]) {
-        return this.assetRepo.findBy({ id: In(ids) })
+    public async findByIds(ids: number[], patch = false) {
+        const assets = await this.assetRepo.findBy({ id: In(ids) })
+        if (patch) await this._patchAssetResults(assets)
+        return assets
     }
 
     public async *generator(relations?: string[]) {
@@ -410,7 +407,7 @@ export class AssetService {
         await this._mergeBodyToEntity(asset, body)
         await throwValidatedErrors(asset)
         const newPic = await this.assetRepo.save(asset)
-        return await this.findById(newPic.id, [], true)
+        return await this.findById(newPic.id, true)
     }
 
     private async _removeFiles(

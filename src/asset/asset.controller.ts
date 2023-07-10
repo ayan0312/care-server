@@ -26,6 +26,7 @@ import {
 } from 'src/shared/file'
 import { createReadStream } from 'fs'
 import { Response } from 'express'
+import { parseIds } from 'src/shared/utilities'
 
 @ApiTags('assets')
 @Controller('assets')
@@ -34,9 +35,12 @@ export class AssetController {
 
     @Get()
     public async find(
+        @Query('ids') ids: string,
         @Query('options') options: string,
-        @Query('near') nearOpts?: string
+        @Query('near') nearOpts?: string,
+        @Query('patch') patch?: boolean
     ) {
+        if (ids) return await this.assetService.findByIds(parseIds(ids), patch)
         if (nearOpts) {
             const result = JSON.parse(nearOpts)
             return await this.assetService.findNearAssetsById(
@@ -126,11 +130,7 @@ export class AssetController {
     ) {
         if (relations.includes('category'))
             return await this.assetService.findCategoryRelationsById(id)
-        return await this.assetService.findById(
-            id,
-            relations ? relations.split(',') : undefined,
-            true
-        )
+        return await this.assetService.findById(id, true)
     }
 
     @Patch(':id')
