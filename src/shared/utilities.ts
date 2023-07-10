@@ -44,6 +44,21 @@ export const parseIds = (ids: string) => {
     return results
 }
 
+export function arrayUnique<T>(array: T[]): T[] {
+    return Array.from(new Set(array))
+}
+
+export function arrayDifference<T>(arr1: T[], arr2: T[]): T[] {
+    return arr1.filter((x) => !arr2.includes(x))
+}
+
+export function arrayIntersection<T>(...arrays: T[][]): T[] {
+    if (arrays.length === 0) return []
+    return arrays.reduce((intersection, currentArray) => {
+        return intersection.filter((value) => currentArray.includes(value))
+    })
+}
+
 export async function throwValidatedErrors(
     object: object,
     validatorOptions?: ValidatorOptions

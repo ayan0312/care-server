@@ -11,6 +11,7 @@ export interface IAsset extends IStarName {
     intro?: string
     tagIds?: string
     recycle?: boolean
+    template?: boolean
     assetType?: AssetType
     filenames?: string[]
     characterIds?: string
@@ -22,6 +23,7 @@ export interface IAssetSearchCondition extends IStarName {
     intro?: string
     tagIds?: string
     recycle?: boolean
+    template?: boolean
     assetType?: AssetType
     characterIds?: string
     relation?: boolean

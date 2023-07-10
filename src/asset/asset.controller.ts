@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IAsset } from 'src/interface/asset.interface'
-import { AssetService } from './asset.service'
+import { AssetService, DiffColumn } from './asset.service'
 import {
     createAssetThumbStream,
     getClippableContentType,
@@ -26,7 +26,6 @@ import {
 } from 'src/shared/file'
 import { createReadStream } from 'fs'
 import { Response } from 'express'
-import { parseIds } from 'src/shared/utilities'
 
 @ApiTags('assets')
 @Controller('assets')
@@ -89,8 +88,14 @@ export class AssetController {
     }
 
     @Patch()
-    public async updateByIds(@Body() body: { ids: number[]; asset: IAsset }) {
-        return await this.assetService.updateByIds(body.ids, body.asset)
+    public async updateByIds(
+        @Body() body: { ids: number[]; asset: IAsset; diffs?: DiffColumn[] }
+    ) {
+        return await this.assetService.updateByIds(
+            body.ids,
+            body.asset,
+            body.diffs
+        )
     }
 
     @Delete()

@@ -13,6 +13,9 @@ export class AssetEntity extends StarNameEntity {
     @Column({ default: false })
     public recycle: boolean = false
 
+    @Column({ default: false })
+    public template: boolean = false
+
     @Column({ default: '' })
     public path: string = ''
 

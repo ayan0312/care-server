@@ -23,9 +23,13 @@ import {
     sortFilenames,
 } from 'src/shared/file'
 import {
+    arrayDifference,
+    arrayIntersection,
+    arrayUnique,
     createQueryIds,
     forEachAsync,
     formatDate,
+    isNumber,
     mergeObjectToEntity,
     parseIds,
     queryQBIds,
@@ -36,6 +40,8 @@ import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 
 import { AssetEntity } from './asset.entity'
+
+export type DiffColumn = 'tagIds' | 'characterIds'
 
 @Injectable()
 export class AssetService {
@@ -192,6 +198,10 @@ export class AssetService {
                 rating: condition.rating,
             })
 
+        qb = qb.andWhere('asset.template = :template', {
+            template: !!condition.template,
+        })
+
         qb = qb.andWhere('asset.recycle = :recycle', {
             recycle: !!condition.recycle,
         })
@@ -336,11 +346,41 @@ export class AssetService {
         )
     }
 
-    public async updateByIds(ids: number[], body: IAsset) {
+    public async updateByIds(
+        ids: number[],
+        body: IAsset,
+        diffs: DiffColumn[] = []
+    ) {
         const errors = []
-        for (let i = 0; i < ids.length; i++) {
+        const assets = await this.findByIds(ids)
+        const tagIds: number[] = body.tagIds ? parseIds(body.tagIds) : []
+        const removedTagIds =
+            tagIds.length > 0
+                ? arrayDifference(
+                      arrayIntersection(
+                          ...assets.map((entity) => parseIds(entity.tagIds))
+                      ),
+                      tagIds
+                  )
+                : []
+        for (let asset of assets) {
             try {
-                await this.update(ids[i], body)
+                if (diffs.includes('tagIds') && tagIds.length > 0) {
+                    const assetIds = arrayUnique(
+                        [
+                            tagIds,
+                            arrayDifference(
+                                parseIds(asset.tagIds),
+                                removedTagIds
+                            ),
+                        ].flat()
+                    )
+                    await this.update(asset, {
+                        tagIds: createQueryIds(assetIds),
+                    })
+                } else {
+                    await this.update(asset, body)
+                }
             } catch (err) {
                 errors.push(err)
             }
@@ -365,8 +405,8 @@ export class AssetService {
         }
     }
 
-    public async update(id: number, body: IAsset) {
-        const asset = await this.findById(id)
+    public async update(cr: number | AssetEntity, body: IAsset) {
+        const asset = isNumber(cr) ? await this.findById(cr) : cr
         await this._mergeBodyToEntity(asset, body)
         await throwValidatedErrors(asset)
         const newPic = await this.assetRepo.save(asset)
