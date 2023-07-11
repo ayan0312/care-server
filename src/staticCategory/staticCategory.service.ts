@@ -49,14 +49,15 @@ export class StaticCategoryService {
 
     public async create(body: IStaticCategory) {
         if (body.name == null)
-            throw new BadRequestException('name cannot be empty')
+            throw new BadRequestException('The name cannot be empty')
         if (await this.hasName(body.name))
-            throw new ConflictException('has the same name')
+            throw new ConflictException('There has the same name')
 
         const category = new StaticCategoryEntity()
         category.name = body.name
         if (body.intro) category.intro = body.intro
         if (body.script) category.script = body.script
+        if (body.validateScript) category.validateScript = body.validateScript
         await throwValidatedErrors(category)
         return await this.categoryRepo.save(category)
     }

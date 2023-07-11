@@ -11,4 +11,7 @@ export class StaticCategoryEntity extends NameEntity {
 
     @Column({ default: '' })
     public script: string = ''
+
+    @Column({ default: '' })
+    public validateScript: string = ''
 }

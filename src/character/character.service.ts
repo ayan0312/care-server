@@ -58,16 +58,11 @@ export class CharacterService {
         this.assetService = this.moduleRef.get(AssetService, { strict: false })
     }
 
-    public async *generator(relations?: string[]) {
+    public async *generator() {
         let next = 0
         while (true) {
             next++
             let qb = this.charRepo.createQueryBuilder('character')
-
-            if (relations)
-                relations.forEach((relation) => {
-                    qb = qb.leftJoinAndSelect(`character.${relation}`, relation)
-                })
 
             const result = await qb
                 .skip(1 * (next - 1))
@@ -210,7 +205,7 @@ export class CharacterService {
             this._createXSmall(entity.avatar, entity.fullLengthPicture),
             {
                 features,
-                relations: [],
+                // relations: [],
             }
         )
 
