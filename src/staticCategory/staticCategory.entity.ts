@@ -10,7 +10,16 @@ export class StaticCategoryEntity extends NameEntity {
     public intro: string = ''
 
     @Column({ default: '' })
-    public script: string = ''
+    public placeholder: string = ''
+
+    @Column({ default: '' })
+    public orderScript: string = ''
+
+    @Column({ default: '' })
+    public inputScript: string = ''
+
+    @Column({ default: '' })
+    public outputScript: string = ''
 
     @Column({ default: '' })
     public validateScript: string = ''

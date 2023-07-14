@@ -59,21 +59,17 @@ export class AssetController {
     ) {
         if (!filename) throw 'Please provide the filename.'
         const stream = await createAssetThumbStream(filename)
-        if (stream) {
-            res.set({
-                'Content-Type': getClippableContentType(filename),
-            })
-
-            await onWriteStreamFinish(stream.writeStream)
-
-            return {
-                origin: true,
-                result: new StreamableFile(
-                    createReadStream(stream.writeStream.path)
-                ),
-            }
+        if (!stream) throw 'Failed to create file stream.'
+        res.set({
+            'Content-Type': getClippableContentType(filename),
+        })
+        await onWriteStreamFinish(stream.writeStream)
+        return {
+            origin: true,
+            result: new StreamableFile(
+                createReadStream(stream.writeStream.path)
+            ),
         }
-        throw 'Failed to create file stream.'
     }
 
     @Post()

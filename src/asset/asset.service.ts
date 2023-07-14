@@ -274,6 +274,8 @@ export class AssetService {
 
     public async getAssetThumbs(id: number) {
         const asset = await this.findById(id)
+        if (asset.assetType == AssetType.files)
+            autoMkdirSync(path.join(config.static.asset_thumbs, asset.path))
         return getAssetThumbs(asset.path, (origin) => {
             return `/api/assets/thumb?filename=${origin}`
         })

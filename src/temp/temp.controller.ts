@@ -174,17 +174,17 @@ export class TempController {
                         config.static.temps,
                         thumb_filename
                     )
+                    const origin_fi = path.resolve(
+                        config.static.temps,
+                        file.filename
+                    )
                     let result = false
                     try {
-                        result = await clipImage(
-                            path.resolve(config.static.temps, file.filename),
-                            thumb_fi,
-                            width
-                        )
+                        result = await clipImage(origin_fi, thumb_fi, width)
                     } catch (err) {
-                        throw err
+                        this.logger.error(err)
+                        throw 'Cannot clips the image:\n' + origin_fi
                     }
-
                     if (result) expireMap.push(String(Date.now()), thumb_fi)
                     else thumb_filename = file.filename
                 }

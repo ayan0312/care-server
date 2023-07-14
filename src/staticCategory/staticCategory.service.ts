@@ -56,8 +56,6 @@ export class StaticCategoryService {
         const category = new StaticCategoryEntity()
         category.name = body.name
         if (body.intro) category.intro = body.intro
-        if (body.script) category.script = body.script
-        if (body.validateScript) category.validateScript = body.validateScript
         await throwValidatedErrors(category)
         return await this.categoryRepo.save(category)
     }
