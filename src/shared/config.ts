@@ -1,5 +1,4 @@
 import os from 'os'
-import path from 'path'
 
 const DEFAULT = {
     ip: '192.168.3.6',
@@ -25,7 +24,7 @@ export function createStaticPaths(root: string) {
 
 export const config = {
     ...DEFAULT,
-    database: 'C:/Care/database/t.db',
+    database: DEFAULT.storage + '/database/t.db',
     api: `http://${DEFAULT.ip}:${DEFAULT.port}/api/`,
     URL: {
         ...createStaticPaths(`http://${DEFAULT.ip}:${DEFAULT.port}/static/`),
