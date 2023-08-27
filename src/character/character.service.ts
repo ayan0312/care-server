@@ -197,8 +197,15 @@ export class CharacterService {
 
     private async _patchCharResult(entity: CharacterEntity) {
         const result = Object.assign({}, entity)
-
         const features = await this._createFeatures(entity.staticCategories)
+
+        if (result.tagIds) {
+            const tags = await this.tagService.findRelationsByIds(
+                parseIds(result.tagIds)
+            )
+
+            Object.assign(result, { tags })
+        }
 
         Object.assign(
             result,
