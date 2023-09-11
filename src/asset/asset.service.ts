@@ -13,6 +13,7 @@ import { config } from 'src/shared/config'
 import {
     autoMkdirSync,
     getAssetThumbs,
+    getExt,
     getPrefix,
     readDirSync,
     rmDirSync,
@@ -254,9 +255,15 @@ export class AssetService {
 
         if (entity.path) {
             const thumbs = await this.getAssetThumbs(entity.id)
+            const total = thumbs.length
+            const displayThumbs = thumb ? thumbs : thumbs.splice(0, 3)
             Object.assign(entity, {
-                total: thumbs.length,
-                thumbs: thumb ? thumbs : thumbs.splice(0, 3),
+                total,
+                thumbs: displayThumbs,
+                details: displayThumbs.map((thumb) => ({
+                    thumb,
+                    ext: getExt(thumb),
+                })),
             })
         }
 
