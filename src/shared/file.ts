@@ -260,8 +260,9 @@ export function getAssetThumbs(
     const relativePaths = createStaticPaths('/static/')
 
     if (isFileSync(origin)) {
-        if (isFileSync(target)) return [relativePaths.asset_thumbs + filename]
-        return [relativePaths.assets + filename]
+        let result = relativePaths.assets + filename
+        if (isFileSync(target)) result = relativePaths.asset_thumbs + filename
+        return [{ result, origin: result }]
     }
 
     // 1.jpg 2.gif 3.jpg
@@ -286,10 +287,18 @@ export function getAssetThumbs(
     })
 
     return arr.map((item) => {
-        if (item.thumb) return relativePaths.asset_thumbs + item.thumb
-        if (!isClippableAsset(item.asset) || !createThumbStreamURL)
-            return relativePaths.assets + item.asset
-        return createThumbStreamURL(item.asset)
+        let o = relativePaths.assets + item.asset,
+            result = origin
+
+        if (item.thumb) o = result = relativePaths.asset_thumbs + item.thumb
+        else if (!isClippableAsset(item.asset) || !createThumbStreamURL)
+            o = result = relativePaths.assets + item.asset
+        else result = createThumbStreamURL(item.asset)
+
+        return {
+            result,
+            origin: o,
+        }
     })
 }
 
@@ -299,16 +308,18 @@ export function getClippableContentType(filename: string) {
             return 'image/png'
         case 'bmp':
             return 'image/bmp'
+        case 'jpg':
         case 'jpeg':
             return 'image/jpeg'
     }
     return ''
 }
 
-function isClippableAsset(filename: string) {
+export function isClippableAsset(filename: string) {
     switch (getExt(filename)) {
         case 'png':
         case 'bmp':
+        case 'jpg':
         case 'jpeg':
             return true
     }
@@ -345,9 +356,14 @@ async function createAssetThumb(
 ) {
     const { origin, target } = getAssetPath(filename)
     if (!isFileSync(origin) || !isClippableAsset(filename)) return
-    const clipped = await clipImage(origin, target, maxWidth, maxHeight)
-    if (clipped) return
-    await copyFile(origin, target)
+    try {
+        const clipped = await clipImage(origin, target, maxWidth, maxHeight)
+        if (clipped) return
+        await copyFile(origin, target)
+    } catch (err) {
+        console.error(err)
+        console.error(origin, target, maxWidth, maxHeight)
+    }
 }
 
 export async function saveFiles(

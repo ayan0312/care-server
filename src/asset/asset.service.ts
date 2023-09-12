@@ -1,3 +1,4 @@
+import fs from 'fs'
 import path from 'path'
 import { In, Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
@@ -15,6 +16,7 @@ import {
     getAssetThumbs,
     getExt,
     getPrefix,
+    isClippableAsset,
     readDirSync,
     rmDirSync,
     rmSync,
@@ -259,10 +261,14 @@ export class AssetService {
             const displayThumbs = thumb ? thumbs : thumbs.splice(0, 3)
             Object.assign(entity, {
                 total,
-                thumbs: displayThumbs,
+                thumbs: displayThumbs.map((thumb) => thumb.result),
                 details: displayThumbs.map((thumb) => ({
-                    thumb,
-                    ext: getExt(thumb),
+                    thumb: thumb.result,
+                    ext: getExt(thumb.origin),
+                    size: isClippableAsset(thumb.origin)
+                        ? -1
+                        : fs.statSync(path.join(config.storage, thumb.origin))
+                              .size,
                 })),
             })
         }
@@ -293,15 +299,36 @@ export class AssetService {
             target.path = await saveFolder(body.folder)
             return
         }
-        let filenames = body.filenames
-        if (body.folder) filenames = sortFilenames(readDirSync(body.folder))
+
+        let filenames = this._readBodyFilenames(body)
         if (!filenames || filenames.length < 0) return
         if (filenames.length === 1) target.assetType = AssetType.file
         else target.assetType = AssetType.files
+
         const name = `${Date.now()}_${++this._imageId}`
+
         if (body.folder)
-            target.path = await saveFiles(name, filenames, body.folder, false)
-        else target.path = await saveFiles(name, filenames, config.static.temps)
+            target.path = await saveFiles(
+                name,
+                filenames,
+                body.folder,
+                body.rename || false
+            )
+        else
+            target.path = await saveFiles(
+                name,
+                filenames,
+                body.root || config.static.temps,
+                body.rename
+            )
+    }
+
+    private _readBodyFilenames(body: IAsset, sort = true) {
+        let filenames = body.filenames
+        if (body.folder)
+            if (sort) filenames = sortFilenames(readDirSync(body.folder))
+            else filenames = readDirSync(body.folder)
+        return filenames
     }
 
     private async _mergeBodyToEntity(target: AssetEntity, body: IAsset) {
@@ -336,6 +363,26 @@ export class AssetService {
     }
 
     public async create(body: IAsset) {
+        if (body.folder && body.assetType === AssetType.file) {
+            const filenames = this._readBodyFilenames(body, false)
+            if (!filenames || filenames.length < 0)
+                throw `Not exist any assets: ${body.folder}`
+            if (!body.root) body.root = body.folder
+            delete body.folder
+            delete body.assetType
+            await forEachAsync(filenames, async (filename) => {
+                try {
+                    body.name = filename
+                    body.filenames = [filename]
+                    console.log(body)
+                    await this.create(body)
+                } catch (err) {
+                    console.error(err)
+                }
+            })
+            return 'Created all assets.'
+        }
+
         if (!body.name)
             body.name = `${formatDate('y-M-d H:m:s', new Date())}-${++this
                 ._nameId}`

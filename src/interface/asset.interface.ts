@@ -8,26 +8,28 @@ export const enum AssetType {
 }
 
 export interface IAsset extends IStarName {
+    root?: string
     intro?: string
+    folder?: string
+    rename?: boolean
     tagIds?: string
     recycle?: boolean
     template?: boolean
     assetType?: AssetType
     filenames?: string[]
     characterIds?: string
-    folder?: string
 }
 
 export interface IAssetSearchCondition extends IStarName {
     name?: string
     intro?: string
     tagIds?: string
+    reverse?: Record<string, boolean>
     recycle?: boolean
+    relation?: boolean
     template?: boolean
     assetType?: AssetType
     characterIds?: string
-    relation?: boolean
-    reverse?: Record<string, boolean>
 }
 
 export interface IAssetSearch extends ISearch<IAssetSearchCondition> {}
