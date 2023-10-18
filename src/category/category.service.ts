@@ -67,6 +67,7 @@ export class CategoryService {
         category.name = body.name
         category.type = body.type
         if (body.intro) category.intro = body.intro
+        if (body.order) category.order = body.order
         await throwValidatedErrors(category)
 
         return await this.categoryRepo.save(category)
@@ -74,12 +75,13 @@ export class CategoryService {
 
     public async update(id: number, body: ICategory) {
         const category = await this.findById(id)
-        if (body.name) {
+        if (body.name && body.name != category.name) {
             if (await this.hasName(body.name, category.type))
                 throw new ConflictException('has the same name')
             category.name = body.name
         }
         if (body.intro) category.intro = body.intro
+        if (body.order) category.order = body.order
         await throwValidatedErrors(category)
 
         return await this.categoryRepo.save(category)

@@ -8,6 +8,7 @@ export const enum CategoryType {
 
 export interface ICategory extends IName {
     type?: CategoryType
+    order?: number
     intro?: string
 }
 

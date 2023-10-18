@@ -2,6 +2,7 @@
 
 ## TODO
 
+-   [ ] feat: 故事的历史记录，用内容差异存，不然体积太大
 -   [ ] refactor: client by vue
 -   [ ] refactor: 没有单个资源和文件类型，全部创建文件夹，可以设置插件类型
 -   [ ] feat: 添加资源系列

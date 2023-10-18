@@ -51,7 +51,14 @@ export class TagService {
     }
 
     public async findById(id: number) {
-        const result = await this.tagRepo.findOneBy({ id })
+        const result = await this.tagRepo.findOne({
+            relations: {
+                category: true,
+            },
+            where: {
+                id,
+            },
+        })
         if (!result) throw new NotFoundException()
         return result
     }
@@ -109,9 +116,11 @@ export class TagService {
         mergeObjectToEntity(tag, body, ['categoryId'])
         if (body.categoryId)
             tag.category = await this.categoryService.findById(body.categoryId)
-
         await throwValidatedErrors(tag)
-        if (await this.hasName(tag.category, tag.name))
+        if (
+            tag.name != body.name &&
+            (await this.hasName(tag.category, tag.name))
+        )
             throw new ConflictException('has the same name')
 
         return await this.tagRepo.save(tag)

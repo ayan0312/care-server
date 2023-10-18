@@ -10,6 +10,9 @@ export class CategoryEntity extends NameEntity {
     @OneToMany((type) => TagEntity, (tag) => tag.category)
     public tags: TagEntity[]
 
+    @Column({ type: 'int', default: 1 })
+    public order: number
+
     @Column({ type: 'int' })
     public type: CategoryType
 
