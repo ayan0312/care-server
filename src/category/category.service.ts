@@ -10,7 +10,7 @@ import { CategoryType, ICategory } from 'src/interface/category.interface'
 import { In, Repository } from 'typeorm'
 import { TagEntity } from 'src/tag/tag.entity'
 import { CategoryEntity } from './category.entity'
-import { throwValidatedErrors } from 'src/shared/utilities'
+import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
 
 @Injectable()
 export class CategoryService {
@@ -64,10 +64,7 @@ export class CategoryService {
             throw new BadRequestException('type and type cannot be empty')
         if (await this.hasName(body.name, body.type))
             throw new ConflictException('has the same name')
-        category.name = body.name
-        category.type = body.type
-        if (body.intro) category.intro = body.intro
-        if (body.order) category.order = body.order
+        mergeObjectToEntity(category, body)
         await throwValidatedErrors(category)
 
         return await this.categoryRepo.save(category)
@@ -78,10 +75,8 @@ export class CategoryService {
         if (body.name && body.name != category.name) {
             if (await this.hasName(body.name, category.type))
                 throw new ConflictException('has the same name')
-            category.name = body.name
         }
-        if (body.intro) category.intro = body.intro
-        if (body.order) category.order = body.order
+        mergeObjectToEntity(category, body)
         await throwValidatedErrors(category)
 
         return await this.categoryRepo.save(category)
