@@ -2,6 +2,7 @@ import { Column, Entity, ManyToOne } from 'typeorm'
 
 import { NameEntity } from 'src/shared/name/name.entity'
 import { CategoryEntity } from 'src/category/category.entity'
+import { Length } from 'class-validator'
 
 @Entity('tag')
 export class TagEntity extends NameEntity {
@@ -10,4 +11,8 @@ export class TagEntity extends NameEntity {
 
     @Column({ type: 'int', default: 1 })
     public order: number
+
+    @Column({ default: '' })
+    @Length(0, 1000)
+    public intro: string = ''
 }
