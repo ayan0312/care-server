@@ -106,7 +106,7 @@ export class CharactershipService {
 
         if (target.targetId === target.selfId) {
             throw new BadRequestException(
-                'The selfId cannot be the same as the targetId '
+                'The selfId cannot be the same as the targetId.'
             )
         }
         if (body.relationshipId) {

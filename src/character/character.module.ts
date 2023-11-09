@@ -5,11 +5,13 @@ import { CharacterService } from './character.service'
 import { CharacterController } from './character.controller'
 import { TagModule } from 'src/tag/tag.module'
 import { StaticCategoryModule } from 'src/staticCategory/staticCategory.module'
+import { WikiModule } from 'src/wiki/wiki.module'
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([CharacterEntity]),
         TagModule,
+        WikiModule,
         StaticCategoryModule,
     ],
     providers: [CharacterService],

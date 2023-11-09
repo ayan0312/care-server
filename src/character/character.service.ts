@@ -39,6 +39,7 @@ import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { AssetService } from 'src/asset/asset.service'
 import { StaticCategoryService } from 'src/staticCategory/staticCategory.service'
+import { WikiService } from 'src/wiki/wiki.service'
 
 @Injectable()
 export class CharacterService {
@@ -46,6 +47,7 @@ export class CharacterService {
         @InjectRepository(CharacterEntity)
         private readonly charRepo: Repository<CharacterEntity>,
         private readonly tagService: TagService,
+        private readonly wikiService: WikiService,
         private readonly staticCategoryService: StaticCategoryService,
         private readonly moduleRef: ModuleRef
     ) {}
@@ -354,7 +356,9 @@ export class CharacterService {
     public async create(body: ICharacter) {
         const char = await this._mergeBodyToEntity(new CharacterEntity(), body)
         await throwValidatedErrors(char)
-        return await this.charRepo.save(char)
+        const result = await this.charRepo.save(char)
+        await this.wikiService.create(result.id)
+        return result
     }
 
     public async update(id: number, body: ICharacter) {
@@ -450,7 +454,7 @@ export class CharacterService {
 
         if (!char.recycle) return await this.update(id, { recycle: true })
 
-        const result = await this.assetService.search({
+        const assets = await this.assetService.search({
             page: 1,
             size: 1,
             condition: {
@@ -458,15 +462,18 @@ export class CharacterService {
             },
         })
 
-        if (result.rows.length > 0)
+        if (assets.rows.length > 0)
             throw new BadRequestException(
                 'please remove all assets in character before delete character'
             )
 
+        const result = await this.charRepo.remove(char)
+        const wiki = await this.wikiService.findByCharId(char.id)
+        if (wiki) await this.wikiService.delete(wiki.id)
         if (char.avatar) await this.removeAvatar(char.avatar)
         if (char.fullLengthPicture)
             await this.removeFullbody(char.fullLengthPicture)
 
-        return await this.charRepo.remove(char)
+        return result
     }
 }

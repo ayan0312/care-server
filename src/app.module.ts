@@ -14,9 +14,7 @@ import { TagModule } from './tag/tag.module'
 import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { CharactershipModule } from './charactership/charactership.module'
-import { StoryModule } from './story/story.module'
-import { StoryChapterModule } from './storyChapter/storyChapter.module'
-import { StoryVolumeModule } from './storyVolume/storyVolume.module'
+import { WikiModule } from './wiki/wiki.module'
 
 @Module({
     imports: [
@@ -37,12 +35,10 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
         MulterModule,
         TagModule,
         TempModule,
+        WikiModule,
         AssetModule,
-        StoryModule,
         CategoryModule,
         CharacterModule,
-        StoryVolumeModule,
-        StoryChapterModule,
         RelationshipModule,
         CharactershipModule,
         StaticCategoryModule,

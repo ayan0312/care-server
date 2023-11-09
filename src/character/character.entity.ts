@@ -8,10 +8,6 @@ import { ICharacterStaticCategory } from 'src/interface/character.interface'
 export class CharacterEntity extends StarNameEntity {
     @Column({ default: '' })
     @Length(0, 1024)
-    public wiki: string = ''
-
-    @Column({ default: '' })
-    @Length(0, 1024)
     public intro: string = ''
 
     @Column({ default: '' })
@@ -34,6 +30,3 @@ export class CharacterEntity extends StarNameEntity {
     @Column({ default: '' })
     public tagIds: string = ''
 }
-
-@Entity('character_relationship')
-export class CharacterRelationshipEntity {}
