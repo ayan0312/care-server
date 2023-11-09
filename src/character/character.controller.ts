@@ -59,11 +59,13 @@ export class CharacterController {
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
         @Query('relations', new DefaultValuePipe(''))
-        relations: string
+        relations: string,
+        @Query('care') care?: boolean,
+        @Query('patch') patch?: boolean
     ) {
         if (relations.includes('category'))
             return await this.charService.findCategoryRelationsById(id)
-        return await this.charService.findById(id, true)
+        return await this.charService.findById(id, patch, care)
     }
 
     @Patch(':id')

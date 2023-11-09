@@ -7,11 +7,8 @@ export class WikiEntity extends CommonEntity {
     public characterId: number
 
     @Column({ default: '' })
+    public characterIds: string = ''
+
+    @Column({ default: '' })
     public content: string = ''
-
-    @Column({ default: false })
-    public history: boolean = false
-
-    @Column()
-    public UUID: string
 }

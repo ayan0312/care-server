@@ -29,21 +29,21 @@ export class WikiController {
         return await this.wikiService.findAll()
     }
 
-    @Get(':id')
-    public async findById(
-        @Param('id', new ParseIntPipe()) id: number,
-        @Query('character', new ParseBoolPipe(), new DefaultValuePipe(false))
-        character?: boolean
-    ) {
-        if (character) return await this.wikiService.findByCharId(id)
-        return await this.wikiService.findById(id)
-    }
-
     @Post()
     public async create(@Body() body: IWiki) {
         if (body.characterId)
             return await this.wikiService.create(body.characterId)
         throw 'The character id was needed.'
+    }
+
+    @Get(':id')
+    public async findById(
+        @Param('id', new ParseIntPipe()) id: number,
+        @Query('character', new DefaultValuePipe(false), new ParseBoolPipe())
+        character?: boolean
+    ) {
+        if (character) return await this.wikiService.findByCharId(id)
+        return await this.wikiService.findById(id)
     }
 
     @Patch(':id')

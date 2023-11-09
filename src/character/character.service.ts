@@ -80,11 +80,12 @@ export class CharacterService {
         }
     }
 
-    public async findById(id: number, patch?: boolean) {
+    public async findById(id: number, patch?: boolean, care?: boolean) {
         const result = await this.charRepo.findOne({
             where: { id },
         })
         if (!result) throw new NotFoundException()
+        if (care) await this.update(id, {})
         if (patch) return await this._patchCharResult(result)
         return result
     }
@@ -336,23 +337,6 @@ export class CharacterService {
         return target
     }
 
-    public async save(body: ICharacter) {
-        const char = new CharacterEntity()
-        mergeObjectToEntity(char, body, ['tagIds'])
-        if (body.tagIds != null)
-            char.tagIds = createQueryIds(
-                (
-                    await this.tagService.matchByIds(
-                        parseIds(body.tagIds),
-                        CategoryType.character
-                    )
-                ).map((tag) => tag.id)
-            )
-
-        await throwValidatedErrors(char)
-        return await this.charRepo.save(char)
-    }
-
     public async create(body: ICharacter) {
         const char = await this._mergeBodyToEntity(new CharacterEntity(), body)
         await throwValidatedErrors(char)
@@ -363,6 +347,7 @@ export class CharacterService {
 
     public async update(id: number, body: ICharacter) {
         const char = await this.findById(id)
+        char.careCount += 1
         await this._mergeBodyToEntity(char, body)
         await throwValidatedErrors(char)
         await this.charRepo.save(char)

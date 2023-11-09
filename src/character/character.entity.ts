@@ -29,4 +29,7 @@ export class CharacterEntity extends StarNameEntity {
 
     @Column({ default: '' })
     public tagIds: string = ''
+
+    @Column({ default: 0 })
+    public careCount: number
 }
