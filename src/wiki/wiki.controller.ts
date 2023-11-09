@@ -31,9 +31,7 @@ export class WikiController {
 
     @Post()
     public async create(@Body() body: IWiki) {
-        if (body.characterId)
-            return await this.wikiService.create(body.characterId)
-        throw 'The character id was needed.'
+        return await this.wikiService.create(body)
     }
 
     @Get(':id')
@@ -51,7 +49,7 @@ export class WikiController {
         @Param('id', new ParseIntPipe()) id: number,
         @Body() body: IWiki
     ) {
-        return await this.wikiService.update(id, body.content || '')
+        return await this.wikiService.update(id, body)
     }
 
     @Delete(':id')

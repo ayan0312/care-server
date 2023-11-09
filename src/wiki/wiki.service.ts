@@ -2,6 +2,8 @@ import { In, Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { WikiEntity } from './wiki.entity'
+import { IWiki } from 'src/interface/wiki.interface'
+import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
 
 @Injectable()
 export class WikiService {
@@ -28,17 +30,20 @@ export class WikiService {
         return await this.wikiRepo.findOneBy({ characterId: charId })
     }
 
-    public async create(charId: number) {
-        const result = await this.findByCharId(charId)
+    public async create(body: IWiki) {
+        if (!body.characterId) throw 'The character id was needed.'
+        const result = await this.findByCharId(body.characterId)
         if (result) throw 'Every character only create one wiki page.'
         const chapter = new WikiEntity()
-        chapter.characterId = charId
+        mergeObjectToEntity(chapter, body)
+        await throwValidatedErrors(chapter)
         return this.wikiRepo.save(chapter)
     }
 
-    public async update(id: number, content: string) {
+    public async update(id: number, body: IWiki) {
         const chapter = await this.findById(id)
-        chapter.content = content
+        mergeObjectToEntity(chapter, body, ['characterId'])
+        await throwValidatedErrors(chapter)
         return await this.wikiRepo.save(chapter)
     }
 

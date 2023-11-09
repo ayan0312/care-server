@@ -341,7 +341,9 @@ export class CharacterService {
         const char = await this._mergeBodyToEntity(new CharacterEntity(), body)
         await throwValidatedErrors(char)
         const result = await this.charRepo.save(char)
-        await this.wikiService.create(result.id)
+        await this.wikiService.create({
+            characterId: result.id,
+        })
         return result
     }
 
