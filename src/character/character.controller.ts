@@ -60,7 +60,8 @@ export class CharacterController {
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
         @Query('relations', new DefaultValuePipe('')) relations: string,
-        @Query('patch', new ParseBoolPipe()) patch?: boolean
+        @Query('patch', new DefaultValuePipe(false), new ParseBoolPipe({}))
+        patch: boolean
     ) {
         if (relations.includes('category'))
             return await this.charService.findCategoryRelationsById(id)
