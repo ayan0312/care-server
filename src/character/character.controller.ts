@@ -25,9 +25,9 @@ export class CharacterController {
 
     @Get()
     public async find(
-        @Query('options') options?: string,
         @Query('ids') ids?: string,
-        @Query('patch') patch?: boolean
+        @Query('patch') patch?: boolean,
+        @Query('options') options?: string
     ) {
         if (ids) return await this.charService.findByIds(parseIds(ids), patch)
         else if (options)
@@ -60,7 +60,7 @@ export class CharacterController {
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
         @Query('relations', new DefaultValuePipe('')) relations: string,
-        @Query('patch', new DefaultValuePipe(false), new ParseBoolPipe({}))
+        @Query('patch', new DefaultValuePipe(false), new ParseBoolPipe())
         patch: boolean
     ) {
         if (relations.includes('category'))
