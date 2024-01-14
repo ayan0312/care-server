@@ -1,8 +1,8 @@
 import { Column, Entity } from 'typeorm'
 import { CommonEntity } from 'src/shared/common/common.entity'
 
-@Entity('character_static_tag')
-export class CharacterStaticTagEntity extends CommonEntity {
+@Entity('static_tag')
+export class StaticTagEntity extends CommonEntity {
     @Column()
     public order: number
 
