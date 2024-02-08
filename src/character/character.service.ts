@@ -184,17 +184,20 @@ export class CharacterService {
     }
 
     private _createXSmall(avatar: string, fullLengthPicture: string) {
+        const xs = {
+            avatar: avatar ? new URL(avatar, config.URL.avatar_thumbs) : '',
+            fullLengthPicture: fullLengthPicture
+                ? new URL(fullLengthPicture, config.URL.fullbody_thumbs)
+                : '',
+        }
         return {
             avatar: avatar ? new URL(avatar, config.URL.avatars) : '',
             fullLengthPicture: fullLengthPicture
                 ? new URL(fullLengthPicture, config.URL.fullbodys)
                 : '',
-            ['xsmall']: {
-                avatar: avatar ? new URL(avatar, config.URL.avatar_thumbs) : '',
-                fullLengthPicture: fullLengthPicture
-                    ? new URL(fullLengthPicture, config.URL.fullbody_thumbs)
-                    : '',
-            },
+            xs,
+            // legacy
+            xsmall: xs,
         }
     }
 

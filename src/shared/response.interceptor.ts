@@ -12,9 +12,8 @@ export class ResponseInterceptor implements NestInterceptor {
         return next.handle().pipe(
             map((result) => {
                 if (result?.HTML) return result.HTML
-
                 if (result?.origin) return result.result
-
+                const message = result?.message || 'request success'
                 return {
                     code: 0,
                     result: Array.isArray(result)
@@ -24,7 +23,7 @@ export class ResponseInterceptor implements NestInterceptor {
                           }
                         : result,
                     success: true,
-                    message: 'request success',
+                    message,
                 }
             })
         )

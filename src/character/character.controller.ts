@@ -11,6 +11,7 @@ import {
     HttpCode,
     Query,
     DefaultValuePipe,
+    ParseBoolPipe,
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ICharacter } from 'src/interface/character.interface'
@@ -24,9 +25,9 @@ export class CharacterController {
 
     @Get()
     public async find(
-        @Query('options') options?: string,
         @Query('ids') ids?: string,
-        @Query('patch') patch?: boolean
+        @Query('patch') patch?: boolean,
+        @Query('options') options?: string
     ) {
         if (ids) return await this.charService.findByIds(parseIds(ids), patch)
         else if (options)
@@ -58,14 +59,13 @@ export class CharacterController {
     @Get(':id')
     public async findById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Query('relations', new DefaultValuePipe(''))
-        relations: string,
-        @Query('care') care?: boolean,
-        @Query('patch') patch?: boolean
+        @Query('relations', new DefaultValuePipe('')) relations: string,
+        @Query('patch', new DefaultValuePipe(false), new ParseBoolPipe())
+        patch: boolean
     ) {
         if (relations.includes('category'))
             return await this.charService.findCategoryRelationsById(id)
-        return await this.charService.findById(id, patch, care)
+        return await this.charService.findById(id, patch)
     }
 
     @Patch(':id')

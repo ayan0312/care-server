@@ -19,4 +19,7 @@ export class CategoryEntity extends NameEntity {
     @Column({ default: '' })
     @Length(0, 1000)
     public intro: string = ''
+
+    @Column({ default: false })
+    public pinned: boolean = false
 }
