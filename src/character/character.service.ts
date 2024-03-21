@@ -70,9 +70,12 @@ export class CharacterService {
                 .getManyAndCount()
 
             if (result[0].length === 0 || next > result[1]) break
-
+            const data = result[0][0]
+            data.staticCategories = (await this._createFeatures(
+                data.staticCategories
+            )) as any
             yield {
-                data: result[0][0],
+                data,
                 count: result[1],
             }
         }

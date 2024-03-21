@@ -1,9 +1,11 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { AssetService } from './asset/asset.service'
 import { CharacterService } from './character/character.service'
 import { config } from './shared/config'
 import { StoryService } from './story/story.service'
+import { Exporter } from './exporter'
+import { CategoryService } from './category/category.service'
 
 @ApiTags('root')
 @Controller()
@@ -12,7 +14,8 @@ export class AppController {
         // Don't remove following declarations.
         private readonly charService: CharacterService,
         private readonly assetService: AssetService,
-        private readonly storyService: StoryService
+        private readonly storyService: StoryService,
+        private readonly categoryService: CategoryService
     ) {}
 
     @Get()

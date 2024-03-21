@@ -22,6 +22,9 @@ import fs from 'fs-extra'
 import { ErrorCodeException, ErrorCodes } from 'src/shared/errorCodes'
 import { AssetService } from 'src/asset/asset.service'
 import { generateLocalId } from 'src/shared/utilities'
+import { Exporter } from 'src/exporter'
+import { CharacterService } from 'src/character/character.service'
+import { CategoryService } from 'src/category/category.service'
 
 function getExt(file: Express.Multer.File) {
     let exts = file.mimetype.split('/')
@@ -46,9 +49,34 @@ expireMap.on('delete', (filename: string) => {
 @ApiTags('temps')
 @Controller('temps')
 export class TempController {
-    constructor(private readonly assetService: AssetService) {}
+    constructor(
+        private readonly charService: CharacterService,
+        private readonly assetService: AssetService,
+        private readonly categoryService: CategoryService
+    ) {}
 
     private logger = new Logger('Temps')
+
+    @Get('context')
+    public async _exportContext(@Query('dir') dir: string) {
+        const exporter = new Exporter(dir)
+        const categories = await this.categoryService.findRelations()
+        await exporter.outputContext({
+            categories,
+        })
+    }
+
+    @Get('characters')
+    public async _exportCharacter(@Query('dir') dir: string) {
+        const exporter = new Exporter(dir)
+        for await (let { data } of this.charService.generator()) {
+            try {
+                await exporter.outputCharacter(data)
+            } catch (err) {
+                console.error(err, data.name)
+            }
+        }
+    }
 
     @Get('download/file')
     public async download(@Query('opts') opts: string) {
