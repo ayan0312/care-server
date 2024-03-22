@@ -24,6 +24,7 @@ function transformNameEntity<T extends NameEntity>(entity: T) {
     return {
         id: entity.id,
         name: entity.name,
+        created: entity.created,
     }
 }
 
