@@ -70,6 +70,8 @@ export class TempController {
     public async _exportCharacter(@Query('dir') dir: string) {
         const exporter = new Exporter(dir)
         for await (let { data } of this.charService.generator()) {
+            if (data.template) continue
+            this.logger.log('Exporting character: ' + data.name)
             try {
                 await exporter.outputCharacter(data)
             } catch (err) {
