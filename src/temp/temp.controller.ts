@@ -81,14 +81,16 @@ export class TempController {
     }
 
     @Get('download/file')
-    public async download(@Query('opts') opts: string) {
+    public async download(
+        @Query('opts') opts: string,
+        @Query('folder') folder = ''
+    ) {
         const {
             url,
             path = 'C:/Users/ayan0312/Desktop/Images',
             name,
-            folder = '',
             timeout = 30 * 1000,
-        } = JSON.parse(decodeURI(opts))
+        } = JSON.parse(atob(opts))
         if (!url || !path || !name) throw 'params'
         try {
             return await download(url, name, `${path}/${folder}`, timeout)
@@ -98,7 +100,11 @@ export class TempController {
                     code: ErrorCodes.TIME_OUT,
                     message: err.message,
                 })
-            throw err
+
+            throw new ErrorCodeException({
+                code: ErrorCodes.UNKNOWN,
+                message: err.message,
+            })
         }
     }
 
