@@ -266,7 +266,7 @@ export class CharacterService {
             tempFilename
         )
 
-        if (metadata === null) return path.join('/avatars/package.png')
+        if (metadata === null) return ''
 
         await this._saveAvatar200(metadata)
 
@@ -300,8 +300,7 @@ export class CharacterService {
             tempFilename
         )
 
-        if (metadata === null)
-            return path.join('/fullLengthPictures/package.png')
+        if (metadata === null) return ''
 
         await this._saveFullLengthPicture300(metadata)
 
@@ -326,16 +325,20 @@ export class CharacterService {
                     )
                 ).map((tag) => tag.id)
             )
-        if (body.avatar) {
+        if (body.avatar != null) {
             if (target.avatar) await this.removeAvatar(target.avatar)
-            target.avatar = await this._saveAvatar(body.avatar)
+            if (body.avatar != '')
+                target.avatar = await this._saveAvatar(body.avatar)
+            else target.avatar = ''
         }
-        if (body.fullLengthPicture) {
+        if (body.fullLengthPicture != null) {
             if (target.fullLengthPicture)
                 await this.removeFullbody(target.fullLengthPicture)
-            target.fullLengthPicture = await this._saveFullLengthPicture(
-                body.fullLengthPicture
-            )
+            if (body.fullLengthPicture != '')
+                target.fullLengthPicture = await this._saveFullLengthPicture(
+                    body.fullLengthPicture
+                )
+            else target.fullLengthPicture = ''
         }
         return target
     }

@@ -3,7 +3,7 @@ import os from 'os'
 const DEFAULT = {
     ip: '192.168.3.6',
     port: 3000,
-    storage: 'D:/storage',
+    storage: 'C:/Spaces/Storage',
     thumb: {
         maxWidth: 800,
     },
