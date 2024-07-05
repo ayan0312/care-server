@@ -123,10 +123,49 @@ const tokenizers = {
         return newTokenMultipleText(raw, values)
     },
     number(raw: string) {
-        const value = _.toNumber(raw)
-        if (_.isNaN(value)) throw new Error(`Invalid number: ${raw}`)
-        if (!_.isFinite(value)) throw new Error(`Number is too large: ${raw}`)
-        return newTokenNumber(raw, value)
+        let plus = false
+        let str = raw
+
+        if (str.endsWith('+')) {
+            str = str.slice(0, -1)
+            plus = true
+        }
+
+        let order: number
+        try {
+            order = parseFloat(str)
+        } catch (err) {
+            throw new Error(`Invalid number: ${raw}`)
+        }
+
+        if (plus) {
+            let maxNum = ''
+            for (let i = 0; i < str.length; i++) {
+                switch (str[i]) {
+                    case '-':
+                        maxNum += '-'
+                        break
+                    case '.':
+                        maxNum += '.'
+                        break
+                    default:
+                        if (i == 0 || (i == 1 && str[0] == '-')) {
+                            maxNum += str[i]
+                            break
+                        }
+                        maxNum += '9'
+                        break
+                }
+            }
+            try {
+                order = parseFloat(maxNum)
+            } catch (err) {
+                throw new Error(`Invalid number: ${raw}`)
+            }
+        }
+        if (_.isNaN(order)) throw new Error(`Invalid number: ${raw}`)
+        if (!_.isFinite(order)) throw new Error(`Number is too large: ${raw}`)
+        return newTokenNumber(raw, order)
     },
     height(raw: string) {
         const match = raw.match(/^(\d+)(cm|m|km)$/)
