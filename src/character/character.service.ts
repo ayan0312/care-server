@@ -286,6 +286,15 @@ export class CharacterService {
                 origin: staticCategories[category.id],
             }
         })
+        features.__raw__ = categories
+            .sort((a, b) => a.sort - b.sort)
+            .map((c) => {
+                return {
+                    id: c.id,
+                    key: c.name,
+                    origin: staticCategories[c.id],
+                }
+            })
         return features
     }
 
