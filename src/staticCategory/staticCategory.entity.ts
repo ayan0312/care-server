@@ -12,8 +12,11 @@ export class StaticCategoryEntity extends NameEntity {
     @Column({ default: '' })
     public script: string = ''
 
-    @Column({ default: true })
-    public display: boolean = true
+    @Column({ default: false })
+    public pinned: boolean = false
+
+    @Column({ default: '' })
+    public sortScript: string = ''
 
     @Column({ default: '' })
     public placeholder: string = ''

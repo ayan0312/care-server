@@ -24,6 +24,7 @@ export const mergeObjectToEntity = <
         if (excludes.includes(key)) return
         if (key === 'id') return
         const value = source[key]
+        if (value === undefined) return
         ;(entity as any)[key] = value
     })
 }

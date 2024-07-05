@@ -43,11 +43,11 @@ export class StaticCategoryController {
     }
 
     @Patch(':id')
-    public async renameById(
+    public async updateById(
         @Param('id', new ParseIntPipe()) id: number,
-        @Body('name', new DefaultValuePipe('')) name: string
+        @Body() body: IStaticCategory
     ) {
-        return await this.categoryService.rename(id, name)
+        return await this.categoryService.update(id, body)
     }
 
     @Delete(':id')

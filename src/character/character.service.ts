@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, Repository } from 'typeorm'
+import { In, Repository, SelectQueryBuilder } from 'typeorm'
 import { URL } from 'url'
 
 import {
@@ -15,6 +15,7 @@ import {
     ICharacterSearch,
     ICharacterSearchCondition,
     ICharacterStaticCategory,
+    ISearchSCategory,
 } from 'src/interface/character.interface'
 import { config } from 'src/shared/config'
 import {
@@ -154,10 +155,16 @@ export class CharacterService {
         if (orderBy != null)
             qb = qb.orderBy(`character.${orderBy.sort}`, orderBy.order)
 
-        const data = await qb
-            .skip(size * (page - 1))
-            .take(size)
-            .getManyAndCount()
+        let data: [CharacterEntity[], number]
+        const scategories = body.condition.staticCategories
+        if (scategories && scategories.length > 0) {
+            data = await this._getDataBySCategoires(qb, size, page, scategories)
+        } else {
+            data = await qb
+                .skip(size * (page - 1))
+                .take(size)
+                .getManyAndCount()
+        }
 
         const rows = data[0]
         await this._patchCharResults(rows)
@@ -168,6 +175,95 @@ export class CharacterService {
             rows,
             total: data[1],
         }
+    }
+
+    private async _getDataBySCategoires(
+        qb: SelectQueryBuilder<CharacterEntity>,
+        size: number,
+        page: number,
+        methods: ISearchSCategory[]
+    ) {
+        const data = await qb.getMany()
+        const scategories = (
+            await this.staticCategoryService.findByIds(methods.map((m) => m.id))
+        ).map((sc) => {
+            return {
+                ...sc,
+                func: sc.sortScript ? new Function(sc.sortScript) : null,
+                method: methods.find((m) => m.id === sc.id)!,
+            }
+        })
+
+        const rows = data.filter((char) => {
+            return scategories.some((sc) => {
+                const source = char.staticCategories[sc.id]
+                switch (sc.method.method) {
+                    case '>':
+                    case '>=':
+                    case '<':
+                    case '<=':
+                    case '=':
+                        if (sc.func === null)
+                            throw new BadRequestException(
+                                'sortScript is required'
+                            )
+                        const sourceValue = Number(sc.func(source))
+                        const targetValue = Number(sc.method.value)
+                        switch (sc.method.method) {
+                            case '>':
+                                return sourceValue > targetValue
+                            case '>=':
+                                return sourceValue >= targetValue
+                            case '<':
+                                return sourceValue < targetValue
+                            case '<=':
+                                return sourceValue <= targetValue
+                            case '=':
+                                return sourceValue === targetValue
+                        }
+                    case 'like':
+                        if (!source) return false
+                        return source.indexOf(sc.method.value) !== -1
+                    case 'isNull':
+                        return source == null
+                    case 'isNotNull':
+                        return source != null
+                    default:
+                        return false
+                }
+            })
+        })
+
+        const sortedRows = rows.sort((a, b) => {
+            const sizes: number[] = []
+            scategories.forEach((sc) => {
+                const sourceA = a.staticCategories[sc.id]
+                const sourceB = b.staticCategories[sc.id]
+                switch (sc.method.method) {
+                    case '>':
+                    case '>=':
+                    case '<':
+                    case '<=':
+                    case '=':
+                        if (sc.func === null)
+                            throw new BadRequestException(
+                                'sortScript is required'
+                            )
+                        const sourceValueA = Number(sc.func(sourceA))
+                        const sourceValueB = Number(sc.func(sourceB))
+                        sizes.push(sourceValueA - sourceValueB)
+                }
+            })
+            return sizes.reduce((prev, curr) => {
+                if (prev !== 0) return prev
+                return curr
+            }, 0)
+        })
+
+        return [sortedRows.splice(size * (page - 1), size), rows.length] as [
+            CharacterEntity[],
+            number
+        ]
     }
 
     private async _createFeatures(staticCategories: ICharacterStaticCategory) {

@@ -22,6 +22,13 @@ export interface ICharacterSearchCondition extends IStarName {
     recycle?: boolean
     template?: boolean
     staticCategoryIds?: string
+    staticCategories?: ISearchSCategory[]
+}
+
+export interface ISearchSCategory {
+    id: number
+    value: string
+    method: '>' | '>=' | '<' | '<=' | '=' | 'like' | 'isNull' | 'isNotNull'
 }
 
 export interface ICharacterSearch extends ISearch<ICharacterSearchCondition> {}

@@ -11,7 +11,7 @@ import { StaticCategoryEntity } from './staticCategory.entity'
 import { IStaticCategory } from 'src/interface/staticCategory.interface'
 import { CharacterService } from 'src/character/character.service'
 import { ModuleRef } from '@nestjs/core'
-import { throwValidatedErrors } from 'src/shared/utilities'
+import { mergeObjectToEntity, throwValidatedErrors } from 'src/shared/utilities'
 
 @Injectable()
 export class StaticCategoryService {
@@ -54,17 +54,18 @@ export class StaticCategoryService {
             throw new ConflictException('There has the same name')
 
         const category = new StaticCategoryEntity()
-        category.name = body.name
-        if (body.intro) category.intro = body.intro
+        mergeObjectToEntity(category, body)
         await throwValidatedErrors(category)
         return await this.categoryRepo.save(category)
     }
 
-    public async rename(id: number, name: string) {
-        if (await this.hasName(name))
+    public async update(id: number, body: IStaticCategory) {
+        if (body.name && (await this.hasName(body.name)))
             throw new ConflictException('has the same name')
-
-        return await this.categoryRepo.update(id, { name })
+        const category = await this.findById(id)
+        mergeObjectToEntity(category, body)
+        await throwValidatedErrors(category)
+        return await this.categoryRepo.save(category)
     }
 
     public async delete(id: number) {
