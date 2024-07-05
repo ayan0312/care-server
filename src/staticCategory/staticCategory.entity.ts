@@ -2,6 +2,7 @@ import { Column, Entity } from 'typeorm'
 
 import { NameEntity } from 'src/shared/name/name.entity'
 import { Length } from 'class-validator'
+import { TokenTypes } from './token'
 
 @Entity('static_category')
 export class StaticCategoryEntity extends NameEntity {
@@ -18,8 +19,8 @@ export class StaticCategoryEntity extends NameEntity {
     @Column({ default: false })
     public pinned: boolean = false
 
-    @Column({ default: '' })
-    public sortScript: string = ''
+    @Column({ default: 'text' })
+    public component: TokenTypes = 'text'
 
     @Column({ default: '' })
     public placeholder: string = ''

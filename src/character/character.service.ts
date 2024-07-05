@@ -40,6 +40,7 @@ import { TagService } from 'src/tag/tag.service'
 import { CategoryType } from 'src/interface/category.interface'
 import { AssetService } from 'src/asset/asset.service'
 import { StaticCategoryService } from 'src/staticCategory/staticCategory.service'
+import { tokenize } from 'src/staticCategory/token'
 
 @Injectable()
 export class CharacterService {
@@ -189,7 +190,6 @@ export class CharacterService {
         ).map((sc) => {
             return {
                 ...sc,
-                func: sc.sortScript ? new Function(sc.sortScript) : null,
                 method: methods.find((m) => m.id === sc.id)!,
             }
         })
@@ -203,11 +203,8 @@ export class CharacterService {
                     case '<':
                     case '<=':
                     case '=':
-                        if (sc.func === null)
-                            throw new BadRequestException(
-                                'sortScript is required'
-                            )
-                        const sourceValue = Number(sc.func(source))
+                        if (!source) return false
+                        const sourceValue = tokenize(sc.component, source).order
                         const targetValue = Number(sc.method.value)
                         switch (sc.method.method) {
                             case '>':
@@ -220,6 +217,10 @@ export class CharacterService {
                                 return sourceValue <= targetValue
                             case '=':
                                 return sourceValue === targetValue
+                            default:
+                                throw new TypeError(
+                                    `unknown method: ${sc.method.method}`
+                                )
                         }
                     case 'like':
                         if (!source) return false
@@ -234,6 +235,7 @@ export class CharacterService {
             })
         })
 
+        const total = rows.length
         const sortedRows = rows.sort((a, b) => {
             const sizes: number[] = []
             scategories.forEach((sc) => {
@@ -245,22 +247,30 @@ export class CharacterService {
                     case '<':
                     case '<=':
                     case '=':
-                        if (sc.func === null)
-                            throw new BadRequestException(
-                                'sortScript is required'
-                            )
-                        const sourceValueA = Number(sc.func(sourceA))
-                        const sourceValueB = Number(sc.func(sourceB))
-                        sizes.push(sourceValueA - sourceValueB)
+                        const sourceValueA = tokenize(
+                            sc.component,
+                            sourceA
+                        ).order
+                        const sourceValueB = tokenize(
+                            sc.component,
+                            sourceB
+                        ).order
+
+                        if (sc.method.order === 'ASC') {
+                            sizes.push(sourceValueA - sourceValueB)
+                        } else {
+                            sizes.push(sourceValueB - sourceValueA)
+                        }
                 }
             })
+
             return sizes.reduce((prev, curr) => {
                 if (prev !== 0) return prev
                 return curr
             }, 0)
         })
 
-        return [sortedRows.splice(size * (page - 1), size), rows.length] as [
+        return [sortedRows.splice(size * (page - 1), size), total] as [
             CharacterEntity[],
             number
         ]

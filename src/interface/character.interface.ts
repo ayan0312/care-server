@@ -21,13 +21,14 @@ export interface ICharacterSearchCondition extends IStarName {
     tagIds?: string
     recycle?: boolean
     template?: boolean
-    staticCategoryIds?: string
     staticCategories?: ISearchSCategory[]
+    staticCategoryIds?: string
 }
 
 export interface ISearchSCategory {
     id: number
     value: string
+    order: 'ASC' | 'DESC'
     method: '>' | '>=' | '<' | '<=' | '=' | 'like' | 'isNull' | 'isNotNull'
 }
 

@@ -5,7 +5,7 @@ export interface IStaticCategory extends IName {
     intro?: string
     script?: string
     pinned?: boolean
-    sortScript?: string
+    component?: string
     placeholder?: string
 }
 
