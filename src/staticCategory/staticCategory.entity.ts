@@ -5,6 +5,9 @@ import { Length } from 'class-validator'
 
 @Entity('static_category')
 export class StaticCategoryEntity extends NameEntity {
+    @Column({ default: 0 })
+    public sort: number = 0
+
     @Column({ default: '' })
     @Length(0, 1000)
     public intro: string = ''

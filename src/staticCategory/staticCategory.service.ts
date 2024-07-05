@@ -60,9 +60,13 @@ export class StaticCategoryService {
     }
 
     public async update(id: number, body: IStaticCategory) {
-        if (body.name && (await this.hasName(body.name)))
-            throw new ConflictException('has the same name')
         const category = await this.findById(id)
+        if (
+            body.name &&
+            body.name != category.name &&
+            (await this.hasName(body.name))
+        )
+            throw new ConflictException('has the same name')
         mergeObjectToEntity(category, body)
         await throwValidatedErrors(category)
         return await this.categoryRepo.save(category)
@@ -70,7 +74,7 @@ export class StaticCategoryService {
 
     public async delete(id: number) {
         const category = await this.findById(id)
-        const result = await this.charService.search({
+        const char = await this.charService.search({
             page: 1,
             size: 1,
             condition: {
@@ -78,7 +82,10 @@ export class StaticCategoryService {
             },
         })
 
-        if (result.total !== 0) throw new UnprocessableEntityException()
+        if (char.total !== 0)
+            throw new UnprocessableEntityException({
+                message: `The character "${char.rows[0].name}(${char.rows[0].id})" has this tag.`,
+            })
         return await this.categoryRepo.remove(category)
     }
 
