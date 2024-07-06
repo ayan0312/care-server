@@ -19,4 +19,7 @@ export class TagEntity extends NameEntity {
     @Column({ default: '' })
     @Length(0, 100)
     public color: string = ''
+
+    @Column({ default: false })
+    public pinned: boolean = false
 }

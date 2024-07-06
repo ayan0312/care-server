@@ -4,6 +4,7 @@ import { IName } from './name.interface'
 export interface ITag extends IName {
     order?: number
     color?: string
+    pinned?: boolean
     categoryId?: number
 }
 

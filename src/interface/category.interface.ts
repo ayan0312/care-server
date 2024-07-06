@@ -10,6 +10,7 @@ export interface ICategory extends IName {
     type?: CategoryType
     order?: number
     intro?: string
+    pinned?: boolean
 }
 
 export interface ICategoryResult extends Required<ICategory> {}
