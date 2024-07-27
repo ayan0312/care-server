@@ -108,8 +108,12 @@ export class CharacterService {
     private _createConditionQB(condition: ICharacterSearchCondition) {
         let qb = this.charRepo.createQueryBuilder('character')
 
+        if (condition.ids != null)
+            qb = qb.where('character.id IN (:...ids)', {
+                ids: parseIds(condition.ids),
+            })
         if (condition.name != null)
-            qb = qb.where('character.name like :name', {
+            qb = qb.andWhere('character.name like :name', {
                 name: `%${condition.name}%`,
             })
         if (condition.tagIds)

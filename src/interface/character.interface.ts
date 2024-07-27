@@ -17,6 +17,7 @@ export interface ICharacter extends IStarName {
 }
 
 export interface ICharacterSearchCondition extends IStarName {
+    ids?: string
     intro?: string
     tagIds?: string
     recycle?: boolean
