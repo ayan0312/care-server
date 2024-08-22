@@ -20,6 +20,7 @@ export interface ICharacterSearchCondition extends IStarName {
     ids?: string
     intro?: string
     tagIds?: string
+    random?: boolean
     recycle?: boolean
     template?: boolean
     staticCategories?: ISearchSCategory[]

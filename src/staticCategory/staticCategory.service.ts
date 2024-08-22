@@ -72,20 +72,24 @@ export class StaticCategoryService {
         return await this.categoryRepo.save(category)
     }
 
-    public async delete(id: number) {
+    public async delete(id: number, force: boolean) {
         const category = await this.findById(id)
-        const char = await this.charService.search({
-            page: 1,
-            size: 1,
-            condition: {
-                staticCategoryIds: String(category.id),
-            },
-        })
 
-        if (char.total !== 0)
-            throw new UnprocessableEntityException({
-                message: `The character "${char.rows[0].name}(${char.rows[0].id})" has this tag.`,
+        if (!force) {
+            const char = await this.charService.search({
+                page: 1,
+                size: 1,
+                condition: {
+                    staticCategoryIds: String(category.id),
+                },
             })
+
+            if (char.total !== 0)
+                throw new UnprocessableEntityException({
+                    message: `The character "${char.rows[0].name}(${char.rows[0].id})" has this tag.`,
+                })
+        }
+
         return await this.categoryRepo.remove(category)
     }
 

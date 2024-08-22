@@ -51,7 +51,10 @@ export class StaticCategoryController {
     }
 
     @Delete(':id')
-    public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.categoryService.delete(id)
+    public async deleteById(
+        @Param('id', new ParseIntPipe()) id: number,
+        @Query('force') force = false
+    ) {
+        return await this.categoryService.delete(id, force)
     }
 }

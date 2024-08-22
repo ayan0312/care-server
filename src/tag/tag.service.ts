@@ -126,33 +126,36 @@ export class TagService {
         return await this.tagRepo.save(tag)
     }
 
-    public async delete(id: number) {
+    public async delete(id: number, force: boolean) {
         const tag = await this.findById(id)
-        const char = await this.charService.search({
-            page: 1,
-            size: 1,
-            condition: {
-                tagIds: String(tag.id),
-            },
-        })
 
-        if (char.total !== 0)
-            throw new UnprocessableEntityException({
-                message: `The character "${char.rows[0].name}(${char.rows[0].id})" has this tag.`,
+        if (!force) {
+            const char = await this.charService.search({
+                page: 1,
+                size: 1,
+                condition: {
+                    tagIds: String(tag.id),
+                },
             })
 
-        const asset = await this.asssetService.search({
-            page: 1,
-            size: 1,
-            condition: {
-                tagIds: String(tag.id),
-            },
-        })
+            if (char.total !== 0)
+                throw new UnprocessableEntityException({
+                    message: `The character "${char.rows[0].name}(${char.rows[0].id})" has this tag.`,
+                })
 
-        if (asset.total !== 0)
-            throw new UnprocessableEntityException({
-                message: `The asset "${asset.rows[0].name}(${asset.rows[0].id})" has this tag.`,
+            const asset = await this.asssetService.search({
+                page: 1,
+                size: 1,
+                condition: {
+                    tagIds: String(tag.id),
+                },
             })
+
+            if (asset.total !== 0)
+                throw new UnprocessableEntityException({
+                    message: `The asset "${asset.rows[0].name}(${asset.rows[0].id})" has this tag.`,
+                })
+        }
 
         return await this.tagRepo.remove(tag)
     }

@@ -108,17 +108,17 @@ export class CharacterService {
     private _createConditionQB(condition: ICharacterSearchCondition) {
         let qb = this.charRepo.createQueryBuilder('character')
 
-        if (condition.ids != null)
+        if (condition.ids)
             qb = qb.where('character.id IN (:...ids)', {
                 ids: parseIds(condition.ids),
             })
-        if (condition.name != null)
+        if (condition.name)
             qb = qb.andWhere('character.name like :name', {
                 name: `%${condition.name}%`,
             })
         if (condition.tagIds)
             qb = queryQBIds(qb, condition.tagIds, 'character.tagIds')
-        if (condition.staticCategoryIds != null)
+        if (condition.staticCategoryIds)
             qb = queryQBIdsForIdMap(
                 qb,
                 condition.staticCategoryIds,
@@ -128,13 +128,9 @@ export class CharacterService {
             qb = qb.andWhere('character.star = :star', {
                 star: !!condition.star,
             })
-        if (condition.intro != null)
+        if (condition.intro)
             qb = qb.andWhere('character.intro like :intro', {
                 intro: `%${condition.intro}%`,
-            })
-        if (condition.rating != null)
-            qb = qb.andWhere('character.rating = :rating', {
-                rating: condition.rating,
             })
 
         qb = qb.andWhere('character.template = :template', {
@@ -162,8 +158,25 @@ export class CharacterService {
 
         let data: [CharacterEntity[], number]
         const scategories = body.condition.staticCategories
-        if (scategories && scategories.length > 0) {
-            data = await this._getDataBySCategoires(qb, size, page, scategories)
+        if ((scategories && scategories.length > 0) || condition.random) {
+            let total = 0
+            let sortedRows: CharacterEntity[] = []
+
+            if (scategories && scategories.length > 0) {
+                sortedRows = await this._getAllCharsBySCategoires(
+                    qb,
+                    scategories
+                )
+                total = sortedRows.length
+            } else {
+                sortedRows = await qb.getMany()
+                total = sortedRows.length
+            }
+
+            if (condition.random)
+                sortedRows = sortedRows.sort(() => Math.random() - 0.5)
+
+            data = [sortedRows.splice(size * (page - 1), size), total]
         } else {
             data = await qb
                 .skip(size * (page - 1))
@@ -182,10 +195,8 @@ export class CharacterService {
         }
     }
 
-    private async _getDataBySCategoires(
+    private async _getAllCharsBySCategoires(
         qb: SelectQueryBuilder<CharacterEntity>,
-        size: number,
-        page: number,
         methods: ISearchSCategory[]
     ) {
         const data = await qb.getMany()
@@ -239,8 +250,7 @@ export class CharacterService {
             })
         })
 
-        const total = rows.length
-        const sortedRows = rows.sort((a, b) => {
+        return rows.sort((a, b) => {
             const sizes: number[] = []
             scategories.forEach((sc) => {
                 const sourceA = a.staticCategories[sc.id]
@@ -273,11 +283,6 @@ export class CharacterService {
                 return curr
             }, 0)
         })
-
-        return [sortedRows.splice(size * (page - 1), size), total] as [
-            CharacterEntity[],
-            number
-        ]
     }
 
     private async _createFeatures(staticCategories: ICharacterStaticCategory) {

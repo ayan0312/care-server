@@ -69,7 +69,10 @@ export class TagController {
     }
 
     @Delete(':id')
-    public async deleteById(@Param('id', new ParseIntPipe()) id: number) {
-        return await this.tagService.delete(id)
+    public async deleteById(
+        @Param('id', new ParseIntPipe()) id: number,
+        @Query('force') force = false
+    ) {
+        return await this.tagService.delete(id, force)
     }
 }
