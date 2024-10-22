@@ -14,9 +14,7 @@ import { TagModule } from './tag/tag.module'
 import { StaticCategoryModule } from './staticCategory/staticCategory.module'
 import { RelationshipModule } from './relationship/relationship.module'
 import { CharactershipModule } from './charactership/charactership.module'
-import { StoryModule } from './story/story.module'
-import { StoryChapterModule } from './storyChapter/storyChapter.module'
-import { StoryVolumeModule } from './storyVolume/storyVolume.module'
+import { DiaryModule } from './diary/diary.module'
 
 @Module({
     imports: [
@@ -38,11 +36,9 @@ import { StoryVolumeModule } from './storyVolume/storyVolume.module'
         TagModule,
         TempModule,
         AssetModule,
-        StoryModule,
+        DiaryModule,
         CategoryModule,
         CharacterModule,
-        StoryVolumeModule,
-        StoryChapterModule,
         RelationshipModule,
         CharactershipModule,
         StaticCategoryModule,
