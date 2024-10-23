@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany } from 'typeorm'
+import { Column, Entity } from 'typeorm'
 import { Length } from 'class-validator'
 
 import { StarNameEntity } from 'src/shared/name/starName.entity'
@@ -33,6 +33,9 @@ export class CharacterEntity extends StarNameEntity {
 
     @Column({ default: '' })
     public tagIds: string = ''
+
+    @Column({ default: 0 })
+    public diaries: number = 0
 }
 
 @Entity('character_relationship')

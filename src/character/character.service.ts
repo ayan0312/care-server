@@ -498,6 +498,22 @@ export class CharacterService {
         return this.findById(id, true)
     }
 
+    public async increaseDiaries(ids: number[]) {
+        const chars = await this.charRepo.findBy({ id: In(ids) })
+        chars.forEach((char) => {
+            char.diaries++
+        })
+        await this.charRepo.save(chars)
+    }
+
+    public async decreaseDiaries(ids: number[]) {
+        const chars = await this.charRepo.findBy({ id: In(ids) })
+        chars.forEach((char) => {
+            char.diaries--
+        })
+        await this.charRepo.save(chars)
+    }
+
     // deprecated
     public async deleteExtraAssets() {
         const bigAvatarPaths = readDirSync(config.static.avatars)

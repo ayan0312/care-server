@@ -15,12 +15,14 @@ import {
     IDiarySearch,
     IDiarySearchCondition,
 } from 'src/interface/diary.interface'
+import { CharacterService } from 'src/character/character.service'
 
 @Injectable()
 export class DiaryService {
     constructor(
         @InjectRepository(DiaryEntity)
-        private readonly diaryRepo: Repository<DiaryEntity>
+        private readonly diaryRepo: Repository<DiaryEntity>,
+        private readonly charService: CharacterService
     ) {}
 
     public async findAll() {
@@ -87,8 +89,17 @@ export class DiaryService {
 
     private async _mergeObjectToEntity(target: DiaryEntity, body: IDiary) {
         mergeObjectToEntity(target, body, ['characterIds'])
-        if (body.characterIds != null)
-            target.characterIds = createQueryIds(parseIds(body.characterIds))
+        if (body.characterIds != null) {
+            const oldIds = parseIds(target.characterIds)
+            const newIds = parseIds(body.characterIds)
+            this.charService.increaseDiaries(
+                newIds.filter((id) => !oldIds.includes(id))
+            )
+            this.charService.decreaseDiaries(
+                oldIds.filter((id) => !newIds.includes(id))
+            )
+            target.characterIds = createQueryIds(newIds)
+        }
         await throwValidatedErrors(target)
     }
 
@@ -108,6 +119,7 @@ export class DiaryService {
     public async delete(id: number) {
         const chapter = await this.findById(id)
         if (!chapter.recycle) return await this.update(id, { recycle: true })
+        this.charService.decreaseDiaries(parseIds(chapter.characterIds))
         return await this.diaryRepo.delete(chapter.id)
     }
 
