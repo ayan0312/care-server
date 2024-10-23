@@ -24,6 +24,7 @@ export interface IAssetSearchCondition extends IStarName {
     name?: string
     intro?: string
     tagIds?: string
+    random?: boolean
     reverse?: Record<string, boolean>
     recycle?: boolean
     relation?: boolean

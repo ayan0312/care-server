@@ -220,6 +220,7 @@ export class AssetService {
 
         if (orderBy != null)
             qb = qb.orderBy(`asset.${orderBy.sort}`, orderBy.order)
+        if (condition.random) qb = qb.orderBy('RANDOM()')
 
         const data = await qb
             .skip(size * (page - 1))
